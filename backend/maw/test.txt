@@ -1,0 +1,39 @@
+[2022-11-05 15:42:37,088: WARNING/MainProcess] C:\Users\chama\Desktop\maw\venv\lib\site-packages\celery\fixups\django.py:203: UserWarning: Using settings.DEBUG leads to a memory
+            leak, never use this setting in production environments!
+  warnings.warn('''Using settings.DEBUG leads to a memory
+
+[2022-11-05 16:13:36,762: CRITICAL/MainProcess] Unrecoverable error: PreconditionFailed(406, 'PRECONDITION_FAILED - delivery acknowledgement on channel 1 timed out. Timeout value used: 1800000 ms. This timeout value can be configured, see consumers doc guide to learn more', (0, 0), '')
+Traceback (most recent call last):
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\celery\worker\worker.py", line 203, in start
+    self.blueprint.start(self)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\celery\bootsteps.py", line 116, in start
+    step.start(parent)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\celery\bootsteps.py", line 365, in start
+    return self.obj.start()
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\celery\worker\consumer\consumer.py", line 326, in start
+    blueprint.start(self)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\celery\bootsteps.py", line 116, in start
+    step.start(parent)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\celery\worker\consumer\consumer.py", line 618, in start
+    c.loop(*c.loop_args())
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\celery\worker\loops.py", line 130, in synloop
+    connection.drain_events(timeout=2.0)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\kombu\connection.py", line 316, in drain_events
+    return self.transport.drain_events(self.connection, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\kombu\transport\pyamqp.py", line 169, in drain_events
+    return connection.drain_events(**kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\amqp\connection.py", line 525, in drain_events
+    while not self.blocking_read(timeout):
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\amqp\connection.py", line 531, in blocking_read
+    return self.on_inbound_frame(frame)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\amqp\method_framing.py", line 53, in on_frame
+    callback(channel, method_sig, buf, None)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\amqp\connection.py", line 537, in on_inbound_method
+    return self.channels[channel_id].dispatch_method(
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\amqp\abstract_channel.py", line 156, in dispatch_method
+    listener(*args)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\amqp\channel.py", line 293, in _on_close
+    raise error_for_code(
+amqp.exceptions.PreconditionFailed: (0, 0): (406) PRECONDITION_FAILED - delivery acknowledgement on channel 1 timed out. Timeout value used: 1800000 ms. This timeout value can be configured, see consumers doc guide to learn more
+[2022-11-07 22:24:34,905: ERROR/MainProcess] Process 'SpawnPoolWorker-16' pid:10912 exited with 'exitcode 3221225786'
+[2022-11-07 22:24:35,245: ERROR/MainProcess] Process 'SpawnPoolWorker-13' pid:8208 exited with 'exitcode 3221225786'
