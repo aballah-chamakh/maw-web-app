@@ -12,12 +12,11 @@ from .credentials import AFEX_LOGIN_CREDENTIALS
 from .custom_wait import input_has_no_empty_value
 from .mawlety_API import update_order_state_in_mawlety 
 from .monitoring_API import delete_a_monitor_order_by_id, get_monitor_orders_by_carrier, update_a_monitor_order_by_id,add_afex_order_to_monitoring_phase
-from .global_variables import AFEX_MONITOR_ORDER_TABLE_NAME, DELETE_MONITOR_ORDER_STATES, MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID
+from .global_variables import AFEX_LOGIN_URL, AFEX_MONITOR_ORDER_TABLE_NAME, DELETE_MONITOR_ORDER_STATES, MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID
 
 
 
 def load_cities_delgs_locs_postal_codes() : 
-    #cities_dels_locs_afex_v1_js
     with open("./cities_dels_locs_afex_v1_js.json","r") as f: 
         cities_delg_locs_postal_codes = json.loads(f.read())
         return cities_delg_locs_postal_codes
@@ -25,35 +24,45 @@ def load_cities_delgs_locs_postal_codes() :
 def load_driver(port=None,headless=False): 
     chrome_driver_path = ChromeDriverManager().install()
     chrome_options = Options()
-    chrome_options.add_argument("--log-level=0")
     chrome_options.headless = headless
+    
     if port : 
         chrome_options.add_experimental_option("debuggerAddress", f"127.0.0.1:{port}")
+    
     driver = webdriver.Chrome(chrome_driver_path,options=chrome_options,service_log_path='NUL')
     
     return driver 
 
+# USED IN MULTIPLE SITUATIONS TO WAIT FOR AN ELEMENT TO EXIST GIVEN HIS CSS SELECTOR (OR A CUSTOM WAIT LIKE THE INPUT CASE)
 def wait_for_loading(driver,element_selector,relogin=False,quitx=False,input=False): 
-
+    # TRY TO LOCATE AN ELEMENT
     try : 
         element = WebDriverWait(driver, 60).until(
             EC.presence_of_element_located((By.ID, element_selector)) if not input else input_has_no_empty_value((By.CSS_SELECTOR, element_selector)) 
         )
     except Exception :
        
-        # HANDLE THE CASE OF THE WEBSITE WAS BLOCKED IN THE LOGIN PAGE
-        print("WE WERE WAITING FOR ONE MINUTE FOR THE WINDOW OR THE PAGE TO LOAD")
+        # HANDLE THE EXCEPTION
+        print("WE WERE WAITING FOR ONE MINUTE FOR THE WINDOW OR THE PAGE TO LOAD OR AN IMPUT TO BE EMPTY")
+
+        # QUIT BECAUSE THIS IS NOT EXPECTED AND THERE A NEW BUG TO HANDLE
         if quitx  : 
             print(f"A NEW BUG TO HANDLE WHEN WE WERE WAITING FOR AN ELEMENT WITH A SELECTOR OF {element_selector} ")
             quit()
-        print("RELOGIN FROM THE WAIT")
+
+        # RELOGIN AFTER WAITING FOR THE INITIAL PAGE TO LOAD  
         if relogin : 
+            print("RELOGIN FROM THE WAIT")
             login_to_afex(driver=driver)
 
+
 def login_to_afex(driver=None):
+    # GRAB DRIVER FROM THE GLOBALS IF DRIVER IN THE KWARGS IS NONE (IN THE TESTING PHASE) 
     if not driver : 
         driver = globals()['driver']
-    driver.get("http://afex.smart-delivery-systems.com/webgesta/index.php/login")
+
+    # GO TO THE LOGIN PAGE OF AFEX     
+    driver.get(AFEX_LOGIN_URL)
    
     # WAIT FOR THE THE LOGIN FORM TO APPEAR WITHIN A MINUTE OTHERWISE RELOGIN 
     try :

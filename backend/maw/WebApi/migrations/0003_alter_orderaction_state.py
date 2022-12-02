@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='orderaction',
             name='state',
-            field=models.JSONField(default=WebApi.models.get_default_state),
+            field=models.JSONField(default=WebApi.models.get_order_action_default_state),
         ),
     ]

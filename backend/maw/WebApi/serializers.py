@@ -1,17 +1,9 @@
 from rest_framework import serializers
-from .models import AfexMonitorOrder,LoxboxMonitorOrder
+from .models import AfexMonitorOrder,LoxboxMonitorOrder,LoxboxAreasSelectorProcess,LoxboxCities,City,Delegation,Locality
 
-"""
-class AfexMonitorOrder(models.Model):
-    order_id= models.IntegerField(unique=True)
-    manifest_date = models.CharField(max_length=10)
-    state = models.CharField(max_length=50)
 
-class LoxboxMonitorOrder(models.Model):
-    order_id= models.IntegerField(unique=True)
-    transaction_id = models.CharField(max_length=255)
-    state = models.CharField(max_length=50)
-"""
+# MONITOR OREDERS SERIALIZERS 
+
 class AfexMonitorOrderSerializer(serializers.ModelSerializer): 
     carrier = serializers.CharField(default='AFEX')
     class Meta: 
@@ -23,3 +15,50 @@ class LoxboxMonitorOrderSerializer(serializers.ModelSerializer):
     class Meta: 
         model = LoxboxMonitorOrder
         fields = ['order_id','transaction_id','state','carrier']
+
+
+# LOXBOX AREAS SERIALIZERS 
+
+class LoxboxAreasSelectorProcessSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = LoxboxAreasSelectorProcess
+        fields = ['is_working','progress']
+
+class LoxboxCitiesSerializer(serializers.ModelSerializer):
+    cities = serializers.SerializerMethodField()
+    class Meta: 
+        model = LoxboxCities
+        fields = ['id','selected_all','cities']
+
+    def get_cities(self,lx_cities_obj): 
+        ser = CitySerializer(lx_cities_obj.city_set.all(),many=True)
+        return ser.data
+
+class CitySerializer(serializers.ModelSerializer):
+    delegations = serializers.SerializerMethodField()
+
+    class Meta: 
+        model = City
+        fields = ['id','name','selected_all','delegations']
+
+    def get_delegations(self,city_obj): 
+        ser = DelegationSerializer(city_obj.delegation_set.all(),many=True)
+        return ser.data
+
+class DelegationSerializer(serializers.ModelSerializer):
+    localities = serializers.SerializerMethodField()
+
+    class Meta: 
+        model = Delegation
+        fields = ['id','name','selected_all','localities']
+
+    def get_localities(self,delg_obj): 
+        ser = LocalitySerializer(delg_obj.locality_set.all(),many=True)
+        return ser.data
+
+class LocalitySerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = Locality
+        fields = ['id','name','selected']
+
+
