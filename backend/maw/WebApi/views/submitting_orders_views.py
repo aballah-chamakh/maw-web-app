@@ -31,6 +31,10 @@ def toggle_order_selection(request):
 
 @api_view(['POST'])
 def launch_orders_submitter(request):
+    loxbox_areas_selector_process_obj = LoxboxAreasSelectorProcess.objects.first()
+    if loxbox_areas_selector_process_obj.is_working  :
+        return Response({'restriction_msg': 'ORDERS_SUBMITTER_IS_DISABLED_NON'}.progress ,status = status.HTTP_200_OK)
+
     orders_loader_obj_id = request.data.get('orders_loader_id')
     orders_submitter_obj =  OrderAction.objects.create(type=SUBMITTING_ORDERS)
     p = Process(target=submit_orders_to_carriers,args=(orders_loader_obj_id,orders_submitter_obj.id,))
