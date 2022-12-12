@@ -2,6 +2,10 @@ from .global_variables import LOXBOX_CITIES_DELEGATIONS, THE_BIG_TUNIS,LOXBOX_CA
 
 
 def is_it_for_loxbox(city,delegation,locality):
+
+    if not delegation or not locality : 
+        return True 
+
     from WebApi.models import City 
     
     #CHECK IF THE CITY OF THE ORDER IS SELECTED WHICH MEAN THE LOCALITY IS AUTO SELECTED
@@ -30,18 +34,10 @@ def split_orders_between_loxbox_and_afex(orders):
 
     for order in orders : 
 
-        # GRAB CURRENT ORDER ADDRESS DATA  
-        city = order['address_detail']['city']
-        delegation = order['address_detail']['delegation']
-        locality = order['address_detail']['locality']
-
         # CHECK IF THE ORDER IS FOR LOXBOX OTHERWISE HE IS FOR AFEX 
-        if not delegation or not locality or is_it_for_loxbox(city,delegation,locality) :
+        if order['carrier'] == 'LOXBOX' :
             loxbox_orders.append(order)
         else :
             afex_orders.append(order)
-
-            
-
 
     return loxbox_orders,afex_orders

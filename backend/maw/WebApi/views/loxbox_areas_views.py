@@ -29,16 +29,22 @@ def loxbox_areas_list(request):
     return Response(ser.data ,status = status.HTTP_200_OK)
 
 
-
+def init_loxbox_areas_actions() : 
+    loxbox_areas_selector_process_obj = LoxboxAreasSelectorProcess.objects.first()
+    loxbox_areas_selector_process_obj.is_working = True 
+    loxbox_areas_selector_process_obj.progress = {}
+    loxbox_areas_selector_process_obj.save()
 
 @api_view(['PUT'])
 def loxbox_areas_select_unselect_all(request,select_type):
+    init_loxbox_areas_actions()
     p = Process(target=select_unselect_all_loxbox_areas,kwargs={'is_select': True if select_type=='select_all' else False})  
     p.start()
     return Response({'msg':f'loxbox areas {select_type} was launched'},status = status.HTTP_200_OK)
 
 @api_view(['PUT'])
 def city_select_unselect_all(request,city_id,select_type):
+    init_loxbox_areas_actions()
     additional_action_beyond_the_main_action = request.data.get('additional_action_beyond_the_main_action')
 
     if additional_action_beyond_the_main_action == 'loxbox_areas_select_all' : 
@@ -56,6 +62,7 @@ def city_select_unselect_all(request,city_id,select_type):
 
 @api_view(['PUT'])
 def delegation_select_unselect_all(request,delegation_id,select_type):
+    init_loxbox_areas_actions()
     additional_action_beyond_the_main_action = request.data.get('additional_action_beyond_the_main_action')
     match additional_action_beyond_the_main_action : 
         case 'loxbox_areas_select_all' :
@@ -87,6 +94,7 @@ def delegation_select_unselect_all(request,delegation_id,select_type):
 
 @api_view(['PUT'])
 def locality_select_unselect(request,locality_id,select_type):
+    init_loxbox_areas_actions()
 
     #SET selectected/unselected FOR THE loc_obj
     loc_obj = Locality.objects.get(id=locality_id)
@@ -135,4 +143,8 @@ def locality_select_unselect(request,locality_id,select_type):
             delegation_obj.selected_all = False 
             delegation_obj.save()
 
+    loxbox_areas_selector_process_obj = LoxboxAreasSelectorProcess.objects.first()
+    loxbox_areas_selector_process_obj.is_working = False 
+    loxbox_areas_selector_process_obj.save()
+    
     return Response({'msg':'success'},status=status.HTTP_200_OK)

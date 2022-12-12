@@ -7,7 +7,7 @@ from rest_framework import status
 from multiprocessing import Process
 import psutil
 import os 
-from WebApi.models import OrderAction,LOADING_ORDERS
+from WebApi.models import LoxboxAreasSelectorProcess,OrderAction,LOADING_ORDERS
 from OrderActionApi import grab_maw_orders
 
 #pid = os.getpid()
@@ -16,6 +16,10 @@ from OrderActionApi import grab_maw_orders
 
 @api_view(['POST'])
 def launch_orders_loader(request):
+    loxbox_areas_selector_process_obj = LoxboxAreasSelectorProcess.objects.first()
+    if loxbox_areas_selector_process_obj.is_working  :
+        return Response({'restriction_msg': 'ORDERS_LOADER_IS_DISABLED_NON'}.progress ,status = status.HTTP_200_OK)
+        
     days_ago = request.GET.get('days_ago') 
     if days_ago :
         days_ago = int(days_ago)

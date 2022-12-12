@@ -11,7 +11,7 @@ def init_the_loxbox_selector_process(LoxboxAreasSelectorProcess,items_to_process
     print("INNNNNNNNNNNNNNNNNNNNNNNNNNNNIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIT")
     # SET LoxboxAreasSelectorProcess OBJ TO WORKING AND SET FOR HIM items_to_process_cnt AND processed_items_cnt
     loxbox_areas_selector_process_obj = LoxboxAreasSelectorProcess.objects.first()
-    loxbox_areas_selector_process_obj.is_working = True 
+    #loxbox_areas_selector_process_obj.is_working = True 
     loxbox_areas_selector_process_obj.progress['processed_items_cnt'] = 0
     loxbox_areas_selector_process_obj.progress['items_to_process_cnt'] = items_to_process_cnt
     loxbox_areas_selector_process_obj.save()

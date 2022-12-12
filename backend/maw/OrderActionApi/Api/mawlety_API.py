@@ -3,6 +3,7 @@ import json
 from datetime import datetime,timedelta
 from .credentials import MAWLETY_AUTHORIZATION_TOKEN
 from .global_variables import HEADERS, MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID
+from .global_functions import is_it_for_loxbox
 import xml.etree.ElementTree as ET
 import sys 
 
@@ -25,6 +26,7 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
     django.setup()
 
     from WebApi.models import OrderAction
+    order_loader_obj = OrderAction.objects.get(id=orders_loader_id)
 
     HEADERS['Output-Format'] = "JSON"
     
@@ -41,19 +43,21 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
     orders_filter_endpoint += f"filter[current_state]=[{state}]&"
     orders_filter_endpoint += f"display={fields_to_collect_from_the_order}"
     print(orders_filter_endpoint)
+
+    # MAKE THE REQUEST 
     r = requests.get(f"{MAWLATY_API_BASE_URL+orders_filter_endpoint}",headers=HEADERS)
     print(r.status_code)
-    print(r.content)
+
+    # HANDLE REQUEST ERROR
     if not r : 
         print(" NO ORDERS TO BE COLLECTED")
-        order_loader_obj = OrderAction.objects.get(id=orders_loader_id)
         order_loader_obj.state['state']= "FINISHED"
         order_loader_obj.state['orders']= []
         order_loader_obj.save()
         return 
 
+    # HANDLE JSON ERROR
     if not r.json() : 
-        order_loader_obj = OrderAction.objects.get(id=orders_loader_id)
         order_loader_obj.state['state']= "FINISHED"
         order_loader_obj.state['orders']= []
         order_loader_obj.save()
@@ -61,20 +65,40 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
 
     orders = r.json()['orders']
 
-    # DECODE THE JSON OF THE VALUES OF THE FOLLOWING KEYS address_detail,customer_detail,cart_products
-    for order in orders : 
-        order['address_detail'] = json.loads(order['address_detail'])
-        order['customer_detail'] = json.loads(order['customer_detail'])
-        order['cart_products'] = json.loads(order['cart_products'])
-        order['selected'] = True 
- 
-    del HEADERS['Output-Format']
+    if len(orders) > 0 : 
+        # SET THE INITIAL PROGRESS STATE OF GRABBING THE ORDERS 
+        order_loader_obj['progress'] = {'current_order_id':orders[0]['id'],'grabbed_orders_len':0,'orders_to_grab_len':len(orders)}
+        order_loader_obj.save()
 
-    order_loader_obj = OrderAction.objects.get(id=orders_loader_id)
+        # DECODE FROM STRING THE JSON OF THE VALUES OF THE FOLLOWING KEYS address_detail,customer_detail,cart_products
+        for order in orders : 
+            # SET THE CURRENT ORDER ID 
+            order_loader_obj['progress']['current_order_id'] = order['id']
+
+            # DECODE FROM STRING TO JSON 
+            order['address_detail'] = json.loads(order['address_detail'])
+            order['customer_detail'] = json.loads(order['customer_detail'])
+            order['cart_products'] = json.loads(order['cart_products'])
+
+            # SET THE CARRIER AND THE SELECTED KEY 
+            order['carrier'] = 'LOXBOX' if is_it_for_loxbox(order['address_detail']['city'],order['address_detail']['delegation'],order['address_detail']['locality']) else 'AFEX' 
+            order['selected'] = True 
+
+            # APPEND THE ORDER 
+            order_loader_obj.state['orders'].apppend(order)
+
+            # INCREASE THE GRABBED ORDERS LEN
+            order_loader_obj['progress']['grabbed_orders_len'] += 1
+            
+            order_loader_obj.save()
+    else : 
+        order_loader_obj['orders'] = []
+
+    # SET THE FINISH STATE    
     order_loader_obj.state['state'] = 'FINISHED'
-    order_loader_obj.state['orders'] = orders 
     order_loader_obj.save()
 
+    del HEADERS['Output-Format']
 
 
 def update_order_state_in_mawlety(order_id,order_state):

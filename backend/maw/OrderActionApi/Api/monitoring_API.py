@@ -90,27 +90,14 @@ def add_afex_order_to_monitoring_phase(order) :
 
 
 
-def get_monitor_orders_by_carrier(monitor_order_table):
-    conn = sqlite3.connect(DB_FILENAME)
-    conn.row_factory = sqlite3.Row 
-    rows = conn.execute(f"SELECT * FROM {monitor_order_table} {'ORDER BY manifest_date ASC' if monitor_order_table=='afex_monitor_order' else ''}").fetchall()
-    rows = [dict(row) for row in rows]
-    return rows
+
 
 
     
 
 
 
-def monitor_orders_of_all_carriers():
-    afex_monitor_orders = get_monitor_orders_by_carrier(AFEX_MONITOR_ORDER_TABLE_NAME)
-    loxbox_monitor_orders = get_monitor_orders_by_carrier(LOXBOX_MONITOR_ORDER_TABLE_NAME)
 
-    if len(loxbox_monitor_orders) > 0 : 
-        update_monitor_orders_state_from_loxbox(loxbox_monitor_orders,update_a_monitor_order_by_id,delete_a_monitor_order_by_id)
-    if len(afex_monitor_orders) > 0 : 
-        pass
-        #update_afex_monitor_orders_state_from_afex(afex_monitor_orders)
         
 
 """

@@ -12,6 +12,8 @@ urlpatterns = [
     
 
     # SUBMITTING ORDERS URLS 
+    
+    path('set_order_carrier', set_order_carrier),
     path('toggle_order_selection', toggle_order_selection),
     path('orders_submitter/launch', launch_orders_submitter),
     path('orders_submitter/<int:id>/monitor', monitor_orders_submitter),
