@@ -27,12 +27,23 @@ def launch_orders_loader(request):
     else : 
         days_ago = 0 
     orders_loader_obj =  OrderAction.objects.create(type=LOADING_ORDERS)
+
+    # INITIATE THE CANCEL STATE FOR THE ORDER LOADER 
+    orders_loader_obj.state['canceled'] = False 
+    orders_loader_obj.save()
+
     orders_loader_obj_id = orders_loader_obj.id
     p = Process(target=grab_maw_orders,args=(orders_loader_obj_id,),kwargs={'nb_of_days_ago':days_ago})
     p.start()
     print(f"ORDER LOADER ID : {orders_loader_obj_id}")
     return Response({'orders_loader_id':orders_loader_obj_id },status = status.HTTP_201_CREATED)
 
+@api_view(['PUT'])
+def cancel_orders_loader(request,id):
+    orders_loader_obj =  OrderAction.objects.get(id=id)
+    orders_loader_obj.state['canceled'] = True 
+    orders_loader_obj.save()
+    return Response({'msg':'success'},status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def monitor_orders_loader(request,id):

@@ -82,7 +82,7 @@ def set_order_carrier(request):
     orders_loader_id = request.data.get('orders_loader_id')
     order_id = request.data.get('order_id')
     carrier = request.data.get('carrier')
-    
+
     # GRAB THE ORDER LOADER OBJ
     orders_loader_obj = OrderAction.objects.get(id=orders_loader_id)
     orders_loader_obj.state['is_selector_working'] = True 

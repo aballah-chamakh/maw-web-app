@@ -180,6 +180,7 @@ def format_loxbox_order(loxbox_order) :
 def insert_a_loxbox_order(loxbox_order,loxbox_header):
     formatted_loxbox_order = format_loxbox_order(loxbox_order)
     r = requests.post("https://www.loxbox.tn/api/NewTransaction/",data=json.dumps(formatted_loxbox_order),headers=loxbox_header)
+    print(r.json())
     return r.json()['Transaction_instance']
 
 def submit_loxbox_orders(loxbox_orders,orders_submitter_obj,add_a_loxbox_order_to_monitoring_phase):

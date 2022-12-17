@@ -17,8 +17,7 @@ def submit_orders_to_carriers(orders_loader_id,orders_submitter_id):
     from .Api.afex_API import submit_afex_orders
     from .Api.global_functions import split_selected_orders_between_loxbox_and_afex
 
-    # GRAB THE ORDERS FROM THE ORDER LOADER 
-    #order_loader_obj = OrderAction.objects.get(id=orders_loader_id)
+    """
     orders = []
     for i in range(514,520):
         orders.append(
@@ -34,7 +33,11 @@ def submit_orders_to_carriers(orders_loader_id,orders_submitter_id):
             'selected' :  True
             }
         )
-    #orders = order_loader_obj.state['orders']
+    """
+
+    # GRAB THE ORDERS FROM THE ORDER LOADER 
+    order_loader_obj = OrderAction.objects.get(id=orders_loader_id)
+    orders = order_loader_obj.state['orders'][:2]
 
     # SPLIT ORDERS BETWEEN AFEX AND LOXBOX
     loxbox_orders,afex_orders = split_selected_orders_between_loxbox_and_afex(orders)

@@ -8,6 +8,7 @@ from .views.loxbox_areas_views import *
 urlpatterns = [
     # LOADING ORDERS URLS 
     path('orders_loader/launch', launch_orders_loader),
+    path('orders_loader/<int:id>/cancel', cancel_orders_loader),
     path('orders_loader/<int:id>/monitor', monitor_orders_loader),
     
 

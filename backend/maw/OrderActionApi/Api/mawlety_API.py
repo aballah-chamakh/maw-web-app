@@ -26,7 +26,7 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
     django.setup()
 
     from WebApi.models import OrderAction
-    order_loader_obj = OrderAction.objects.get(id=orders_loader_id)
+    orders_loader_obj = OrderAction.objects.get(id=orders_loader_id)
 
     HEADERS['Output-Format'] = "JSON"
     
@@ -51,35 +51,39 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
     # HANDLE REQUEST ERROR
     if not r : 
         print(" NO ORDERS TO BE COLLECTED")
-        order_loader_obj.state['state']= "FINISHED"
-        order_loader_obj.state['orders']= []
-        order_loader_obj.save()
+        orders_loader_obj.state['state']= "FINISHED"
+        orders_loader_obj.state['orders']= []
+        orders_loader_obj.state['canceled'] = True 
+        orders_loader_obj.save()
         return 
 
     # HANDLE JSON ERROR
     if not r.json() : 
-        order_loader_obj.state['state']= "FINISHED"
-        order_loader_obj.state['orders']= []
-        order_loader_obj.save()
+        orders_loader_obj.state['state']= "FINISHED"
+        orders_loader_obj.state['orders']= []
+        orders_loader_obj.state['canceled'] = True 
+        orders_loader_obj.save()
         return 
 
     orders = r.json()['orders']
 
     if len(orders) > 0 : 
-        order_loader_obj.state['orders']  = []
-        order_loader_obj.state['orders_selected_all'] = True #FOR THE ORDERS SET THEM ALL SELECTED 
+        orders_loader_obj.state['orders']  = []
+        orders_loader_obj.state['orders_selected_all'] = True #FOR THE ORDERS SET THEM ALL SELECTED 
         # SET THE INITIAL PROGRESS STATE OF GRABBING THE ORDERS 
-        order_loader_obj.state['progress'] = {'current_order_id':orders[0]['id'],'grabbed_orders_len':0,'orders_to_grab_len':len(orders)}
-        order_loader_obj.save()
+        orders_loader_obj.state['progress'] = {'current_order_id':orders[0]['id'],'grabbed_orders_len':0,'orders_to_grab_len':len(orders)}
+        orders_loader_obj.save()
 
         # DECODE FROM STRING THE JSON OF THE VALUES OF THE FOLLOWING KEYS address_detail,customer_detail,cart_products
         for order in orders : 
             # SET THE CURRENT ORDER ID 
-            order_loader_obj.state['progress']['current_order_id'] = order['id']
+            orders_loader_obj.state['progress']['current_order_id'] = order['id']
 
             # DECODE FROM STRING TO JSON 
             order['address_detail'] = json.loads(order['address_detail'])
             order['customer_detail'] = json.loads(order['customer_detail'])
+            order['customer_detail']['firstname'] = 'test'
+            order['customer_detail']['lastname'] = 'test'
             order['cart_products'] = json.loads(order['cart_products'])
 
             # SET THE CARRIER AND THE SELECTED KEY 
@@ -87,18 +91,18 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
             order['selected'] = True 
 
             # APPEND THE ORDER 
-            order_loader_obj.state['orders'].append(order)
+            orders_loader_obj.state['orders'].append(order)
 
             # INCREASE THE GRABBED ORDERS LEN
-            order_loader_obj.state['progress']['grabbed_orders_len'] += 1
+            orders_loader_obj.state['progress']['grabbed_orders_len'] += 1
             
-            order_loader_obj.save()
+            orders_loader_obj.save()
     else : 
-        order_loader_obj['orders'] = []
+        orders_loader_obj['orders'] = []
 
     # SET THE FINISH STATE    
-    order_loader_obj.state['state'] = 'FINISHED'
-    order_loader_obj.save()
+    orders_loader_obj.state['state'] = 'FINISHED'
+    orders_loader_obj.save()
 
     del HEADERS['Output-Format']
 

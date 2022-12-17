@@ -11,7 +11,7 @@ import time
 from .credentials import AFEX_LOGIN_CREDENTIALS
 from .custom_wait import input_has_no_empty_value
 from .mawlety_API import update_order_state_in_mawlety 
-from .monitoring_API import delete_a_monitor_order_by_id, get_monitor_orders_by_carrier, update_a_monitor_order_by_id,add_afex_order_to_monitoring_phase
+from .monitoring_API import delete_a_monitor_order_by_id, update_a_monitor_order_by_id,add_afex_order_to_monitoring_phase
 from .global_variables import AFEX_LOGIN_URL, AFEX_MONITOR_ORDER_TABLE_NAME, DELETE_MONITOR_ORDER_STATES, MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID
 
 
