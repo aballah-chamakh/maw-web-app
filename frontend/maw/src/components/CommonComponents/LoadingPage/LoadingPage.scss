@@ -1,0 +1,36 @@
+@import '../../../vars.scss';
+
+.loading-page-container{
+
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    p{
+        text-transform: uppercase;
+        font-weight: bold;
+        color: $third_color;
+        font-size: 25px;
+    }
+    .upper-txt{
+        margin-bottom: 70px ;
+    }
+    .lower-txt{
+        margin-top: 70px ;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .highlight{
+        color : $secondary_color  ;
+        background-color: $primary_color;
+        padding: 5px 30px ;
+        border-radius: 5px ;
+        font-size: 20px;
+        margin-top: 5px;
+
+    }
+ 
+}

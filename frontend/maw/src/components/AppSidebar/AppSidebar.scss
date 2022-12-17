@@ -1,0 +1,142 @@
+@import '../../vars.scss' ;
+
+.app-sidebar-container{
+
+    width: 17%; //
+    //width: 3%;
+    background-color: $primary_color ;
+    position : fixed ;
+    height: 100%;
+    transition: width 0.05s;
+    color: $secondary_color;
+
+
+    .app-sidebar-apparent{
+        width: 100%;
+        display: flex ;
+        flex-direction: column;
+        align-items: center;
+       
+        &-header{
+            width: 100%;
+           
+            padding:0px;
+            background-color: $dark_color;
+            
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 10px;
+            p{
+                font-size: 20px;
+                text-transform: uppercase;
+                font-weight: 500;
+               
+            }
+            i{
+                cursor: pointer;
+            }
+        }
+        &-logo{
+            width: 90%;
+            text-align: center;
+            margin: 40px auto;
+
+            img {
+                height: 150px;
+                width: 150px;
+                border-radius: 50%;
+                margin: 0px auto;
+            }
+        }
+        &-navigation{
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            ul{
+                list-style-type: none;
+                li{
+                    cursor: pointer;                  
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 15px;
+                    transition: border padding 200ms;
+
+                    &:hover{
+                        padding-bottom: 5px;
+                        border-bottom: 1px solid ;
+                       
+                    }
+                    i{
+                        margin-right: 10px;
+                    }
+                    p{
+                        font-size: 14px;
+                        text-transform: uppercase;
+                    }
+
+                }
+              
+            }
+        }
+        
+    }
+    .app-sidebar-hidden{
+        display: flex ;
+        flex-direction: column;
+        align-items: center;
+        
+        &-header{
+           
+            width: 100%;
+            background-color: $dark_color;
+            text-align: center;
+            padding: 5px 0px;
+            i{
+                cursor: pointer;
+            }
+        }
+        &-logo{
+            width: 90%;
+            margin: 20px auto ;
+            text-align: center;
+            
+    
+            img {
+                height: 30px;
+                width: 30px;
+                border-radius: 50%;
+       
+            }
+        }
+        &-navigation{
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            ul{
+                width: 80%;
+                list-style-type: none;
+                
+                li{
+                    &:first-child{
+                        margin-top: 0px;
+                    }
+                    width: 100%;
+                    cursor: pointer; 
+                    text-align: center;
+                    margin-top: 10px;
+                    transition: border padding 200ms;
+
+                    &:hover{
+                        border-bottom: 1px solid white;
+                       
+                    }
+                }
+            }
+        }
+    }
+
+}

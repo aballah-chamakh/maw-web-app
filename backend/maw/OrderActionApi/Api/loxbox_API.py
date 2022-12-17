@@ -74,7 +74,7 @@ def update_monitor_orders_state_from_loxbox(loxbox_monitor_orders,update_a_monit
         if type(loxbox_monitor_order) != dict : 
             loxbox_monitor_order = loxbox_monitor_order.__dict__
         if orders_monitoror_obj : 
-            orders_monitoror_obj.state['current_order_id'] = loxbox_monitor_order['order_id']
+            orders_monitoror_obj.state['progress']['current_order_id'] = loxbox_monitor_order['order_id']
             orders_monitoror_obj.save()
         # SEARCH IN WHICH STATE CARD THE CURRENT MONITOR ORDER EXIST
         for filtered_state_card in filtered_state_cards : 
@@ -121,7 +121,7 @@ def update_monitor_orders_state_from_loxbox(loxbox_monitor_orders,update_a_monit
                 break 
 
         if orders_monitoror_obj : 
-            orders_monitoror_obj.state['monitored_orders_len'] += 1 
+            orders_monitoror_obj.state['progress']['monitored_orders_len'] += 1 
             orders_monitoror_obj.save()
 
         
@@ -187,13 +187,10 @@ def submit_loxbox_orders(loxbox_orders,orders_submitter_obj,add_a_loxbox_order_t
     loxbox_header = get_loxbox_header(loxbox_token)
     already_created = True 
     for loxbox_order in loxbox_orders : 
-        # SET THE INITIAL submitted_orders_len TO THE ORDERS SUBMITTER
-        if orders_submitter_obj.state.get('submitted_orders_len') == None :
-             orders_submitter_obj.state['submitted_orders_len']  = 0 
         
         # SET THE current_order_id TO THE ORDERS SUBMITTER
-        orders_submitter_obj.state['current_order_id'] = loxbox_order['id']
-        orders_submitter_obj.save()
+        orders_submitter_obj.state['progress']['current_order_id'] = loxbox_order['id']
+        orders_submitter_obj.save() 
 
         # IF WE HAVE THE TRANSACTION ID IT MEAN THAT THE TRANSACTION WAS CREATED BY THE LOXBOX MODULE OTHERWISE WE SHOULD CREATE IT BY OURSELF
         if not loxbox_order['transaction_id'] :
@@ -206,7 +203,7 @@ def submit_loxbox_orders(loxbox_orders,orders_submitter_obj,add_a_loxbox_order_t
 
         
         # INSCREASE submitted_orders_len TO THE ORDERS SUBMITTER
-        orders_submitter_obj.state['submitted_orders_len']  += 1 
+        orders_submitter_obj.state['progress']['submitted_orders_len']  += 1 
         orders_submitter_obj.save()
 
 

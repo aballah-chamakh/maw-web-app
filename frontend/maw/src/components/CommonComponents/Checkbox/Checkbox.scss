@@ -1,0 +1,58 @@
+@import '../../../vars.scss';
+ // CREATE THE CHECKBOX CONTAINER
+ .checkbox-container{
+    display: block;
+    position: relative;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    // HIDE THE ORIGINAL CHECKBOX 
+    input{
+        opacity:  0;
+    }
+
+    // CREATE THE FAKE CHECKBOX FRAME
+    .fake-checkbox{
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        width: 25px;
+        height: 25px;
+        background-color: #F9F9F9;
+        border: 1px solid #D0D0D0 ;
+        border-radius: 5px;
+    }
+    
+    // CREATE THE CHECK SYMBOL OF THE FAKE CHECKBOX AND KEEP IT HIDDEN
+    .fake-checkbox::after{
+        content: "";
+        position: absolute;
+        left: 7px;
+        top: 2px;
+        width: 10px;
+        height: 15px;
+        border: solid $primary_color;
+        border-width: 0 3px 3px 0;
+        -webkit-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        transform: rotate(45deg);
+        display: none;
+    }
+
+    // HANDLE THE HOVER OF THE FAKE CHECKBOX
+    .fake-checkbox:hover{
+        background-color: #E8E8E8;
+    }
+    // HANDLE CHECKED OF THE ORIGINAL CHECKBOX BY SETTING : 
+    // 1- THE BACKGROUND OF THE FAKE CHECKBOX TO ______
+    // 2- THE AFTER ELEMENT (THE CHECKBOX SYMBOL) TO VISIBLE
+
+    //input:checked  ~ .fake-checkbox{}
+
+    input:checked ~ .fake-checkbox::after {
+        display: block;
+    }
+}

@@ -313,7 +313,7 @@ def submit_orders(driver,orders,orders_submitter_obj):
     for idx,order in enumerate(orders): 
         print(f"WORKING ON SUBMITTING THE ORDER WITH ID : {order['id']}")
 
-        orders_submitter_obj.state['current_order_id'] = order['id']
+        orders_submitter_obj.state['progress']['current_order_id'] = order['id']
         orders_submitter_obj.save()
 
         # ADD FOR EACH ORDER HIS POSTAL CODE
@@ -328,9 +328,11 @@ def submit_orders(driver,orders,orders_submitter_obj):
             save_order(driver,new_order=True)
         else: 
             save_order(driver)
+
         add_afex_order_to_monitoring_phase(order)
+
         # INSCREASE submitted_orders_len TO THE ORDERS SUBMITTER
-        orders_submitter_obj.state['submitted_orders_len']  += 1 
+        orders_submitter_obj.state['progress']['submitted_orders_len']  += 1 
         orders_submitter_obj.save()
     
     # START MANIFESTING
@@ -348,12 +350,7 @@ def submit_orders(driver,orders,orders_submitter_obj):
 
     
 def submit_afex_orders(orders,orders_submitter_obj):
-    #SET THE INITIAL submitted_orders_len TO THE ORDERS SUBMITTER
-    if not orders_submitter_obj.state.get('submitted_orders_len') :
-        orders_submitter_obj.state['submitted_orders_len']  = 0 
-    #SET THE current_order_id TO THE ORDERS SUBMITTER
-    orders_submitter_obj.state['current_order_id'] = orders[0]['id']
-    orders_submitter_obj.save()
+
     print("LOAD THE DRIVER")
     driver = load_driver(headless=True) 
     print("LOGIN TO AFEX")
@@ -464,7 +461,7 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
     for afex_monitor_order in afex_monitor_orders : 
 
         # SET THE NEW current_order_id
-        orders_monitoror_obj.state['current_order_id'] = afex_monitor_order.order_id
+        orders_monitoror_obj.state['progress']['current_order_id'] = afex_monitor_order.order_id
         orders_monitoror_obj.save()
 
         # AFEX ORDER STATE FROM DB 
@@ -508,7 +505,7 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
             print("NO CHANGE ")
         
         # INCREASE THE MONITOR ORDERS LEN BY ONE 
-        orders_monitoror_obj.state['monitored_orders_len'] += 1 
+        orders_monitoror_obj.state['progress']['monitored_orders_len'] += 1 
         orders_monitoror_obj.save()
   
                 

@@ -40,7 +40,7 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
     # PREP REQUEST ORDERS URL
     orders_base_endpoint = "/orders/"
     orders_filter_endpoint = orders_base_endpoint + f"?filter[invoice_date]=[{start_date},{end_date}]&"
-    orders_filter_endpoint += f"filter[current_state]=[{state}]&"
+    #orders_filter_endpoint += f"filter[current_state]=[{state}]&"
     orders_filter_endpoint += f"display={fields_to_collect_from_the_order}"
     print(orders_filter_endpoint)
 
@@ -66,14 +66,16 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
     orders = r.json()['orders']
 
     if len(orders) > 0 : 
+        order_loader_obj.state['orders']  = []
+        order_loader_obj.state['orders_selected_all'] = True #FOR THE ORDERS SET THEM ALL SELECTED 
         # SET THE INITIAL PROGRESS STATE OF GRABBING THE ORDERS 
-        order_loader_obj['progress'] = {'current_order_id':orders[0]['id'],'grabbed_orders_len':0,'orders_to_grab_len':len(orders)}
+        order_loader_obj.state['progress'] = {'current_order_id':orders[0]['id'],'grabbed_orders_len':0,'orders_to_grab_len':len(orders)}
         order_loader_obj.save()
 
         # DECODE FROM STRING THE JSON OF THE VALUES OF THE FOLLOWING KEYS address_detail,customer_detail,cart_products
         for order in orders : 
             # SET THE CURRENT ORDER ID 
-            order_loader_obj['progress']['current_order_id'] = order['id']
+            order_loader_obj.state['progress']['current_order_id'] = order['id']
 
             # DECODE FROM STRING TO JSON 
             order['address_detail'] = json.loads(order['address_detail'])
@@ -85,10 +87,10 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
             order['selected'] = True 
 
             # APPEND THE ORDER 
-            order_loader_obj.state['orders'].apppend(order)
+            order_loader_obj.state['orders'].append(order)
 
             # INCREASE THE GRABBED ORDERS LEN
-            order_loader_obj['progress']['grabbed_orders_len'] += 1
+            order_loader_obj.state['progress']['grabbed_orders_len'] += 1
             
             order_loader_obj.save()
     else : 

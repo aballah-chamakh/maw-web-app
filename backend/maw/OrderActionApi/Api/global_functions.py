@@ -27,12 +27,16 @@ def is_it_for_loxbox(city,delegation,locality):
     return False 
 
 
-def split_orders_between_loxbox_and_afex(orders):
+def split_selected_orders_between_loxbox_and_afex(orders):
     # INIT LOXBOX AND AFEX ORDERS 
     loxbox_orders = []
     afex_orders = []
 
     for order in orders : 
+        
+        # CHECK IF THE ORDER IS SELECTED TO APPEND IT 
+        if not order['selected'] : 
+            continue
 
         # CHECK IF THE ORDER IS FOR LOXBOX OTHERWISE HE IS FOR AFEX 
         if order['carrier'] == 'LOXBOX' :

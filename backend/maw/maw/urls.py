@@ -17,6 +17,8 @@ from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import path
 from django.urls import include
+from django.conf import settings
+from django.conf.urls.static import static
 #import time 
 #from WebApi import urls as web_api_urls
 
@@ -25,4 +27,7 @@ from django.urls import include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/',include('WebApi.urls')),
+
 ]
+urlpatterns+=static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
+

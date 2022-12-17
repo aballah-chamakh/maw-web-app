@@ -15,7 +15,7 @@ def submit_orders_to_carriers(orders_loader_id,orders_submitter_id):
     from .Api.monitoring_API import add_loxbox_order_to_monitoring_phase
     from .Api.loxbox_API import submit_loxbox_orders
     from .Api.afex_API import submit_afex_orders
-    from .Api.global_functions import split_orders_between_loxbox_and_afex
+    from .Api.global_functions import split_selected_orders_between_loxbox_and_afex
 
     # GRAB THE ORDERS FROM THE ORDER LOADER 
     #order_loader_obj = OrderAction.objects.get(id=orders_loader_id)
@@ -37,13 +37,27 @@ def submit_orders_to_carriers(orders_loader_id,orders_submitter_id):
     #orders = order_loader_obj.state['orders']
 
     # SPLIT ORDERS BETWEEN AFEX AND LOXBOX
-    loxbox_orders,afex_orders = split_orders_between_loxbox_and_afex(orders)
+    loxbox_orders,afex_orders = split_selected_orders_between_loxbox_and_afex(orders)
 
     # SUBMIT THE ORDERS TO THEIR CARRIERS WHILE SAVING THE PROGRESS OF SUBMITTING THE ORDERS IN THE orders_submitter_obj
     orders_submitter_obj = OrderAction.objects.get(id=orders_submitter_id)
+
     if len(loxbox_orders) > 0 :  
+
+        # SET THE INITIAL DATA OF THE PROGRESS OF THE ORDERS SUBMITTER
+        orders_submitter_obj.state['progress'] = {'current_order_id' : loxbox_orders[0]['id'] ,'submitted_orders_len' :  0,'orders_to_be_submitted': len(loxbox_orders)+len(afex_orders)} 
+        orders_submitter_obj.save()
+
         submit_loxbox_orders(loxbox_orders,orders_submitter_obj,add_loxbox_order_to_monitoring_phase) 
+
     if len(afex_orders) > 0 : 
+
+        # SET THE INITIAL DATA OF THE PROGRESS OF THE ORDERS SUBMITTER
+        if not orders_submitter_obj.state.get('progress') :
+            orders_submitter_obj.state['progress'] = {'current_order_id' : afex_orders[0]['id'] ,'submitted_orders_len' :  0,'orders_to_be_submitted': len(afex_orders)} 
+        else : 
+            orders_submitter_obj.state['progress']['current_order_id'] = afex_orders[0]['id']
+
         submit_afex_orders(afex_orders,orders_submitter_obj)
 
     # SET THE FINISH STATE TO THE ORDERS SUBMITTER
@@ -75,9 +89,9 @@ def monitor_monitor_orders(orders_monitoror_id) :
 
     # MONITOR LOXBOX MONITOR ORDERS
     if len(lx_monitor_orders) > 0 : 
-    
-        orders_monitoror_obj.state['monitored_orders_len'] = 0 
-        orders_monitoror_obj.state['current_order_id'] = lx_monitor_orders[0].order_id
+        
+        # SET THE INITIAL DATA OF THE PROGRESS OF THE ORDERS MONITOROR
+        orders_monitoror_obj.state['progress'] = {'current_order_id' : lx_monitor_orders.first().order_id ,'submitted_orders_len' :  0,'orders_to_be_monitored': lx_monitor_orders.count()+fx_monitor_orders.count()} 
         orders_monitoror_obj.save()
 
         update_monitor_orders_state_from_loxbox(lx_monitor_orders,update_a_monitor_order_by_id,delete_a_monitor_order_by_id,orders_monitoror_obj=orders_monitoror_obj)
@@ -87,8 +101,15 @@ def monitor_monitor_orders(orders_monitoror_id) :
 
         if orders_monitoror_obj.state.get('monitored_orders_len') == None  : 
             orders_monitoror_obj.state['monitored_orders_len'] = 0 
+
         orders_monitoror_obj.state['current_order_id'] = fx_monitor_orders[0].order_id
         orders_monitoror_obj.save()
+
+        if not orders_monitoror_obj.state.get('progress') :
+            orders_monitoror_obj.state['progress'] = {'current_order_id' : fx_monitor_orders.first().order_id ,'submitted_orders_len' :  0,'orders_to_be_monitored': fx_monitor_orders.count()} 
+            orders_monitoror_obj.save()
+        else : 
+            orders_monitoror_obj.state['progress']['current_order_id'] = fx_monitor_orders.first().order_id 
 
         update_afex_monitor_orders_state_from_afex(fx_monitor_orders,orders_monitoror_obj)
 
