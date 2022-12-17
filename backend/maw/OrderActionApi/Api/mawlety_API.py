@@ -81,6 +81,8 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
 
             # DECODE FROM STRING TO JSON 
             order['address_detail'] = json.loads(order['address_detail'])
+            order['address_detail']['phone_mobile'] = order['address_detail']['phone_mobile'][:8]
+            
             order['customer_detail'] = json.loads(order['customer_detail'])
             order['customer_detail']['firstname'] = 'test'
             order['customer_detail']['lastname'] = 'test'

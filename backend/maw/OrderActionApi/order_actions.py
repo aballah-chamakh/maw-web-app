@@ -4,6 +4,9 @@
 
 # SUBMIT ORDERS TO CARRIERS 
 
+import time
+
+
 def submit_orders_to_carriers(orders_loader_id,orders_submitter_id):
     # LOAD THE DJANGO ENV
     import django
@@ -37,9 +40,9 @@ def submit_orders_to_carriers(orders_loader_id,orders_submitter_id):
 
     # GRAB THE ORDERS FROM THE ORDER LOADER 
     order_loader_obj = OrderAction.objects.get(id=orders_loader_id)
-    orders = order_loader_obj.state['orders'][:2]
+    orders = order_loader_obj.state['orders']
 
-    # SPLIT ORDERS BETWEEN AFEX AND LOXBOX
+    # SPLIT THE SELECTED ORDERS BETWEEN AFEX AND LOXBOX
     loxbox_orders,afex_orders = split_selected_orders_between_loxbox_and_afex(orders)
 
     # SUBMIT THE ORDERS TO THEIR CARRIERS WHILE SAVING THE PROGRESS OF SUBMITTING THE ORDERS IN THE orders_submitter_obj
@@ -57,9 +60,13 @@ def submit_orders_to_carriers(orders_loader_id,orders_submitter_id):
 
         # SET THE INITIAL DATA OF THE PROGRESS OF THE ORDERS SUBMITTER
         if not orders_submitter_obj.state.get('progress') :
+            
             orders_submitter_obj.state['progress'] = {'current_order_id' : afex_orders[0]['id'] ,'submitted_orders_len' :  0,'orders_to_be_submitted': len(afex_orders)} 
+            orders_submitter_obj.save()
+
         else : 
             orders_submitter_obj.state['progress']['current_order_id'] = afex_orders[0]['id']
+            orders_submitter_obj.save()
 
         submit_afex_orders(afex_orders,orders_submitter_obj)
 
