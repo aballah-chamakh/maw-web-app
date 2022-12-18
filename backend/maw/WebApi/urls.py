@@ -13,7 +13,6 @@ urlpatterns = [
     
 
     # SUBMITTING ORDERS URLS 
-    
     path('set_order_carrier', set_order_carrier),
     path('toggle_order_selection', toggle_order_selection),
     path('select_unselect_all_orders', select_unselect_all_orders),

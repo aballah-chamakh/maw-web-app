@@ -21,6 +21,18 @@ def launch_orders_monitoror(request):
 @api_view(['GET'])
 def monitor_orders_monitoror(request,id):
     orders_monitoror_obj =  OrderAction.objects.get(id=id)
+
+    # IF THE ORDER MONITOROR IS FINISHED RETURN WITH HIS STATE THE LIST OF MONITOR ORDERS AFTER MONITORING
+    if orders_monitoror_obj.state['state'] == "FINISHED" : 
+        lx_monitor_orders = LoxboxMonitorOrder.objects.all()
+        lx_ser = LoxboxMonitorOrderSerializer(lx_monitor_orders,many=True)
+
+        fx_monitor_orders = AfexMonitorOrder.objects.all()
+        fx_ser = AfexMonitorOrderSerializer(fx_monitor_orders,many=True)
+    
+        new_monitor_orders = lx_ser.data + fx_ser.data
+        orders_monitoror_obj.state['new_monitor_orders'] = new_monitor_orders
+
     return Response(orders_monitoror_obj.state,status=status.HTTP_200_OK)
 
 

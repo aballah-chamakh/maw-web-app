@@ -101,7 +101,8 @@ def monitor_monitor_orders(orders_monitoror_id) :
     if len(lx_monitor_orders) > 0 : 
         
         # SET THE INITIAL DATA OF THE PROGRESS OF THE ORDERS MONITOROR
-        orders_monitoror_obj.state['progress'] = {'current_order_id' : lx_monitor_orders.first().order_id ,'submitted_orders_len' :  0,'orders_to_be_monitored': lx_monitor_orders.count()+fx_monitor_orders.count()} 
+        orders_monitoror_obj.state['progress'] = {'current_order_id' : lx_monitor_orders.first().order_id ,'monitored_orders_len' :  0,'orders_to_be_monitored': lx_monitor_orders.count()+fx_monitor_orders.count()} 
+       
         orders_monitoror_obj.save()
 
         update_monitor_orders_state_from_loxbox(lx_monitor_orders,update_a_monitor_order_by_id,delete_a_monitor_order_by_id,orders_monitoror_obj=orders_monitoror_obj)
@@ -116,7 +117,7 @@ def monitor_monitor_orders(orders_monitoror_id) :
         orders_monitoror_obj.save()
 
         if not orders_monitoror_obj.state.get('progress') :
-            orders_monitoror_obj.state['progress'] = {'current_order_id' : fx_monitor_orders.first().order_id ,'submitted_orders_len' :  0,'orders_to_be_monitored': fx_monitor_orders.count()} 
+            orders_monitoror_obj.state['progress'] = {'current_order_id' : fx_monitor_orders.first().order_id ,'monitored_orders_len' :  0,'orders_to_be_monitored': fx_monitor_orders.count()} 
             orders_monitoror_obj.save()
         else : 
             orders_monitoror_obj.state['progress']['current_order_id'] = fx_monitor_orders.first().order_id 
