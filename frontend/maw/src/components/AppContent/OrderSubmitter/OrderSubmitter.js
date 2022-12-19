@@ -1,6 +1,6 @@
 import './OrderSubmitter.scss' ;
 import {useState,useEffect} from 'react' ;
-import { useLocation,useParams } from 'react-router-dom';
+import { useNavigate,useParams } from 'react-router-dom';
 import axios from 'axios' ;
 import { API_ENDPOINT } from '../../../globals';
 import LoadingPage from '../../CommonComponents/LoadingPage/LoadingPage';
@@ -10,12 +10,15 @@ import ServerLoading from '../../CommonComponents/ServerLoading/ServerLoading';
 
 const OrderSubmitter = (props)=>{
     const [isLoading,setIsLoading] = useState(true)
+    const [loadingActionTxt,setLoadingActionTxt] = useState('loading orders to submit')
+    const [submittingProgress,setSubmittingProgress] = useState(null)
     const [isServerLoading,setServerIsLoading] = useState(false)
     const [orders,setOrders] = useState([])
     const [ordersSelectedAll,setOrdersSelectedAll] = useState(false)
 
 
-    const location = useLocation()
+
+    const navigate = useNavigate()
     const {orders_loader_id}  = useParams()
 
     const order_keys = ['selected','id','first and last name','city','delegation','locality','carrier']
@@ -25,16 +28,15 @@ const OrderSubmitter = (props)=>{
     }
 
     useEffect(()=>{
-        // LOAD THE ORDERS FROM THE ORDER STATE OF THE NAVIGATION IF IT EXIST (COMMING FROM THE ORDER LOADER)
-        if(location.state){
-            let state = location.state
-            setOrders(state.orders)
-            setOrdersSelectedAll(state.orders_selected_all)
-            setIsLoading(false)
-        }else if(orders_loader_id) { // OTHERWISE LOAD THE ORDERS FROM THE SERVER (IN THE CASE OF THE LOADED ORDERS ARE NOT SUBMITTED AND NOT CANCELED YET )
+       // LOAD THE ORDERS FROM THE SERVER GIVEN THE orders_loader_id
+       if(orders_loader_id) { 
             axios.get(API_ENDPOINT+'/orders_loader/'+orders_loader_id+'/monitor').then(res=>{
                 // SET THE ORDERS AND THEIR SELECTED ALL STATE
                 let data = res.data
+                // REDIRECT TO LOADING ORDERS WHEN THE ORDER LOADER IS CANCELED
+                if (data.canceled){
+                    navigate('/load_orders')
+                }
                 let orders = data.orders  
                 let orders_selected_all = data.orders_selected_all
                 setOrders(orders)
@@ -76,7 +78,7 @@ const OrderSubmitter = (props)=>{
                 }
             })
         }
-    },[location,orders_loader_id])
+    },[orders_loader_id])
 
     const handleSelectChange = (e)=>{
         // SET SERVER LOADING 
@@ -84,8 +86,7 @@ const OrderSubmitter = (props)=>{
 
         // GRAB THE TARGETED CHECKBOX ELEMENT 
         let checkbox = e.target 
-        console.log("checked : "+checkbox.checked)
-        console.log("checked : "+checkbox.checked)
+
         // HANDLE SINGLE ORDER CHECKBOX
         if(checkbox.name.includes('order')){
             // EXTRACT ORDER ID FROM THE CHECKBOX NAME 
@@ -96,17 +97,9 @@ const OrderSubmitter = (props)=>{
             if (checkbox.checked){
                 additional_action = 'selected_all'
                 orders.every(order => {
-                    /*
-                    console.log(order_id)
-                    console.log(order.id)
-                    console.log(order.selected)*/
                     console.log(order.selected==false && order.id != order_id)
                     if(order.selected==false && order.id != order_id){
-                        console.log(order_id)
-                        console.log(order.id)
-                        console.log(order.selected)
                         additional_action = '' 
-                        console.log("breeeeeeeeeeeeeeeeeeak")
                         return false 
                     }
                     return true 
@@ -165,7 +158,70 @@ const OrderSubmitter = (props)=>{
 
         }
     }
+    const handleDropdownChange = (e)=>{
+        // SET SERVER LOADING 
+        setServerIsLoading(true)
+
+        let selectEl = e.target 
+        let order_id =  parseInt(selectEl.name.split('_')[2])
+        let carrier = selectEl.value 
+
+        // UPDATE THE CARRIER OF THE ORDER IN THE SERVER
+        axios.put(API_ENDPOINT+'/set_order_carrier',{orders_loader_id:orders_loader_id,order_id:order_id,carrier:carrier}).then(res=>{
+            
+            // UPDATE THE CARRIER OF THE ORDER IN THE FRONT
+            setOrders(prevOrders=>{
+                let newOrders = [...prevOrders]
+                newOrders.every(order => {
+                    if(order.id==order_id){
+                        order.carrier = carrier  ;
+                        return false 
+                    }
+                    return true 
+                })  
+                return newOrders ;
+            })
+
+            // SET SERVER LOADING 
+            setServerIsLoading(false)
+
+        })
+
+    }
     
+    const cancelOrderLoader = ()=>{
+        setServerIsLoading(true)
+        axios.put(API_ENDPOINT+'/orders_loader/'+orders_loader_id+'/cancel').then(res=>{
+           
+            navigate('/load_orders')
+        })
+    }
+
+    const submitOrders = ()=>{
+        setIsLoading(true)
+        setLoadingActionTxt('submitting orders')
+        axios.post(API_ENDPOINT+'/orders_submitter/launch',{orders_loader_id:orders_loader_id}).then((res)=>{
+            let orders_submitter_id = res.data.orders_submitter_id 
+            let req_is_done = true  
+            let intv = setInterval(()=>{
+                if(req_is_done){
+                    req_is_done = false 
+                    axios.get(API_ENDPOINT+'/orders_submitter/'+orders_submitter_id+'/monitor').then((res)=>{
+                        let data = res.data 
+                        if(data.progress){
+                            setSubmittingProgress(data.progress)
+                        }
+                        if(data.state=='FINISHED'){
+                            navigate('/load_orders',{state:{submitted_orders_len:data.progress.orders_to_be_submitted}})
+                            clearInterval(intv)
+                        }
+                        req_is_done = true  
+                    })
+                }
+
+            },5000)
+        })
+    }
 
     return(
 
@@ -174,16 +230,16 @@ const OrderSubmitter = (props)=>{
 
                 <p className='order-submitter-title'>{orders.length} order(s) to submit to carrier(s)</p>
 
-                <GenericTable  keys={order_keys} orders={orders} ordersSelectedAll={ordersSelectedAll} dropdown_keys={dropdown_keys} maxHeight='75vh' handleSelectChange={handleSelectChange}/>
+                <GenericTable  keys={order_keys} orders={orders} ordersSelectedAll={ordersSelectedAll} dropdown_keys={dropdown_keys} handleDropdownChange={handleDropdownChange} maxHeight='75vh' handleSelectChange={handleSelectChange}/>
                 
                 <div className='order-submitter-actions'>
-                    <button className='order-submitter-actions-submit'>submit to carriers</button>
-                    <button className='order-submitter-actions-cancel'>cancel</button>
+                    <button className='order-submitter-actions-submit' onClick={submitOrders}>submit to carriers</button>
+                    <button className='order-submitter-actions-cancel' onClick={cancelOrderLoader}>cancel</button>
                 </div>
                 <ServerLoading show={isServerLoading} />
             </div>
         :
-        <LoadingPage action_txt='loading orders to submit' />
+        <LoadingPage progress={submittingProgress} action_txt={loadingActionTxt} done_action_txt="were submitted"  />
     
     )
 }

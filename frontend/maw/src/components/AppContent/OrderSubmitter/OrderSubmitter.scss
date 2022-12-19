@@ -1,26 +1,12 @@
 @import '../../../vars.scss';
 
-@mixin action-btn($background-color) {
-    width: 100%;
-    background-color: $background-color;
-    color : $secondary_color ;
-    border: none ;
-    border-radius : 5px ;
-    padding : 8px 0px ;
-    font-size: 14px;
-    font-weight: 500;
-    text-transform: uppercase;
-  }
+
 .order-submitter{
     display: flex;
     flex-direction: column;
     width: 100%;
     &-title{
-        font-size: 20px;
-        text-transform: uppercase;
-        margin: 10px 0px; 
-        color: $third_color;
-        font-weight: 500;
+        @include table-title() ;
     }
     &-actions{
         display: flex;
@@ -28,11 +14,11 @@
         width: 100%;
         margin-top: 20px;
         &-submit{
-            @include action-btn($primary_color) ;
+            @include table-action-btn($dark_color) ;
             margin-bottom: 5px ;
         }
         &-cancel{
-            @include action-btn($third_color) ;
+            @include table-action-btn($third_color) ;
         }
     }
 

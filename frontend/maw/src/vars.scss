@@ -2,3 +2,24 @@ $primary_color : #276629 ;
 $dark_color : #0C4110 ;
 $secondary_color : white  ;
 $third_color : #3C3C3C ;
+
+
+@mixin table-action-btn($background-color) {
+    width: 100%;
+    background-color: $background-color;
+    color : $secondary_color ;
+    border: none ;
+    border-radius : 5px ;
+    padding : 8px 0px ;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+@mixin table-title() {
+font-size: 20px;
+text-transform: uppercase;
+margin: 10px 0px; 
+color: $third_color;
+font-weight: 500;
+}

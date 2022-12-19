@@ -5,7 +5,7 @@ const GenericTable = (props)=>{
     let address_keys = ['city','delegation','locality']
     return(
         <div style={{maxHeight:props.maxHeight,overflowY:'auto'}}>
-        <table class="table generic-table align-middle">
+        <table class="table generic-table align-middle justify-middle" style={{fontSize:props.fontSize, textAlign: props.textAlign}} >
             <thead >
                 <tr>
                     {props.keys.map(key=>{
@@ -32,7 +32,7 @@ const GenericTable = (props)=>{
                                     return <td>{order.address_detail[key]}</td>
                                 }else if (props.dropdown_keys && props.dropdown_keys[key]){
                                     return (<td>
-                                            <select class="form-select" value={order[key]}>
+                                            <select class="form-select" value={order[key]} name={'select_order_'+order.id} onChange={props.handleDropdownChange} >
                                                 {props.dropdown_keys[key].map(opt=><option value={opt} >{opt}</option>)}
                                             </select>
                                         </td>)

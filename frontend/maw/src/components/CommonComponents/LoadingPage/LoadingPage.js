@@ -37,7 +37,7 @@ const LoadingPage = (props)=>{
                         size={20}
                     />
                     <div class="lower-txt">
-                        <p>working in the order with id : </p>
+                        <p>working on the order with id : </p>
                         <p class="highlight highlight-bg">{props.progress.current_order_id}</p>
                     </div>
                 </>
@@ -49,7 +49,7 @@ const LoadingPage = (props)=>{
                     size={20}
                 />
                 <div class="lower-txt">
-                    <p>start {props.action_txt}</p>
+                    <p>{props.action_txt}</p>
                 </div>
             </>
 }

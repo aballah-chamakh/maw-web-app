@@ -4,19 +4,20 @@ import Modal from 'react-bootstrap/Modal';
 
 const GenericModal = (props)=>{
 
+
     return(
-        <Modal show={props.show} onHide={props.closeModal} animation={true} >
+        <Modal show={props.show} onHide={props.closeModal} animation={true} size={props.size} >
            <div className="generic-modal">
-                <div className="generic-modal-header">
+                <div className="generic-modal-header" style={{borderBottom: props.type != 'alert' ? 'none' :'1px solid'}}>
                         <p className="generic-modal-header-title"> {props.title}</p>
                         <i onClick={props.closeModal} className="fas fa-times"></i>
                 </div>
                 {props.type == 'alert' ? 
                     <div className="generic-modal-body">
                         {props.alertData.icon}
-                        <p>{props.alertData.msg}</p>
+                        <p>{props.orders_len} {props.alertData.msg}</p>
                     </div> 
-                : null }
+                : <div style={{marginBottom:'10px'}}>{props.result_table}</div> }
                 <div className="generic-modal-footer">
                         <button onClick={props.closeModal} >ok</button>
                 </div>

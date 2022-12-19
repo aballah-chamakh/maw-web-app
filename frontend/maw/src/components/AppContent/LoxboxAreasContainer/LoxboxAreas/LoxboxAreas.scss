@@ -1,0 +1,57 @@
+@import '../../../../vars.scss';
+
+.loxbox-areas{
+    display:flex ;
+    flex-direction : column ;
+    width: 100%;
+    &-header{
+        display:flex ;
+        justify-content: space-between;
+        align-items: center;
+        p{
+            @include table-title() ;
+        }
+        button{
+            background-color: $dark_color;
+            color: $secondary_color;
+            width: 15%;
+            border-radius: 5px;
+            padding: 3px 0px;
+            text-transform: uppercase;
+        }
+    }
+    &-body{
+        .loxbox-areas-item{
+            margin-bottom: 5px;
+
+            &-primary{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 5px 10px ;
+                background-color: #F5F5F5;
+                border-radius:10px ;
+                &-left{
+                    display: flex;
+                    align-items: center;
+                    p{
+                        margin-left: 20px;
+                    }
+                }
+                i{
+                    font-size: 18px;
+                    background-color: #E8E8E8;
+                    border-radius: 50%;
+                    padding: 7px;
+
+                }
+            }
+            &-sub{
+                display : none  ;
+                padding: 5px 15px;
+                border-left: 0.2px dashed;
+
+            }
+        }
+    }
+}

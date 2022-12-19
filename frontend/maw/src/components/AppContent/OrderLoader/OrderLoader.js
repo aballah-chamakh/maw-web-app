@@ -1,6 +1,6 @@
-import {useState} from 'react' ;
+import {useState,useEffect} from 'react' ;
 import axios from 'axios' ;
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useLocation } from 'react-router-dom';
 import './OrderLoader.scss' ;
 import OrderLoaderForm from './OrderLoaderForm/OrderLoaderForm';
 import LoadingPage from '../../CommonComponents/LoadingPage/LoadingPage';
@@ -9,15 +9,25 @@ import { API_ENDPOINT } from '../../../globals';
 
 const infoAlertData = {title:'info',icon : <i style={{color:'#101B82',fontSize:'45px'}} class="material-icons">info</i> , msg : 'no orders to load from mawlety.com given the number of days ago '} ;
 const restrictedAlertData = {title:'restricted',icon:<i style={{color:'#D81010'}} className='fas fa-minus-circle'></i>,msg:"it's restricted to load orders while the lowbox areas selector process is running"};
+const successAlertData = {title:'success',icon:<i style={{color:'#28C20F'}} className="fas fa-check-circle"></i>,msg:"order(s) were submitted"};
 
 const OrderLoader = (props)=>{
     const [isLoading,setIsLoading] = useState(false)
     const [progress,setProgress] = useState(null)
     const [isInfoModalShowed,setInfoModalShowed] = useState(false)
     const [isRestrictedModalShowed,setRestrictedModalShowed] = useState(false)
+    const [isSuccessModalShowed,setSuccessModalShowed] = useState(false)
     const [nbDaysAgo,setNbDaysAgo] = useState(0)
 
     const navigate = useNavigate()
+    const location = useLocation()
+
+
+    useEffect(()=>{
+        if(location.state && location.state.submitted_orders_len){
+            setSuccessModalShowed(true)
+        }
+    },[location])
 
     const closeInfoModal = ()=>{
         setInfoModalShowed(false) ;
@@ -33,6 +43,10 @@ const OrderLoader = (props)=>{
 
     const openRestrictedModal = ()=>{
         setRestrictedModalShowed(true) ;
+    }
+
+    const closeSuccessModal = ()=>{
+        setSuccessModalShowed(false)
     }
 
     const loadOrders = ()=>{
@@ -88,7 +102,7 @@ const OrderLoader = (props)=>{
                         if(data.orders.length == 0){
                             openInfoModal() ;
                         }else{
-                            navigate('/load_orders/'+orders_loader_id+'/submit_orders',{state:{'orders':data.orders,'orders_selected_all':data.orders_selected_all}})
+                            navigate('/load_orders/'+orders_loader_id+'/submit_orders')
 
                         }
                         console.log('clear interval')
@@ -115,8 +129,9 @@ const OrderLoader = (props)=>{
             <OrderLoaderForm nbDaysAgo={nbDaysAgo} setNbDaysAgo={setNbDaysAgo} loadOrders={loadOrders} /> 
             <GenericModal show={isInfoModalShowed}  type='alert' title={infoAlertData.title} alertData={infoAlertData} closeModal={closeInfoModal} />
             <GenericModal show={isRestrictedModalShowed}  type='alert' title={restrictedAlertData.title} alertData={restrictedAlertData} closeModal={closeRestrictedModal} />
+            <GenericModal show={isSuccessModalShowed}  type='alert' title={successAlertData.title} alertData={successAlertData} orders_len={location.state ? location.state.submitted_orders_len : 0 } closeModal={closeSuccessModal} />
         </div> : 
-        <LoadingPage progress={progress} action_txt="loading orders" done_action_txt="were submitted"  />
+        <LoadingPage progress={progress} action_txt="loading orders" done_action_txt="were loaded"  />
 
     )
 }

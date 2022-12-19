@@ -1,0 +1,19 @@
+@import '../../../vars.scss';
+
+
+.order-monitoror{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    &-title{
+        @include table-title() ;
+    }
+
+    &-monitor-btn{
+        @include table-action-btn($dark_color) ;
+        margin-bottom: 5px ;
+    }
+    
+
+}
