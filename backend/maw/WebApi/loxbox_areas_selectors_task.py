@@ -32,31 +32,31 @@ def select_unselect_all_loxbox_areas(is_select=True):
     print("END ++++++++++++++++++++++++++++++")
     # SET lx_cities_objEGATION selected_all TO TRUE
     lx_cities_obj = LoxboxCities.objects.first()
-    lx_cities_obj.selected_all = is_select  
+    lx_cities_obj.selected = is_select  
     processed_items_cnt += 1 
     lx_cities_obj.save()
 
     # GRAB THE CITIES OF lx_cities_obj
-    cities_qs = lx_cities_obj.city_set.all()
+    cities_qs = lx_cities_obj.city_set.filter(selected=not is_select)
     
     for city_obj in cities_qs : 
         # SET THE CURRENT CITY selected_all TO TRUE AND LOG THE PROGRESS 
-        city_obj.selected_all = is_select 
+        city_obj.selected = is_select 
         city_obj.save()
         processed_items_cnt += 1 
         log_loxbox_areas_selector_process_progress(LoxboxAreasSelectorProcess,processed_items_cnt)
 
         # GRAB THE DELEGATIONS OF THE CURRENT CITY
-        delgs_qs = city_obj.delegation_set.all()
+        delgs_qs = city_obj.delegation_set.filter(selected=not is_select)
         for delg_obj in delgs_qs : 
             # SET THE CURRENT DELEGATION selected_all TO TRUE AND LOG THE PROGRESS  
-            delg_obj.selected_all = is_select
+            delg_obj.selected = is_select
             delg_obj.save()
             processed_items_cnt += 1 
             log_loxbox_areas_selector_process_progress(LoxboxAreasSelectorProcess,processed_items_cnt)
 
             # GRAB THE LOCALITIES OF THE CURRENT DELEGATION
-            locs_qs = delg_obj.locality_set.all()
+            locs_qs = delg_obj.locality_set.filter(selected=not is_select)
             for loc_obj in locs_qs : 
                 # SET THE CURRENT DELEGATION selected_all TO TRUE AND LOG THE PROGRESS  
                 loc_obj.selected = is_select 
@@ -73,7 +73,7 @@ def select_unselect_all_loxbox_areas(is_select=True):
 def select_unselect_all_a_city(city_id,is_select=True):
     # LOAD THE DJANGO ENV
     import django
-    import os 
+    import os  
     os.environ['DJANGO_SETTINGS_MODULE'] = 'maw.settings'
     django.setup()
 
@@ -86,22 +86,22 @@ def select_unselect_all_a_city(city_id,is_select=True):
     init_the_loxbox_selector_process(LoxboxAreasSelectorProcess,city_obj.get_items_to_process_cnt())
 
     # SET city_obj selected_all TO TRUE 
-    city_obj.selected_all = is_select
+    city_obj.selected = is_select
     city_obj.save()
     processed_items_cnt += 1 
 
     # GRAB THE DELEGATIONS OF city_obj
-    delgs_qs = city_obj.delegation_set.all()
+    delgs_qs = city_obj.delegation_set.filter(selected=not is_select)
 
     for delg_obj in delgs_qs : 
         # SET THE CURRENT DELEGATION selected_all TO TRUE AND LOG THE PROGRESS  
-        delg_obj.selected_all = is_select
+        delg_obj.selected = is_select
         delg_obj.save()
         processed_items_cnt += 1 
         log_loxbox_areas_selector_process_progress(LoxboxAreasSelectorProcess,processed_items_cnt)
 
         # GRAB THE LOCALITIES OF THE CURRENT DELEGATION
-        locs_qs = delg_obj.locality_set.all()
+        locs_qs = delg_obj.locality_set.filter(selected=not is_select)
         for loc_obj in locs_qs : 
             # SET THE CURRENT DELEGATION selected_all TO TRUE AND LOG THE PROGRESS  
             loc_obj.selected = is_select 
@@ -131,12 +131,12 @@ def select_unselect_all_a_delegation(delegation_id,is_select=True):
     init_the_loxbox_selector_process(LoxboxAreasSelectorProcess,delegation_obj.get_items_to_process_cnt())
 
     # SET delegation_obj selected_all TO TRUE 
-    delegation_obj.selected_all = is_select
+    delegation_obj.selected = is_select
     delegation_obj.save()
     processed_items_cnt += 1 
 
     # GRAB THE LOCALITIES OF THE CURRENT delegation_obj
-    locs_qs = delegation_obj.locality_set.all()
+    locs_qs = delegation_obj.locality_set.filter(selected=not is_select)
     for loc_obj in locs_qs : 
         # SET THE CURRENT DELEGATION selected_all TO TRUE AND LOG THE PROGRESS  
         loc_obj.selected = is_select 

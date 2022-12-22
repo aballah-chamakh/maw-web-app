@@ -36,13 +36,13 @@ class LoxboxAreasSelectorProcess(models.Model):
 
 class LoxboxCities(models.Model):
     ALL_ELEMENTS_TO_BE_SELECTED_OR_UNSELECTED_COUNT = 5195 # CITIES COUNT + DELEGATIONS COUNT + LOCALITIES_COUNT + 1 OF THE LOXBOW CITIES OBJ (THE CONTAINER OF ALL OF THESE) 
-    selected_all = models.BooleanField(default=False)
+    selected = models.BooleanField(default=False)
     
 
 class City(models.Model):
     loxbox_cities = models.ForeignKey(LoxboxCities,on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    selected_all = models.BooleanField(default=False)
+    selected = models.BooleanField(default=False)
 
 
     def get_items_to_process_cnt(self): 
@@ -56,7 +56,7 @@ class City(models.Model):
 class Delegation(models.Model):
     city = models.ForeignKey(City,on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    selected_all = models.BooleanField(default=False)
+    selected = models.BooleanField(default=False)
 
     def get_items_to_process_cnt(self): 
         return self.locality_set.all().count()

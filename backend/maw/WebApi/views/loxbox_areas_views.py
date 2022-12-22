@@ -49,11 +49,11 @@ def city_select_unselect_all(request,city_id,select_type):
 
     if additional_action_beyond_the_main_action == 'loxbox_areas_select_all' : 
         lx_cities = LoxboxCities.objects.first()
-        lx_cities.selected_all = True 
+        lx_cities.selected = True 
         lx_cities.save()
     elif additional_action_beyond_the_main_action == 'loxbox_areas_disable_select_all' : 
         lx_cities = LoxboxCities.objects.first()
-        lx_cities.selected_all = False 
+        lx_cities.selected = False 
         lx_cities.save()
 
     p = Process(target=select_unselect_all_a_city,args=(city_id,),kwargs={'is_select': True if select_type=='select_all' else False})  
@@ -67,25 +67,25 @@ def delegation_select_unselect_all(request,delegation_id,select_type):
     match additional_action_beyond_the_main_action : 
         case 'loxbox_areas_select_all' :
             lx_cities = LoxboxCities.objects.first()
-            lx_cities.selected_all = True 
+            lx_cities.selected = True 
             lx_cities.save() 
             city_obj = Delegation.objects.get(id=delegation_id).city
-            city_obj.selected_all = True 
+            city_obj.selected = True 
             city_obj.save()
         case 'loxbox_areas_disable_select_all' :
             lx_cities = LoxboxCities.objects.first()
-            lx_cities.selected_all = False 
+            lx_cities.selected = False 
             lx_cities.save()
             city_obj = Delegation.objects.get(id=delegation_id).city
-            city_obj.selected_all = False 
+            city_obj.selected = False 
             city_obj.save()
         case 'city_select_all' :
             city_obj = Delegation.objects.get(id=delegation_id).city
-            city_obj.selected_all = True 
+            city_obj.selected = True 
             city_obj.save()
         case 'city_disable_select_all' :
             city_obj = Delegation.objects.get(id=delegation_id).city
-            city_obj.selected_all = False 
+            city_obj.selected = False 
             city_obj.save()
     p = Process(target=select_unselect_all_a_delegation,args=(delegation_id,),kwargs={'is_select': True if select_type=='select_all' else False})  
     p.start()
@@ -106,41 +106,41 @@ def locality_select_unselect(request,locality_id,select_type):
     match additional_action_beyond_the_main_action : 
         case 'loxbox_areas_select_all' :
             lx_cities = LoxboxCities.objects.first()
-            lx_cities.selected_all = True 
+            lx_cities.selected = True 
             lx_cities.save() 
             delegation_obj = loc_obj.delegation
-            delegation_obj.selected_all = True 
+            delegation_obj.selected = True 
             delegation_obj.save()
-            delegation_obj.city.selected_all = True 
+            delegation_obj.city.selected = True 
             delegation_obj.city.save()
         case 'loxbox_areas_disable_select_all' :
             lx_cities = LoxboxCities.objects.first()
-            lx_cities.selected_all = False 
+            lx_cities.selected = False 
             lx_cities.save() 
             delegation_obj = loc_obj.delegation
-            delegation_obj.selected_all = False 
+            delegation_obj.selected = False 
             delegation_obj.save()
-            delegation_obj.city.selected_all = False 
+            delegation_obj.city.selected = False 
             delegation_obj.city.save()
         case 'city_select_all' :
             delegation_obj = loc_obj.delegation
-            delegation_obj.selected_all = True 
+            delegation_obj.selected = True 
             delegation_obj.save()
-            delegation_obj.city.selected_all = True 
+            delegation_obj.city.selected = True 
             delegation_obj.city.save()
         case 'city_disable_select_all' :
             delegation_obj = loc_obj.delegation
-            delegation_obj.selected_all = False 
+            delegation_obj.selected = False 
             delegation_obj.save()
-            delegation_obj.city.selected_all = False 
+            delegation_obj.city.selected = False 
             delegation_obj.city.save()
         case 'delegation_select_all' :
             delegation_obj = loc_obj.delegation
-            delegation_obj.selected_all = True 
+            delegation_obj.selected = True 
             delegation_obj.save()
         case 'delegation_disable_select_all' :
             delegation_obj = loc_obj.delegation
-            delegation_obj.selected_all = False 
+            delegation_obj.selected = False 
             delegation_obj.save()
 
     loxbox_areas_selector_process_obj = LoxboxAreasSelectorProcess.objects.first()

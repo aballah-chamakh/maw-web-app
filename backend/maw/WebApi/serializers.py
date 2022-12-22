@@ -28,7 +28,7 @@ class LoxboxCitiesSerializer(serializers.ModelSerializer):
     cities = serializers.SerializerMethodField()
     class Meta: 
         model = LoxboxCities
-        fields = ['id','selected_all','cities']
+        fields = ['id','selected','cities']
 
     def get_cities(self,lx_cities_obj): 
         ser = CitySerializer(lx_cities_obj.city_set.all(),many=True)
@@ -39,7 +39,7 @@ class CitySerializer(serializers.ModelSerializer):
 
     class Meta: 
         model = City
-        fields = ['id','name','selected_all','delegations']
+        fields = ['id','name','selected','delegations']
 
     def get_delegations(self,city_obj): 
         ser = DelegationSerializer(city_obj.delegation_set.all(),many=True)
@@ -50,7 +50,7 @@ class DelegationSerializer(serializers.ModelSerializer):
 
     class Meta: 
         model = Delegation
-        fields = ['id','name','selected_all','localities']
+        fields = ['id','name','selected','localities']
 
     def get_localities(self,delg_obj): 
         ser = LocalitySerializer(delg_obj.locality_set.all(),many=True)
