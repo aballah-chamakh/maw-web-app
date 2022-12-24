@@ -19,14 +19,16 @@ urlpatterns = [
     path('orders_submitter/launch', launch_orders_submitter),
     path('orders_submitter/<int:id>/monitor', monitor_orders_submitter),
     
-    # MONITORING ORDERS URLS
+    # MONITORING ORDERS URLS²
     path('monitor_orders', monitor_orders_list),
     path('orders_monitoror/launch', launch_orders_monitoror),
     path('orders_monitoror/<int:id>/monitor', monitor_orders_monitoror),
 
     #LOXBOX AREAS URLS 
+    
     path('monitor_loxbox_areas_selector_process', monitor_loxbox_areas_selector_process),
     path('loxbox_areas', loxbox_areas_list),
+    path('launch_loxbox_areas_select_or_deselect',loxbox_areas_select_or_deselect),
     path('loxbox_areas/<str:select_type>', loxbox_areas_select_unselect_all),
     path('city/<int:city_id>/<str:select_type>', city_select_unselect_all),
     path('delegation/<int:delegation_id>/<str:select_type>', delegation_select_unselect_all),

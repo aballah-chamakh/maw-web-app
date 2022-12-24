@@ -9,7 +9,7 @@ import psutil
 import os 
 from WebApi.models import LoxboxCities,LoxboxAreasSelectorProcess,Delegation,Locality
 from WebApi.serializers import LoxboxCitiesSerializer,LoxboxAreasSelectorProcessSerializer
-from WebApi.loxbox_areas_selectors_task import select_unselect_all_loxbox_areas,select_unselect_all_a_city,select_unselect_all_a_delegation
+from WebApi.loxbox_areas_selectors_task import handle_loxbox_areas_long_select_or_deselect_task,get_address_level_element,handle_additional_action,select_unselect_all_loxbox_areas,select_unselect_all_a_city,select_unselect_all_a_delegation
 import time 
 
 
@@ -23,28 +23,95 @@ def monitor_loxbox_areas_selector_process(request):
 def loxbox_areas_list(request):
     loxbox_areas_selector_process_obj = LoxboxAreasSelectorProcess.objects.first()
     if loxbox_areas_selector_process_obj.is_working  :
-        return Response(loxbox_areas_selector_process_obj.progress ,status = status.HTTP_200_OK)
+        ser = LoxboxAreasSelectorProcessSerializer(loxbox_areas_selector_process_obj)
+        return Response(ser.data ,status = status.HTTP_200_OK)
     lx_cities_obj = LoxboxCities.objects.first()
     ser = LoxboxCitiesSerializer(lx_cities_obj,many=False)
     return Response(ser.data ,status = status.HTTP_200_OK)
 
 
-def init_loxbox_areas_actions() : 
+def init_loxbox_areas_selector_process() : 
     loxbox_areas_selector_process_obj = LoxboxAreasSelectorProcess.objects.first()
     loxbox_areas_selector_process_obj.is_working = True 
     loxbox_areas_selector_process_obj.progress = {}
     loxbox_areas_selector_process_obj.save()
+    return loxbox_areas_selector_process_obj
+
 
 @api_view(['PUT'])
+def loxbox_areas_select_or_deselect(request):
+
+    # GRAB THE REQUEST DATA 
+    identifier = request.data.get('identifier')
+    is_select = request.data.get('is_select')
+    additional_action = request.data.get('additional_action')
+    print(additional_action)
+
+    # INIT LOXBOX AREAS SELECTOR PROCESS 
+    loxbox_areas_selector_process_obj = init_loxbox_areas_selector_process()
+    
+    # SPLIT THE IDENTIFIER 
+    splitted_identifier = identifier.split('_')
+
+    # HANDLE THE LOCALITY WITHOUT LAUNCHING PROCESS BECAUSE WILL NOT TAKE TIME
+    if len(splitted_identifier)  == 4  : 
+        # GRAB THE ROOT ADDRESS LEVEL ELEMENT
+        root_address_level_element = LoxboxCities.objects.first()
+
+        # SELECT OR DESELECT THE LOCALITY
+        locality_obj = get_address_level_element(root_address_level_element,splitted_identifier)
+        locality_obj.selected = is_select
+        locality_obj.save()
+
+        # HANDLE ADDITIONAL ACTION
+        if additional_action :
+            handle_additional_action(root_address_level_element,splitted_identifier,additional_action,is_select)
+        
+        # FINISH THE THE LOXBOX SELECTOR PROCESS  
+        loxbox_areas_selector_process_obj.is_working = False 
+        loxbox_areas_selector_process_obj.save()
+        
+    else : # FOR THE OTHER ADDRESS LEVELS ABOVE THE LOCALITY LAUNCH A PROCESS
+        # LAUNCH THE THE LOXBOX AREAS SELECTOR PROCESS
+        p = Process(target=handle_loxbox_areas_long_select_or_deselect_task,args=(splitted_identifier,is_select,additional_action,))  
+        p.start()
+
+
+    return Response({'msg':f'THE LOBOX AREAS LONG SELECT OR DESELECT PROCESS WAS LAUNCHED'},status = status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@api_view(['PUT']) 
 def loxbox_areas_select_unselect_all(request,select_type):
-    init_loxbox_areas_actions()
+    init_loxbox_areas_selector_process()
     p = Process(target=select_unselect_all_loxbox_areas,kwargs={'is_select': True if select_type=='select_all' else False})  
     p.start()
     return Response({'msg':f'loxbox areas {select_type} was launched'},status = status.HTTP_200_OK)
 
 @api_view(['PUT'])
 def city_select_unselect_all(request,city_id,select_type):
-    init_loxbox_areas_actions()
+    init_loxbox_areas_selector_process()
     additional_action_beyond_the_main_action = request.data.get('additional_action_beyond_the_main_action')
 
     if additional_action_beyond_the_main_action == 'loxbox_areas_select_all' : 
@@ -62,7 +129,7 @@ def city_select_unselect_all(request,city_id,select_type):
 
 @api_view(['PUT'])
 def delegation_select_unselect_all(request,delegation_id,select_type):
-    init_loxbox_areas_actions()
+    init_loxbox_areas_selector_process()
     additional_action_beyond_the_main_action = request.data.get('additional_action_beyond_the_main_action')
     match additional_action_beyond_the_main_action : 
         case 'loxbox_areas_select_all' :
@@ -94,7 +161,7 @@ def delegation_select_unselect_all(request,delegation_id,select_type):
 
 @api_view(['PUT'])
 def locality_select_unselect(request,locality_id,select_type):
-    init_loxbox_areas_actions()
+    init_loxbox_areas_selector_process()
 
     #SET selectected/unselected FOR THE loc_obj
     loc_obj = Locality.objects.get(id=locality_id)

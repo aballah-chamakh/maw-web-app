@@ -56,3 +56,12 @@ for filtered_state_card in filtered_state_cards :
             if len(loxbox_monitor_orders) == 0 : 
                 return 
 """
+
+x = {"aa":{"aa":'hhhhhhh'}}
+print(id(x))
+def set_x(a) : 
+    a = a['aa']
+
+
+set_x(x)
+print(x)

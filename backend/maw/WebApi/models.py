@@ -38,19 +38,37 @@ class LoxboxCities(models.Model):
     ALL_ELEMENTS_TO_BE_SELECTED_OR_UNSELECTED_COUNT = 5195 # CITIES COUNT + DELEGATIONS COUNT + LOCALITIES_COUNT + 1 OF THE LOXBOW CITIES OBJ (THE CONTAINER OF ALL OF THESE) 
     selected = models.BooleanField(default=False)
     
+    def get_sub_address_level_elements(self) : 
+         return self.city_set.all()
+    
+    def get_items_to_process_cnt(self,is_select):
+        city_delg_loc_count = 0 
+        city_qs = self.city_set.filter(selected=not is_select)
+        city_delg_loc_count += city_qs.count()
+
+        for city in city_qs : 
+            delg_qs = city.delegation_set.filter(selected=not is_select)
+            city_delg_loc_count += delg_qs.count()
+
+            for delg in delg_qs : 
+                city_delg_loc_count += delg.locality_set.filter(selected=not is_select).count()
+
+        return city_delg_loc_count + 1 # CITIES COUNT + DELEGATIONS COUNT + LOCALITIES_COUNT + 1 OF THE LOXBOW CITIES OBJ (THE CONTAINER OF ALL OF THESE) 
 
 class City(models.Model):
     loxbox_cities = models.ForeignKey(LoxboxCities,on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     selected = models.BooleanField(default=False)
 
+    def get_sub_address_level_elements(self) : 
+         return self.delegation_set.all()
 
-    def get_items_to_process_cnt(self): 
-        delegations_qs = self.delegation_set.all()
+    def get_items_to_process_cnt(self,is_select): 
+        delegations_qs = self.delegation_set.filter(selected=not is_select)
         delegations_count = delegations_qs.count()
         locs_count = 0 
         for delg_obj in delegations_qs : 
-            locs_count += delg_obj.locality_set.all().count()
+            locs_count += delg_obj.locality_set.filter(selected=not is_select).count()
         return delegations_count + locs_count + 1
 
 class Delegation(models.Model):
@@ -58,8 +76,11 @@ class Delegation(models.Model):
     name = models.CharField(max_length=255)
     selected = models.BooleanField(default=False)
 
-    def get_items_to_process_cnt(self): 
-        return self.locality_set.all().count()
+    def get_sub_address_level_elements(self) : 
+         return self.locality_set.all()
+
+    def get_items_to_process_cnt(self,is_select): 
+        return self.locality_set.filter(selected=not is_select).count()
 
 class Locality(models.Model):
     delegation = models.ForeignKey(Delegation,on_delete=models.CASCADE)
