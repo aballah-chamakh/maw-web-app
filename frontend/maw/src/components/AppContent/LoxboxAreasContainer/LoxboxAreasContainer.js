@@ -1,25 +1,56 @@
 import './LoxboxAreasContainer.scss' ;
 import { useState,useEffect } from 'react';
 import axios from 'axios';
+import $ from 'jquery' ;
 import { API_ENDPOINT } from '../../../globals';
 import LoadingPage from '../../CommonComponents/LoadingPage/LoadingPage';
 import LoxboxAreas from './LoxboxAreas/LoxboxAreas';
 import ServerLoading from '../../CommonComponents/ServerLoading/ServerLoading';
 
+
 const LoxboxAreasContainer = ()=>{
     const [loxboxAreas,setLoxboxAreas] = useState({})
+
+    const [loadingActionTxt,setLoadingActionTxt] = useState('loading loxbox areas')
+
     const [lxSelectorProgress,setLxSelectorProgress] = useState(null)
     const [isLoading,setIsLoading] = useState(true)
     const [isServerLoading,setServerIsLoading] = useState(false)
+
     useEffect(()=>{
+        // GRAB THE LOBOX AREAS ADDRESS LEVELS 
         axios.get(API_ENDPOINT+'/loxbox_areas').then((res)=>{
-            
             let data = res.data 
+            // CHECK IF THE SELECTOR PROCESS IS WORKING , IF SO 
             if(data.hasOwnProperty('is_working')){
+                // SET THE PROGRESS OF THE SELECTOR 
                 setLxSelectorProgress(data.progress)
-            }            
-           
-            setLoxboxAreas(res.data)
+
+                // SET THE LOADING ACTION TEXT RELATED TO THE SELECTOR PROCESS
+                setLoadingActionTxt('selecting or deselecting address levels')
+
+                // KEEP MONIROTING THE SELECTOR PROCESS UNTIL HE FINISH 
+                const intv = setInterval(()=>{
+
+                    axios.get(API_ENDPOINT+"/loxbox_areas").then(res=>{
+                        let data = res.data 
+                        // HANDLE THE FINISH OF THE SELECTOR PROCESS 
+                        if(!data.hasOwnProperty('is_working')){
+                            setIsLoading(false)
+                            setLoxboxAreas(data)
+                            clearInterval(intv)
+                        }else{
+                            // UPDATE THE PROGRESS DATA 
+                            setLxSelectorProgress(data.progress)
+                        }
+                    })
+    
+                },5000)
+
+            }else{ // OTHERWISE DISABEL THE LOADING PAGE AND SET LOBOX AREAS ADDRESS LEVELS 
+                setIsLoading(false)
+                setLoxboxAreas(res.data)
+            }         
         })
     },[])
 
@@ -218,7 +249,6 @@ const LoxboxAreasContainer = ()=>{
                         }
                         setLoxboxAreas(newLoxboxAreas)
                         clearInterval(intv)
-                        //window.location.reload()
                     }
                 })
 
@@ -234,7 +264,7 @@ const LoxboxAreasContainer = ()=>{
             <LoxboxAreas handleSelectChange={handleSelectChange}  current_address_level_data={loxboxAreas} current_address_level_idx={loxboxAreas.id} /> 
             <ServerLoading show={isServerLoading}/>
         </div>  : 
-        <LoadingPage  action_txt='loading loxbox areas' />
+        <LoadingPage  action_txt={loadingActionTxt} progress={lxSelectorProgress} items_name='address levels' />
 
     )
 }

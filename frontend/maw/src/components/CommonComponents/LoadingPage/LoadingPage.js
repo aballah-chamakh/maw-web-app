@@ -31,14 +31,20 @@ const LoadingPage = (props)=>{
         <div className="loading-page-container">
             {props.progress ? 
                 <>
-                    <p class="upper-txt"><span class="highlight">{done_orders} / {orders_to_be_done}</span> orders {props.done_action_txt}</p>
+                    <p class="upper-txt"><span class="highlight">{done_orders} / {orders_to_be_done}</span> {props.items_name ? props.items_name : 'orders' } {props.done_action_txt}</p>
                     <GridLoader 
                         color="#276629"
                         size={20}
                     />
                     <div class="lower-txt">
-                        <p>working on the order with id : </p>
-                        <p class="highlight highlight-bg">{props.progress.current_order_id}</p>
+                        {props.progress.current_order_id ? 
+                            <>
+                                <p>working on the order with id : </p>
+                                <p class="highlight highlight-bg">{props.progress.current_order_id}</p>
+                            </>:
+                            <p>{props.action_txt}</p>
+                        }
+
                     </div>
                 </>
 

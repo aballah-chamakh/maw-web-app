@@ -13,16 +13,101 @@ const LoxboxAreas = (props)=>{
         let iconEl = e.target 
         let primaryEL = document.querySelector('#'+id.replace('sub','primary'))
         let subEl = $('#'+id)
+        // OPEN THE SUB ELEMENT
         if(subEl.css('display') == 'none'){
             iconEl.className = up_classes_icon
-            subEl.slideDown(100)
+            subEl.slideDown(20)
             primaryEL.style.borderRadius = "10px 10px 0px 0px"
-        }else{
+        }else{ // CLOSE THE SUBELEMENT 
             iconEl.className = down_classes_icon
-            subEl.slideUp(100)
+            subEl.slideUp(20)
             primaryEL.style.borderRadius = "10px"
         }        
     }
+
+    const openElement = (current_element,iconEl) => {
+        // OPEN THE SUB ELEMENT
+        current_element.css('display','block')
+        //slideDown(100,
+        //'linear',()=>{
+         //   alert('done done ')
+         //   console.log($('#'+current_identifier).css('top'))
+        //})
+
+        // SET THE BORDER RADIUS OF THE PRIMARY ELEMENT
+        $('#'+current_element.attr('id').replace('sub','primary')).css('borderRadius', "10px 10px 0px 0px")
+
+        // SET THE Up ARROW ICON 
+        iconEl.className = up_classes_icon
+    } 
+
+    const closeElement = (current_element,iconEl) => {
+        // CLOSE THE SUB ELEMENT
+        current_element.css('display','none')
+        
+        //slideUp(100,'linear',()=>{
+         //   alert('up up ')
+        //})
+
+        // RESET THE BORDER RADIUS OF THE PRIMARY ELEMENT
+        $('#'+current_element.attr('id').replace('sub','primary')).css('borderRadius',"10px")
+
+        // SET THE DOWN ARROW ICON 
+        iconEl.className = down_classes_icon
+    } 
+
+
+
+    const close_opened_same_identifier_address_level_recursively = (identifier,iconEl) =>{
+        let splitted_identifier = identifier.split('_')
+        let last_idx_len = identifier.split('_').at(-1).length 
+        let pre_identifier_address_level = identifier.slice(0,-last_idx_len)
+        let idx = 0 
+        let current_element = $('#'+pre_identifier_address_level + idx)
+
+        while(current_element.length>0){
+
+            if(current_element.css('display') != 'none'){
+
+                // IN THE CITY ADDRESS LEVEL CHECK IF HE HAVE AN OPENED DELEGATION THEN CLOSE IT 
+                if(splitted_identifier.length == 3){
+                    close_opened_same_identifier_address_level_recursively(identifier+'_0',iconEl)
+                }
+
+                closeElement(current_element,iconEl)
+                break 
+            }
+            idx += 1 
+            current_element = $("#"+pre_identifier_address_level + idx)
+        }
+    }
+
+    const toggleElement = (e,identifier)=>{
+        console.log('top before : '+$('#'+identifier).position().top)
+        let iconEl = e.target 
+        let splitted_identifier = identifier.split('_')
+        let current_element = $('#'+identifier)
+        let main_action = current_element.css('display') == 'none' ? 'open' : 'close'
+        if (main_action == 'close'){
+            let address_level = splitted_identifier.length == 3 ?  'city' : 'delegation'
+            if(address_level == 'city'){
+                // CHECK IF THE CITY HAVE AN OPENED DELEGATION THEN CLOSE IT 
+                close_opened_same_identifier_address_level_recursively(identifier+'_0',iconEl)
+                // CLOSE THE CITY
+                closeElement(current_element,iconEl)
+            }else{
+                // CLOSE THE DELEGATION
+                closeElement(current_element,iconEl)
+            }
+        }else{
+            
+            close_opened_same_identifier_address_level_recursively(identifier,iconEl)
+            openElement(current_element,iconEl)
+            window.scrollTo(0,$('#'+identifier.replace('sub','primary')).position().top)
+        }
+
+    }
+
 
 
 
@@ -80,7 +165,7 @@ const LoxboxAreas = (props)=>{
                                 <p>{sub_address_level_data.name}</p>
                             </div>
                             {address_level != 'localities' ? 
-                            <i className='far fa-arrow-alt-circle-down' onClick={(e)=>{toggleDropdown(e,get_identifier('sub',sub_address_lebel_idx))}}></i>
+                            <i className='far fa-arrow-alt-circle-down' onClick={(e)=>{toggleElement(e,get_identifier('sub',sub_address_lebel_idx))}}></i>
                             :null}
                         </div>
                         {address_level != 'localities' ? 

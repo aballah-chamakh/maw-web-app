@@ -10,16 +10,16 @@ def is_it_for_loxbox(city,delegation,locality):
     
     #CHECK IF THE CITY OF THE ORDER IS SELECTED WHICH MEAN THE LOCALITY IS AUTO SELECTED
     city_obj = City.objects.filter(name=city).first()
-    if city_obj.selected_all : 
+    if city_obj.selected : 
         return True 
 
     #CHECK IF THE DELEGATION OF THE ORDER IS SELECTED WHICH MEAN THE LOCALITY IS AUTO SELECTED
-    delegation_obj = city_obj.delegation_set.all().filter(name=delegation).first()
-    if delegation_obj.selected_all : 
+    delegation_obj = city_obj.delegation_set.filter(name=delegation).first()
+    if delegation_obj.selected : 
         return True 
 
     #CHECK IF THE LOCALITY OF THE ORDER IS SELECTED 
-    locality_obj  = delegation_obj.locality_set.all().filter(name=locality).first()
+    locality_obj  = delegation_obj.locality_set.filter(name=locality).first()
     if locality_obj.selected : 
         return True 
 
