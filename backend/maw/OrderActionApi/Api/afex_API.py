@@ -8,11 +8,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 import json 
 import time
-from .credentials import AFEX_LOGIN_CREDENTIALS
+import requests 
+import random
+from .credentials import AFEX_LOGIN_CREDENTIALS,AFEX_API_CREDENTIALS
 from .custom_wait import input_has_no_empty_value
 from .mawlety_API import update_order_state_in_mawlety 
 from .monitoring_API import delete_a_monitor_order_by_id, update_a_monitor_order_by_id,add_afex_order_to_monitoring_phase
-from .global_variables import AFEX_LOGIN_URL, AFEX_MONITOR_ORDER_TABLE_NAME, DELETE_MONITOR_ORDER_STATES, MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID
+from .global_variables import AFEX_LOGIN_URL, AFEX_MONITOR_ORDER_TABLE_NAME, DELETE_MONITOR_ORDER_STATES
 
 
 
@@ -24,7 +26,7 @@ def load_cities_delgs_locs_postal_codes() :
 def load_driver(port=None,headless=False): 
     chrome_driver_path = ChromeDriverManager().install()
     chrome_options = Options()
-    chrome_options.headless = headless
+    chrome_options.headless = False
     
     if port : 
         chrome_options.add_experimental_option("debuggerAddress", f"127.0.0.1:{port}")
@@ -37,13 +39,14 @@ def load_driver(port=None,headless=False):
 def wait_for_loading(driver,element_selector,relogin=False,quitx=False,input=False): 
     # TRY TO LOCATE AN ELEMENT
     try : 
-        element = WebDriverWait(driver, 60).until(
+        element = WebDriverWait(driver, 300).until(
             EC.presence_of_element_located((By.ID, element_selector)) if not input else input_has_no_empty_value((By.CSS_SELECTOR, element_selector)) 
         )
+        return element
     except Exception :
        
         # HANDLE THE EXCEPTION
-        print("WE WERE WAITING FOR ONE MINUTE FOR THE WINDOW OR THE PAGE TO LOAD OR AN IMPUT TO BE EMPTY")
+        print("WE WERE WAITING FOR 5 MINUTES FOR THE WINDOW OR THE PAGE TO LOAD OR AN IMPUT TO BE EMPTY")
 
         # QUIT BECAUSE THIS IS NOT EXPECTED AND THERE A NEW BUG TO HANDLE
         if quitx  : 
@@ -54,7 +57,7 @@ def wait_for_loading(driver,element_selector,relogin=False,quitx=False,input=Fal
         if relogin : 
             print("RELOGIN FROM THE WAIT")
             login_to_afex(driver=driver)
-
+        
 
 def login_to_afex(driver=None):
     # GRAB DRIVER FROM THE GLOBALS IF DRIVER IN THE KWARGS IS NONE (IN THE TESTING PHASE) 
@@ -95,190 +98,85 @@ def login_to_afex(driver=None):
     wait_for_loading(driver,"envoi-shortcut",relogin=True)
 
 
+def load_the_order_manager(driver=None):
+    if not driver : 
+        driver = globals()['driver']
 
-
-
-#cities_delgs_locs_postal_codes[city][delg][loc]
-    
-def wait_for_orders_table(driver):
-    print("WAIT FOR ORDERS TABLE")
-    existing_orders_len = 0 
-    passed_seconds = 0 
-    res = False 
-    # NOTE :  I USED PANELS TO DO NOT MISTAKE IT WITH TABLE OF "Gestion du paiment"
-    while True: 
-        res = driver.execute_script("""
-            let panels = document.querySelectorAll(".x-panel.x-grid.x-fit-item.x-panel-default")
-            if(panels){
-                let pre_manifest_panel = panels[0]
-                if(pre_manifest_panel.querySelector("table.x-grid-table.x-grid-table-resizer")){
-                    return {existing_orders_len:pre_manifest_panel.querySelectorAll('table.x-grid-table.x-grid-table-resizer tr').length -1 }
-                }
-            }
-            return false 
-        """)
-        if res : 
-            break 
-
-        print("WAIT 2 MORE SECONDS FOR THE PRE MANIFEST ORDER TABLE TO LOAD")
-        time.sleep(2)
-        passed_seconds += 2 
-        if passed_seconds == 10 : 
-            print("NO ORDERS TO LOAD")
-            return existing_orders_len 
-    if res : 
-        print("ORDERS ARE LOADED")
-        return res['existing_orders_len']
-        
-
-
-def load_the_order_form(driver):
     # LAUNCH THE ORDER SENDER SOFTWARE
     driver.execute_script("document.querySelector('#envoi-shortcut').click()")
+
     # WAIT FOR ORDER SENDER SOFTWARE TO LOAD WITHIN A MINUTE OTHERWISE QUIT()  TO HANDLE THIS BUG
-    wait_for_loading(driver,"add_bord",quitx=True)
-    # WAIT FOR THE ORDER TABLE TO LOAD (TO DO NOT LET THE ORDER SOFTWARE BECOME ABOVE THE ORDER FORM WINDOW ONCE THE ORDERS TABLE IS LOADED )
-    existing_orders_len = wait_for_orders_table(driver)
-    # OPEN THE ORDER FORM 
-    print("OPEN THE ORDER FORM")
-    driver.execute_script("document.querySelector('#add_bord').click()")
+    wait_for_loading(driver,"add_bord") 
 
-    # WAIT FOR THE ORDER FORM TO LOAD WITHIN A MINUTE OTHERWISE QUIT() TO HANDLE THIS BUG
-    wait_for_loading(driver,"input[name='societe_expediteur']",quitx=True,input=True)
-    print("THE ORDER FORM IS LOADED")  
-    return existing_orders_len
+def get_pre_manifest_orders(driver_cookies): 
+    request_cookies = {}
+    for cookie in driver_cookies : 
+        request_cookies[cookie['name']] = cookie['value'] 
+    # GRAB ORDERS 
+    r = requests.get("http://afex.smart-delivery-systems.com/webgesta/index.php/expeditionb/expedition_list?station=Info%40mawlety.com&client_id=136614&is_prestataire_marketplace=0&is_vendeur_marketplace=0&page=1&start=0&limit=1000000",cookies=request_cookies)
+    return r.json()['records']
 
+def get_afex_logged_session_cookies() : 
+    driver = load_driver()
+    login_to_afex(driver=driver)
+    return driver.get_cookies()
 
-
-
-
-def initiate_search_carnet_adresse(driver):
-    inp = driver.find_elements(By.NAME, 'search_carnet_adresse')[1]
-    inp.send_keys("Ari")
-    while not driver.execute_script("""
-            let tables =  document.querySelectorAll('table.x-grid-table.x-grid-table-resizer')
-            return tables.length > 0 && tables[tables.length-1].querySelector(".x-grid-cell-first").innerText == 'Ariana'
-            """):
-        print("WAIT 2 MORE SECONDS FOR THE TABLE TO APPEAR")
-        time.sleep(2)
-
+def refresh_and_load_the_order_manager(driver):
+    # DISABLE THE BEFORE UNLOAD POPUP
     driver.execute_script("""
-        let tables =  document.querySelectorAll('table.x-grid-table.x-grid-table-resizer')
-        let first_cell = tables[tables.length-1].querySelector(".x-grid-cell-first")
-        let event = new MouseEvent('mousedown',{view:window,bubbles: true,
-        cancelable: true})
-        first_cell.dispatchEvent(event)
+        window.onbeforeunload = null;
+        window.onunload = null;
     """)
 
-def fill_the_order_form(driver,order):
-    initiate_search_carnet_adresse(driver)
-    driver.execute_script("""
-        let order = arguments[0] 
+    # REFRESH THE PAGE
+    driver.refresh()
 
-        let customer_name_inp = document.querySelector("input[name='nom_pre_destinataire']")
-        customer_name_inp.value = `${order['customer_detail']['firstname']} ${order['customer_detail']['lastname']}`
-
-        let tel_inp = document.querySelector("input[name='tel_destinataire']")
-        tel_inp.value = order['address_detail']['phone_mobile']
-
-        let address_inp = document.querySelector("textarea[name='adresse_destinataire']")
-        address_inp.value = order['address_detail']['address1']
-
-        let city_inp = document.querySelector("input[name='gouvernerat_destinataire']")
-        city_inp.value = order['address_detail']['city']
-
-        let delg_inp = document.querySelector("input[name='deleg_destinataire']")
-        delg_inp.value = order['address_detail']['delegation']
-
-        let loc_inp = document.querySelector("input[name='localite_destinataire']")
-        loc_inp.value = order['address_detail']['locality'].split(" code postal")[0]
-
-        let post_code_inp = document.querySelector("input[name='code_postal_destinataire']")
-        post_code_inp.value = order['address_detail']['postal_code']
-
-        let marchandise_inp = document.querySelector("input[name='marchandise']")
-        let cart_products = order['cart_products']
-        let marchandise_val = "" 
-        cart_products.map((product,idx)=>{
-            marchandise_val += `${product['quantity']} x ${product['name']}`
-            if (idx+1 != cart_products.length){
-                marchandise_val+= ","
-            }
-        })
-        marchandise_inp.value = marchandise_val
-
-
-        let ref_inp = document.querySelector("input[name='ref_destinataire']")
-        ref_inp.value = order['id']
-
-        let type_envoi_inp = document.querySelector("input[name='type_envoi_colis']")
-        type_envoi_inp.value = 'Livraison à domicile'
-
-        type_envoi_inp.click()
-        let event = new MouseEvent('mousedown',{view:window,bubbles: true,
-        cancelable: true})
-        type_envoi_inp.parentElement.parentElement.dispatchEvent(event)
-
-        let montant_contre_rembst_inp = document.querySelector("input[name='montant_contre_rembst']")
-        montant_contre_rembst_inp.value = order['total_paid']
-        
-    """,order)
-    # WAIT FOR THE EVENT HANDLER TO CLEAR THE PRICE 
-    while driver.execute_script("""return document.querySelector('input[name="montant_contre_rembst"]').value != '' """) : 
-        print("WAITING 2 MORE SECONDS FOR THE EVENT HANDLER CLEAR THE PRICE")
-        time.sleep(2)
-
-    # RESET THE PRICE AND SET PAYMENT TYPES
-    driver.execute_script("""
-        let total_paid = arguments[0] 
-        let montant_contre_rembst_inp = document.querySelector("input[name='montant_contre_rembst']")
-        montant_contre_rembst_inp.value = total_paid
-       
-        let mode_regl_inp = document.querySelectorAll("input[name='mode_regl']")[2]
-        mode_regl_inp.value = 'Chèque ou espèces'
-       
-    """,order['total_paid'])
-
-def save_order(driver,new_order=False):
-    if new_order == False : 
-        driver.execute_script("document.querySelector('#save_close .x-btn-inner').click()")
-    else: 
-        # CLICK SAVE AND NEW BUTTON
-        driver.execute_script("document.querySelector('#save_new .x-btn-inner').click()")
-        # WAIT ORDER FORM TO BE RESETED 
-        while not driver.execute_script("""
-                let customer_name_inp = document.querySelector("input[name='nom_pre_destinataire']")
-                let company_name = document.querySelector("input[name='societe_expediteur']")
-                return customer_name_inp.value== "" && company_name.value !=""
-        """):
-            info = driver.execute_script("""
-                let customer_name_inp = document.querySelector("input[name='nom_pre_destinataire']").value
-                let company_name = document.querySelector("input[name='societe_expediteur']").value
-                return [customer_name_inp,company_name]
-            """)
-            print(f"customer_name_inp : {info[0]}")
-            print(f"company_name : {info[1]}")
-            print("WAIT 2 MORE SECONDS UNTIL THE ORDER FORM IS RESETED")
-            time.sleep(2)
+    # WAITING FOR THE DASHBOARD TO APPEAR AFTER THE REFRESH
+    wait_for_loading(driver,"envoi-shortcut")
     
+    # LAUNCH THE ORDER MANAGER SOFTWARE 
+    print("LAUNCH THE ORDER MANAGER SOFTWARE")
+    driver.execute_script("document.querySelector('#envoi-shortcut').click()")
+    
+    # WAIT FOR ORDER MANAGER SOFTWARE TO BE LOADED 
+    wait_for_loading(driver,"add_bord",quitx=True)
 
-def manifest_orders(driver,expected_orders_len):
-    # WAIT FOR THE SUBMITTED ORDERS TO APPEAR IN THE TABLE 
-    print(f"expected_orders_len : {expected_orders_len}")
+
+def waiting_for_loading_pre_manifest_orders_recursively(driver,expected_orders_len) : 
+    TIMEOUT_SECONDS = 120
+    passed_seconds = 0
     # NOTE :  I USED PANELS TO DO NOT MISTAKE IT WITH TABLE OF "Gestion du paiment"
     while not driver.execute_script("""
-        let expected_orders_len = arguments[0] 
-        let panels = document.querySelectorAll(".x-panel.x-grid.x-fit-item.x-panel-default")
-            if(panels){
-                let pre_manifest_panel = panels[0]
-                if(pre_manifest_panel.querySelector("table.x-grid-table.x-grid-table-resizer")){
-                    return pre_manifest_panel.querySelectorAll('table.x-grid-table.x-grid-table-resizer tr').length -1 == expected_orders_len
-                }
+    let expected_orders_len = arguments[0] 
+    let panels = document.querySelectorAll(".x-panel.x-grid.x-fit-item.x-panel-default")
+        if(panels){
+            let pre_manifest_panel = panels[0]
+            if(pre_manifest_panel.querySelector("table.x-grid-table.x-grid-table-resizer")){
+                return pre_manifest_panel.querySelectorAll('table.x-grid-table.x-grid-table-resizer tr').length -1 == expected_orders_len
             }
-            return false 
-    """,expected_orders_len) : 
+        }
+        return false 
+    """,expected_orders_len) :
+        if passed_seconds == TIMEOUT_SECONDS : 
+            refresh_and_load_the_order_manager(driver)
+            waiting_for_loading_pre_manifest_orders_recursively(driver,expected_orders_len)
+            break 
         print("WAIT 2 MORE SECONDS FOR THE SUBMITTED ORDERS TO APPEAR IN THE TABLE")
         time.sleep(2)
+        passed_seconds += 2 
+
+def manifest_orders(expected_orders_len):
+    # LOAD THE DRIVER 
+    driver = load_driver()
+
+    # LOGIN TO AFEX 
+    login_to_afex(driver=driver)
+
+    # LOAD THE ORDER MANAGER 
+    load_the_order_manager(driver=driver)
+
+    # WE ARE WAINTING FOR THE PRE MANIFEST ORDERS TO LOAD RECURSIVELY TO HANDLE ANY BLOCK CAN HAPPEN HERE
+    waiting_for_loading_pre_manifest_orders_recursively(driver,expected_orders_len)
 
     # SELECT ALL THE ORDER AND CLICK MANIFEST 
     driver.execute_script("""
@@ -288,6 +186,7 @@ def manifest_orders(driver,expected_orders_len):
         order_table.querySelectorAll(".x-grid-cell-first").forEach(el=>{el.firstChild.firstChild.dispatchEvent(event)})
         document.querySelector('#imp_bord').nextElementSibling.click()
     """)    
+
     # WAIT FOR THE MANIFEST CONFIRMATION MESSAGE BOX
     while not driver.execute_script("return document.querySelectorAll('.x-message-box').length") : 
         print("WAIT 2 MORE SECONDS FOR THE MANIFEST CONFIRMATION MESSAGE BOX TO LOAD")
@@ -296,23 +195,76 @@ def manifest_orders(driver,expected_orders_len):
     # CLICK YES TO CONFIRM THE MANIFEST OF THE ORDERS
     driver.execute_script("document.querySelectorAll('.x-message-box button')[1].click()")
 
-    # WAIT FOR THE PRINT MESSAGE BOX
-    while not driver.execute_script("return document.querySelectorAll('.x-message-box').length && document.querySelectorAll('.x-message-box .x-window-body')[0].innerText.includes('Manifest Validé')") : 
-        print("WAIT 2 MORE SECONDS FOR THE PRINT MESSAGE BOX TO LOAD")
+    afex_logged_session_cookies = driver.get_cookies()
+    
+    # WAIT UNTIL THE PRE MANIFEST ORDER LIST TO BE EMPTY TO MAKE SURE THAT THE MANIFEST REQUEST IS SENT TO THE SERVER BEFORE CLOSING THE BROWSER
+    while get_pre_manifest_orders(afex_logged_session_cookies) : 
+        print("WAIT 2 MORE SECONDS FOR THE PRE MANIFEST ORDER LIST TO BE EMPTY")
         time.sleep(2)
 
+    # WAIT FOR THE PRINT MESSAGE BOX (THE POINT OF WAITING HERE IS TO MAKE SURE THAT MANIFEST REQUEST IS SENT TO THE SERVER BEFORE CLOSING THE BROWSER)
+    #while not driver.execute_script("return document.querySelectorAll('.x-message-box').length && document.querySelectorAll('.x-message-box .x-window-body')[0].innerText.includes('Manifest Validé')") : 
+    #    print("WAIT 2 MORE SECONDS FOR THE PRINT MESSAGE BOX TO LOAD")
+    #    time.sleep(2)
     # CLICK NO TO NOT PRINT
-    driver.execute_script("document.querySelectorAll('.x-message-box button')[2].click()")
+    #driver.execute_script("document.querySelectorAll('.x-message-box button')[2].click()")
 
-def submit_orders(driver,orders,orders_submitter_obj):
+def submit_afex_order(order) : 
+    
 
-    existing_orders_len =  load_the_order_form(driver)
-    print(f"existing_orders_len : {existing_orders_len}")
+    marchandise = ""
+    cart_product_len = len(order['cart_products'])
+    for idx,product in enumerate(order['cart_products']) : 
+        marchandise += f"{product['quantity']} x {product['name']}"
+        if idx+1 != cart_product_len :
+            marchandise += ','
+    
+    formatted_afex_order = {
+        **AFEX_API_CREDENTIALS, 
+        'nom_pre_destinataire':f"{order['customer_detail']['firstname']} {order['customer_detail']['lastname']}",
+        'gouvernerat_destinataire':order['address_detail']['city'],
+        'deleg_destinataire':order['address_detail']['delegation'],
+        'adresse_destinataire' : order['address_detail']['address1'],
+        'tel_destinataire' : int(order['address_detail']['phone_mobile']),    
+        'marchandise' : marchandise ,
+        'ref_destinataire' :str(order['id']),
+        'nbr_colis' : 1 ,
+        'type_envoi_colis' : 'Livraison à domicile',
+        'montant_contre_rembst' : float(order['total_paid']) ,
+        'mode_regl' : 'Chèque ou espèces'
+    }
+
+    url = "http://afex.smart-delivery-systems.com/webgesta/index.php/api/pushOrderDataApi"
+
+    while True : 
+        # SUBMIT THE ORDER TO AFEX SERVER 
+        r = requests.post(url,data=formatted_afex_order)
+
+        # CHECK IF THE REQUEST WAS SUCCESSFUL THEN EXIT 
+        res = r.json()
+        if res.get('success') == True  : 
+            print(res)
+            return 
+        
+        # OTHERWISE WAIT FOR 2 SECONDS 
+        print(f"WE DID ENCOUNTER A ERROR WHILE CREATING THE ORDER WITH THE ID : {order['id']} , WE WILL TRY AGAIN IN 2 SECONDS")
+        time.sleep(2)
+
+def submit_afex_orders(orders,orders_submitter_obj):
+
+    # GRAB EXISTING PRE MANIFEST ORDERS LEN 
+    afex_logged_session_cookies = get_afex_logged_session_cookies()    
+    existing_pre_manifest_orders = get_pre_manifest_orders(afex_logged_session_cookies)
+    existing_pre_manifest_orders_len = 0 if existing_pre_manifest_orders == None  else len(existing_pre_manifest_orders)
+    
+    # LOAD CITIERS DELG LOCS
     cities_delgs_locs_postal_codes = load_cities_delgs_locs_postal_codes()
-    orders_len = len(orders)
-    for idx,order in enumerate(orders): 
-        print(f"WORKING ON SUBMITTING THE ORDER WITH ID : {order['id']}")
 
+    # START SUBMITTING ORDERS 
+    for order in orders: 
+        print(f"WORKING ON SUBMITTING THE ORDER WITH ID : {order['id']}")
+        
+        # SET THE CURRENT ORDER ID 
         orders_submitter_obj.state['progress']['current_order_id'] = order['id']
         orders_submitter_obj.save()
 
@@ -322,56 +274,19 @@ def submit_orders(driver,orders,orders_submitter_obj):
         locality = order['address_detail']['locality']
         order['address_detail']['postal_code'] = cities_delgs_locs_postal_codes[city][delegation][locality]
 
-        fill_the_order_form(driver,order)
-       
-        if idx+1 != orders_len : 
-            save_order(driver,new_order=True)
-        else: 
-            save_order(driver)
-
+        # SUBMIT ORDER 
+        submit_afex_order(order)
         add_afex_order_to_monitoring_phase(order)
-
-        # INSCREASE submitted_orders_len TO THE ORDERS SUBMITTER
+        
+        # INSCREASE THE submitted_orders_len
         orders_submitter_obj.state['progress']['submitted_orders_len']  += 1 
         orders_submitter_obj.save()
-    
-    # START MANIFESTING
-    # SET THE MANIFEST STATE TO THE ORDERS SUBMITTER
-    print("START MANIFESTING")
-    orders_submitter_obj.state['state'] = "MANIFESTING"
-    orders_submitter_obj.save()
 
-    # WAIT FOR THE SUBMITTED ORDERS TO APPEAR IN THE TABLE 
-    expected_orders_len = existing_orders_len + len(orders)
-    manifest_orders(driver,expected_orders_len)
-    print("END SUBMITTIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIING ORDERS")
-    
-
-
-    
-def submit_afex_orders(orders,orders_submitter_obj):
-
-    print("LOAD THE DRIVER")
-    driver = load_driver(headless=True) 
-    print("LOGIN TO AFEX")
-    login_to_afex(driver=driver)
-    print("START SUBMITTING ORDERS")
-    submit_orders(driver,orders,orders_submitter_obj)
-    
-
-
-
-def load_the_order_manager(driver=None):
-    if not driver : 
-        driver = globals()['driver']
-
-    # LAUNCH THE ORDER SENDER SOFTWARE
-    driver.execute_script("document.querySelector('#envoi-shortcut').click()")
-
-    # WAIT FOR ORDER SENDER SOFTWARE TO LOAD WITHIN A MINUTE OTHERWISE QUIT()  TO HANDLE THIS BUG
-    wait_for_loading(driver,"add_bord",quitx=True)
-
-
+        # SLEEP FOR EACH SUBMITTED ORDER TO NOT OVERLOAD THE SERVER 
+        time.sleep(2)
+        
+    # MANIFEST ORDERS 
+    manifest_orders(existing_pre_manifest_orders_len+len(orders))
 
 def move_date_day(date_str,days):
     return (datetime.datetime.strptime(date_str, "%Y-%m-%d").date() + datetime.timedelta(days=days)).strftime("%Y-%m-%d")
@@ -381,7 +296,6 @@ def get_orders_date_range(orders) :
 
 def fitlter_orders_manager_by_date_range(driver,orders) : 
     date_range = get_orders_date_range(orders)
-
     # SET THE DATE RANGE IN THE "SEND" TAB 
     driver.execute_script("""
         let date_range = arguments[0]
@@ -408,8 +322,9 @@ def afex_state_to_mawlety_state_converter(afex_order_state):
         'en attente de relivraison':'Expédié',
         'en attente de retour':'Expédié', 
         'en cours de retour':'Expédié',
-        'Livré':'Livré',
-        'Retourne':'Retour',
+        'en cours de transfert' : 'Expédié',
+        'livré':'Livré',
+        'retourne':'Retour',
         'annulé':'Annulé',
         'en attente':'Expédié',
     }
@@ -417,10 +332,7 @@ def afex_state_to_mawlety_state_converter(afex_order_state):
         if afex_state in afex_order_state  : 
             return afex_state_to_mawlety_state[afex_state]
 
-    
-
-
-
+    return None 
 
 def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monitoror_obj):
 
@@ -437,8 +349,7 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
     fitlter_orders_manager_by_date_range(driver,afex_monitor_orders)
 
     # EXTRACT ORDERS FROM AFEX IN THE FOLLOWING FORMAT [{'refercence (order_id)':'afex_state'}]
-    orders_from_afex = driver.execute_script("""
-        
+    orders_from_afex = driver.execute_script("""    
         let rows = document.querySelectorAll(".x-panel-body.x-grid-body.x-panel-body-default.x-panel-body-default.x-layout-fit")[1].querySelectorAll('table tr')
         
         let afex_orders = {}
@@ -457,6 +368,9 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
         return afex_orders
     """) 
 
+    driver.quit()
+
+
     # FOR EACH AFEX MONITOR ORDER CHECK IF THE STATE OF THE ORDER WAS UPDATED IF SO DO YOUR THING
     for afex_monitor_order in afex_monitor_orders : 
 
@@ -468,20 +382,37 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
         afex_monitor_order_state = afex_monitor_order.state
 
         # AFEX ORDER STATE FROM AFEX SITE  
-        afex_order_state = orders_from_afex[str(afex_monitor_order.order_id)]
+        afex_order_state = f"failed_state_{int(random.random()*100)}" # orders_from_afex[str(afex_monitor_order.order_id)]
 
         # CONVERT IT TO MAW STATE
-        afex_order_state = afex_state_to_mawlety_state_converter(afex_order_state) 
+        afex_order_in_maw_state = afex_state_to_mawlety_state_converter(afex_order_state.lower()) 
+
+        # HANDLE THE CASE OF THE CONVERTER DIDN'T WORK 
+        if not afex_order_in_maw_state : 
+
+            # SAVE THE CONVESION ERROR
+            if not orders_monitoror_obj.state['conv_errors']['AFEX'].get(afex_order_state.lower()) : 
+                orders_monitoror_obj.state['conv_errors']['AFEX'][afex_order_state.lower()] = 1
+            else :
+                orders_monitoror_obj.state['conv_errors']['AFEX'][afex_order_state.lower()] += 1 
+            orders_monitoror_obj.save()
+            # INCREASE THE MONITOR ORDERS LEN BY ONE 
+            orders_monitoror_obj.state['progress']['monitored_orders_len'] += 1 
+            orders_monitoror_obj.save()
+            # SKIP THIS ORDER AND CONTINUE MONITORING THE OTHER ORDERS 
+            continue 
+
+
 
         #CHECK IF THE STATE OF THE CURRENT MONITOR ORDER WAS CHANGED
-        if afex_monitor_order_state != afex_order_state  : 
+        if afex_monitor_order_state != afex_order_in_maw_state  : 
             print("THERE IS A CHANGE")
             # IF THE NEW STATE IS ONE OF THE DELETE STATE DELETE THE ORDER FROM THE TABLE 
-            if afex_order_state in DELETE_MONITOR_ORDER_STATES : 
+            if afex_order_in_maw_state in DELETE_MONITOR_ORDER_STATES : 
                 delete_a_monitor_order_by_id('AFEX',afex_monitor_order.order_id)
             # OTHERWISE UPDATE THE AFEX MONITOR ORDER
             else:
-                update_a_monitor_order_by_id('AFEX',afex_monitor_order.order_id,afex_order_state)
+                update_a_monitor_order_by_id('AFEX',afex_monitor_order.order_id,afex_order_in_maw_state)
 
 
             # ADD THE CHANGED ORDER TO THE RESULTS
@@ -495,12 +426,12 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
                 'order_id': afex_monitor_order.order_id,
                 'carrier' : 'AFEX',
                 'old_state' : afex_monitor_order.state,
-                'new_state' : afex_order_state
+                'new_state' : afex_order_in_maw_state
             })
             orders_monitoror_obj.save()
 
             #UPDATE THE STATE OF THE ORDER IN MAWLATY.COM
-            #update_order_state_in_mawlety(afex_monitor_order.order_id,MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID[afex_order_state])
+            update_order_state_in_mawlety(afex_monitor_order.order_id,afex_order_in_maw_state)
         else : 
             print("NO CHANGE ")
         
@@ -534,7 +465,7 @@ if __name__ == '__main__':
             }
         )
 
-    submit_orders(driver,orders)
+    #submit_orders(driver,orders)
     #orders = get_monitor_orders_by_carrier(AFEX_MONITOR_ORDER_TABLE_NAME)
     #update_afex_monitor_orders_state_from_afex(driver,orders)
 

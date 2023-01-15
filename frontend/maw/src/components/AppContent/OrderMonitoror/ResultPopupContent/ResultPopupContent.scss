@@ -1,0 +1,46 @@
+@import '../../../../vars.scss';
+
+.monitoring-card{
+    padding: 10px 10px;
+    border-top: 1px solid #A0A0A0 ;
+    border-left: 1px solid #E6E4E4;
+    border-right: 1px solid #E6E4E4 ;
+    border-bottom: 1px solid #A0A0A0 ;
+    border-radius: 5px;
+    margin-bottom: 20px;
+
+    &:first-child{
+        .monitoring-card-header{
+            margin-bottom: 0px;
+        }
+    }
+    &-header{
+        @include table-title() ;
+        margin: 0px;
+        font-size: 14px;
+        border-bottom: 1px solid $third_color;
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+        
+    
+    }
+
+    &-overview{
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        &-item{
+            width: 32.5%;
+            background-color: $primary-color;
+            color: white;
+            border-radius: 5px;
+            margin-top : 10px;
+            padding : 5px ;
+            &-name{
+                text-transform: uppercase;
+                font-size: 12px;
+            }
+
+        }
+    }
+}

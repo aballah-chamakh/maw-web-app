@@ -1,0 +1,247 @@
+{'order_id': 581, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'} DONE
+{'order_id': 583, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'} DONE 
+{'order_id': 591, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 592, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 597, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 622, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 632, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 643, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Retour'} DONE 
+{'order_id': 645, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 653, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 654, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 662, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 688, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 689, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 694, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 721, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 734, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 792, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 835, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 864, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Retour'} xx
+{'order_id': 875, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 903, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 916, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 917, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 919, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 920, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 970, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 972, 'carrier': 'LOXBOX', 'old_state': 'Expédié', 'new_state': 'Livré'}
+{'order_id': 604, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 606, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 610, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 612, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 613, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 626, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 628, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 640, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 657, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 660, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 755, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 787, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 790, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 793, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 806, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 807, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 811, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 813, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 814, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 822, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 823, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 826, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 840, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 852, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 866, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 870, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 882, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 884, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 890, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 894, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 907, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 939, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 979, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1009, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1018, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1019, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1023, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1032, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1033, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1041, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1049, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1062, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1068, 'carrier': 'LOXBOX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 580, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'} DONE
+{'order_id': 582, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 584, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 585, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 586, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 589, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 590, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 596, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 598, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 600, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 603, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 609, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 615, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 616, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 617, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 618, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 619, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 630, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 633, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 635, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 636, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 638, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 639, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 644, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 646, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 652, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 656, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 658, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 671, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 683, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 690, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 691, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 699, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 713, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 716, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 730, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 732, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 744, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 747, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 763, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 765, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 767, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 789, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 818, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 831, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 833, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 842, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 856, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 860, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 869, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 874, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 881, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 891, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 897, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 918, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 926, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 943, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 946, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 951, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 955, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 958, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 980, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 1051, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 1059, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Livré'}
+{'order_id': 595, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 601, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 602, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 607, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 611, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 614, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 621, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 624, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 625, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 634, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 637, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 641, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 642, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 649, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 650, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 651, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 788, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 794, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 796, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 797, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 798, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 800, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 801, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 802, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 804, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 809, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 815, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 816, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 819, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 832, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 838, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 841, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 844, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 851, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 855, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 857, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 871, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 876, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 879, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 880, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 883, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 885, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 892, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 893, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 896, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 902, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 905, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 911, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 922, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 934, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 960, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 962, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 976, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 996, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 999, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1010, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1017, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1022, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1024, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1028, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1030, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1036, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1038, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1044, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1045, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1047, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1052, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1054, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1056, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1058, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1061, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1063, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+{'order_id': 1067, 'carrier': 'AFEX', 'old_state': 'En cours de préparation', 'new_state': 'Expédié'}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

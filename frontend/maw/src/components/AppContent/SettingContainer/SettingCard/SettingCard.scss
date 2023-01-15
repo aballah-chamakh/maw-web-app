@@ -1,0 +1,52 @@
+@import '../../../../vars.scss';
+
+.setting-card{
+    padding: 10px 10px;
+    border-top: 1px solid #A0A0A0 ;
+    border-left: 1px solid #E6E4E4;
+    border-right: 1px solid #E6E4E4 ;
+    border-bottom: 1px solid #A0A0A0 ;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    &-header{
+        p{
+            @include table-title() ;
+            margin: 0px;
+            font-size: 16px;
+            border-bottom: 1px solid $third_color;
+            padding-bottom: 10px;
+        }
+    }
+    &-body{
+        .form-group{
+            label{
+                margin-bottom: 5px;
+            }
+            margin-bottom: 10px;
+            &:first-child{
+                margin-top: 10px;
+            }
+            &:last-of-type{
+                margin-bottom: 15px;
+            }
+            .toggle-password-visibility{
+                display: flex;
+                margin-top: 10px;
+                p{
+                    margin-left: 20px;
+                    font-size: 15px;
+                }
+            }
+            .form-control:focus{
+    
+                box-shadow: none;
+                
+            }
+        }
+
+        button{
+            @include table-action-btn($dark_color) ;
+        }
+    }
+}
+

@@ -4,7 +4,8 @@ import OrderLoader from './OrderLoader/OrderLoader';
 import OrderSubmitter from './OrderSubmitter/OrderSubmitter';
 import OrderMonitoror from './OrderMonitoror/OrderMonitoror';
 import LoxboxAreasContainer from './LoxboxAreasContainer/LoxboxAreasContainer';
-
+import SettingContainer from './SettingContainer/SettingContainer';
+import Test from './Test' ;
 
 const AppContent = (props)=>{
     return(
@@ -15,6 +16,8 @@ const AppContent = (props)=>{
                     <Route path="/load_orders/:orders_loader_id/submit_orders" element={<OrderSubmitter />} />
                     <Route path="/monitor_orders" element={<OrderMonitoror />} />
                     <Route path="/loxbox_areas" element={<LoxboxAreasContainer />} />
+                    <Route path="/settings" element={<SettingContainer />} />
+                    <Route path="/test" element={<Test />} />
           </Routes>
           
         </div>

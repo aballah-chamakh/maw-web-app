@@ -3,7 +3,7 @@ import sqlite3
 
 from .loxbox_API import update_monitor_orders_state_from_loxbox
 #from afex_API import update_afex_monitor_orders_state_from_afex
-from .global_variables import DELETE_MONITOR_ORDER_STATES, MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID, AFEX_MONITOR_ORDER_TABLE_NAME,LOXBOX_MONITOR_ORDER_TABLE_NAME
+from .global_variables import DELETE_MONITOR_ORDER_STATES, AFEX_MONITOR_ORDER_TABLE_NAME,LOXBOX_MONITOR_ORDER_TABLE_NAME
 from .mawlety_API import update_order_state_in_mawlety
 from WebApi.models import AfexMonitorOrder,LoxboxMonitorOrder
 
@@ -41,28 +41,32 @@ def add_loxbox_order_to_monitoring_phase(order,already_created):
     #CREATE THE INITIAL ROW OF THE MONITOR ORDER
     monitor_order = {'order_id':order['id'],'transaction_id': str(order['transaction_id']) ,'state':'En cours de préparation'}
 
+    # CREATE THE MONITOR_ORDER TABLE IN DB 
+    create_a_monitor_order(monitor_order,"LOXBOX")
+    
+    #SET THE ORDER STATE IN MAWLETY.COM TO "En cours de préparation" 
+    update_order_state_in_mawlety(monitor_order['order_id'],monitor_order['state']) 
+
+    # TRASH CODE 
     # HANDLE THE CASE OF THE ORDER WAS CREATED BY THE MODULE OF LOXBOX , CHECK IF FATMA FORGET TO RUN OUR PROG AND THE STATE OF THE ORDER WAS UPDATED IN LOXBOX
     # NOTE :  IF TRANSACTION ID NOT FALSE IN THE ORDER IT MEAN THAT THE ORDER WAS CREATED BY THE LOXBOX MODULE
-    if already_created :
-        monitor_order = update_monitor_orders_state_from_loxbox([monitor_order],update_a_monitor_order_by_id,delete_a_monitor_order_by_id,return_monitor_orders_updated=True)[0]
+    #if already_created :
+    #    monitor_order = update_monitor_orders_state_from_loxbox([monitor_order],update_a_monitor_order_by_id,delete_a_monitor_order_by_id,return_monitor_orders_updated=True)[0]
     
-    # CREATE THE MONITOR_ORDER TABLE IN DB IF DOESN'T EXIST THEN ADD TO IT THE MONITOR ORDER ROW
-    create_a_monitor_order(monitor_order,"LOXBOX")
 
-    # SET THE ORDER STATE IN MAWLETY.COM TO "En cours de préparation" 
+
+    
     # IF THE STATE OF MONITOR ORDER EQUAL TO A STATE OTHER THAN 'En cours de préparation' WE DO NOTHING 
-    # BECAUSE update_monitor_orders_state_from_loxbox WILL DO THE JOB
-    #if monitor_order['state'] == 'En cours de préparation':
-    #    update_order_state_in_mawlety(monitor_order['order_id'],MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID[monitor_order['state']]) 
-
-
+    # BECAUSE update_monitor_orders_state_from_loxbox WILL DO THE JOBEn cours de préparation
+    #if monitor_order['state'] == 'En cours de préparation':  
+    
 
 
 def add_afex_order_to_monitoring_phase(order) : 
     manifest_date = datetime.date.today().strftime("%Y-%m-%d")
     monitor_order = {'order_id':order['id'],'state':'En cours de préparation','manifest_date':manifest_date}
     create_a_monitor_order(monitor_order,"AFEX")
-    #update_order_state_in_mawlety(monitor_order['order_id'],MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID[monitor_order['state']])
+    update_order_state_in_mawlety(monitor_order['order_id'],monitor_order['state'])
 
 
 

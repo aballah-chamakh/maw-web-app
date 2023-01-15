@@ -1,19 +1,58 @@
 # LOAD THE DJANGO ENV
+import time 
 
-def laad_django_env(): 
+def load_django_env(): 
     import django
     import os 
     import json 
     os.environ['DJANGO_SETTINGS_MODULE'] = 'maw.settings'
     django.setup()
 
-    test()
+    #test()
 
 def test() : 
-    from WebApi.models import LoxboxAreasSelectorProcess,LoxboxCities,City,Delegation,Locality
-    print(Locality.objects.count())
+    from WebApi.models import OrderAction,MONITORING_ORDERS
+    from OrderActionApi.Api.mawlety_API import update_order_state_in_mawlety
+    orders_monitoror_obj = OrderAction.objects.filter(type=MONITORING_ORDERS).last()
+    start = False 
+    for order in orders_monitoror_obj.state['results'] : 
+        if order['carrier'] == 'AFEX' : 
+            if order['order_id'] == 794 : 
+                start = True 
+            if start == True :
+                print(f"order monitoror id : {orders_monitoror_obj.id} || order : {order}")
+                update_order_state_in_mawlety(order['order_id'],order['new_state'])
+                time.sleep(3)
+                    
 
-laad_django_env()
+def test2():
+    from OrderActionApi.Api.mawlety_API import update_order_state_in_mawlety
+    update_order_state_in_mawlety(1066,'Expédié')
+
+
+load_django_env()
+test2()
+"""
+EVALUATE THE RESULT OF MONITORING AFEX ORDERS CODE  : 
+# GRAB AFEX ORDERS 01 TO 07
+orders_from_afex = update_afex_monitor_orders_state_from_afex()
+
+# GRAB ALL MAW ORDERS 30 T0 07
+orders_from_mawlety = grab_maw_orders(291,nb_of_days_ago=8)
+
+# FROM ALL THE MAW ORDERS SELECT ONLY AFEX ORDERS 
+maw_afex_orders = []
+for order in orders_from_mawlety :                :
+     if str(order['id']) in order_from_afex.keys() :
+             maw_afex_orders.append(order)
+
+# PRINT THE ORDERS WHO DON'T HAVE THE SAME STATE IN MAW AND AFEX
+for order in maw_afex_orders : 
+    if MAWLETY_STATE_ID_TO_MAWLETY_STR_STATE[order['current_state']] != afex_state_to_mawlety_state_converter(orders_from_afex[str(order['id'])]) : 
+        print(order['id'])
+        
+
+"""
 quit()
 # CREATE THE LoxboxAreasSelectorProcess OBJECTS IF IT DOESN'T EXIST 
 if LoxboxAreasSelectorProcess.objects.count() == 0  : 

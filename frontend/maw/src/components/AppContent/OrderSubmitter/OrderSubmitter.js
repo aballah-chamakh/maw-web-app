@@ -1,6 +1,6 @@
 import './OrderSubmitter.scss' ;
 import {useState,useEffect} from 'react' ;
-import { useNavigate,useParams } from 'react-router-dom';
+import { useNavigate,useParams,useLocation} from 'react-router-dom';
 import axios from 'axios' ;
 import { API_ENDPOINT } from '../../../globals';
 import LoadingPage from '../../CommonComponents/LoadingPage/LoadingPage';
@@ -10,75 +10,104 @@ import ServerLoading from '../../CommonComponents/ServerLoading/ServerLoading';
 
 const OrderSubmitter = (props)=>{
     const [isLoading,setIsLoading] = useState(true)
+    const [didMount,setDidMount] = useState(false)
     const [loadingActionTxt,setLoadingActionTxt] = useState('loading orders to submit')
     const [submittingProgress,setSubmittingProgress] = useState(null)
     const [isServerLoading,setServerIsLoading] = useState(false)
     const [orders,setOrders] = useState([])
     const [ordersSelectedAll,setOrdersSelectedAll] = useState(false)
+    const [monitorIntv,setMonitorIntv] = useState(null)
+    const [selectorIntv,setSelectorIntv] = useState(null)
 
 
 
     const navigate = useNavigate()
+    const location = useLocation()
     const {orders_loader_id}  = useParams()
 
     const order_keys = ['selected','id','first and last name','city','delegation','locality','carrier']
     
     const dropdown_keys = {
         'carrier' : ['AFEX','LOXBOX']
-    }
+    }   
+
 
     useEffect(()=>{
-       // LOAD THE ORDERS FROM THE SERVER GIVEN THE orders_loader_id
-       if(orders_loader_id) { 
-            axios.get(API_ENDPOINT+'/orders_loader/'+orders_loader_id+'/monitor').then(res=>{
-                // SET THE ORDERS AND THEIR SELECTED ALL STATE
-                let data = res.data
-                // REDIRECT TO LOADING ORDERS WHEN THE ORDER LOADER IS CANCELED
-                if (data.canceled){
-                    navigate('/load_orders')
-                }
-                let orders = data.orders  
-                let orders_selected_all = data.orders_selected_all
-                setOrders(orders)
-                setOrdersSelectedAll(orders_selected_all)
-                // REMOVE THE LOADING 
-                setIsLoading(false)
+       // alert("CALL THE USE EFFECT "+selectorIntv)
+        if (didMount  == false){
+            setDidMount(true)
+        
+            // MONITORING THE PREGRESS OF SUBMITTING OF THE LAST ORDERS SUBMITTER 
+            if(location.state){
+                let orders_submitter_id = location.state.orders_submitter_id 
+                setIsLoading(true)
+                setLoadingActionTxt('submitting orders')
+                monitorSubmittingOrders(orders_submitter_id)
 
-                // CHECK IF THE SELECTOR IS WORKING 
-                if(res.data.is_selector_working){
-                    
-                    // SET THE SERVER IS LOADING 
-                    setServerIsLoading(true)
+            } // LOAD THE ORDERS FROM THE SERVER GIVEN THE orders_loader_id
+            else if(orders_loader_id) { 
+                axios.get(API_ENDPOINT+'/orders_loader/'+orders_loader_id+'/monitor').then(res=>{
+                    // SET THE ORDERS AND THEIR SELECTED ALL STATE
+                    let data = res.data
+                    // REDIRECT TO LOADING ORDERS WHEN THE ORDER LOADER IS CANCELED
+                    if (data.canceled){
+                        navigate('/load_orders')
+                    }
+                    let orders = data.orders  
+                    let orders_selected_all = data.orders_selected_all
+                    setOrders(orders)
+                    setOrdersSelectedAll(orders_selected_all)
+                    // REMOVE THE LOADING 
+                    setIsLoading(false)
+                    //alert(res.data.is_selector_working)
+                    // CHECK IF THE SELECTOR IS WORKING 
+                    if(res.data.is_selector_working){
+                        
+                        // SET THE SERVER IS LOADING 
+                        setServerIsLoading(true)
 
-                    // KEEP MONITORING UNTIL THE SELECTOR IS DONE 
-                    let intv = setInterval(()=>{
-                        axios.get(API_ENDPOINT+'/orders_loader/'+orders_loader_id+'/monitor').then(res=>{
-                            let data = res.data 
-                            let is_selector_working = data.is_selector_working
+                        // KEEP MONITORING UNTIL THE SELECTOR IS DONE 
+                        let intv = setInterval(()=>{
+                            axios.get(API_ENDPOINT+'/orders_loader/'+orders_loader_id+'/monitor').then(res=>{
+                                let data = res.data 
+                                let is_selector_working = data.is_selector_working
 
-                            // ONCE THE SELECTOR IS DONE DO THE FOLLOWING 
-                            if(!is_selector_working){
-                                // UPDATE THE ORDERS 
-                                let orders = data.orders 
-                                let orders_selected_all = data.orders_selected_all
-                                setOrders(orders)
-                                setOrdersSelectedAll(orders_selected_all)
-                                
-                                // HIDE THE SERVER IS LOADING INTERFACE
-                                setServerIsLoading(false)
+                                // ONCE THE SELECTOR IS DONE DO THE FOLLOWING 
+                                if(!is_selector_working){
+                                    // UPDATE THE ORDERS 
+                                    let orders = data.orders 
+                                    let orders_selected_all = data.orders_selected_all
+                                    setOrders(orders)
+                                    setOrdersSelectedAll(orders_selected_all)
+                                    
+                                    // HIDE THE SERVER IS LOADING INTERFACE
+                                    setServerIsLoading(false)
 
-                                // CLEAR THE INTERVAL 
-                                clearInterval(intv)
-                            }
+                                    // CLEAR THE INTERVAL 
+                                    clearInterval(selectorIntv)
+                                }
 
-                        })
+                            })
 
-                    },3000)
-
-                }
-            })
+                        },3000)
+                        setSelectorIntv(intv)
+                        
+                    }
+                })
+            }
         }
-    },[orders_loader_id])
+        return ()=>{
+            //alert("clean up "+monitorIntv)
+            if(selectorIntv){
+                
+                clearInterval(selectorIntv)
+            }
+
+            if(monitorIntv){
+                clearInterval(monitorIntv)
+            }
+        }
+    },[orders_loader_id,monitorIntv,selectorIntv])
 
     const handleSelectChange = (e)=>{
         // SET SERVER LOADING 
@@ -196,30 +225,34 @@ const OrderSubmitter = (props)=>{
             navigate('/load_orders')
         })
     }
+    const monitorSubmittingOrders = (orders_submitter_id)=>{
+        let req_is_done = true  
+        let intv = setInterval(()=>{
+            if(req_is_done){
+                req_is_done = false 
+                axios.get(API_ENDPOINT+'/orders_submitter/'+orders_submitter_id+'/monitor').then((res)=>{
+                    let data = res.data 
+                    if(data.progress){
+                        setSubmittingProgress(data.progress)
+                    }
+                    if(data.state=='FINISHED'){
+                        navigate('/load_orders',{state:{submitted_orders_len:data.progress.orders_to_be_submitted}})
+                        clearInterval(intv)
+                    }
+                    req_is_done = true  
+                })
+            }
 
+        },5000)
+        setMonitorIntv(intv)
+    }
     const submitOrders = ()=>{
         setIsLoading(true)
         setLoadingActionTxt('submitting orders')
         axios.post(API_ENDPOINT+'/orders_submitter/launch',{orders_loader_id:orders_loader_id}).then((res)=>{
             let orders_submitter_id = res.data.orders_submitter_id 
-            let req_is_done = true  
-            let intv = setInterval(()=>{
-                if(req_is_done){
-                    req_is_done = false 
-                    axios.get(API_ENDPOINT+'/orders_submitter/'+orders_submitter_id+'/monitor').then((res)=>{
-                        let data = res.data 
-                        if(data.progress){
-                            setSubmittingProgress(data.progress)
-                        }
-                        if(data.state=='FINISHED'){
-                            navigate('/load_orders',{state:{submitted_orders_len:data.progress.orders_to_be_submitted}})
-                            clearInterval(intv)
-                        }
-                        req_is_done = true  
-                    })
-                }
+            monitorSubmittingOrders(orders_submitter_id)
 
-            },5000)
         })
     }
 
@@ -237,6 +270,7 @@ const OrderSubmitter = (props)=>{
                     <button className='order-submitter-actions-cancel' onClick={cancelOrderLoader}>cancel</button>
                 </div>
                 <ServerLoading show={isServerLoading} />
+              
             </div>
         :
         <LoadingPage progress={submittingProgress} action_txt={loadingActionTxt} done_action_txt="were submitted"  />

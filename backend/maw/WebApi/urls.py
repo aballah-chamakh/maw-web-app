@@ -4,12 +4,15 @@ from .views.loading_orders_views import *
 from .views.submitting_orders_views import *
 from .views.monitoring_orders_views import *
 from .views.loxbox_areas_views import *  
+from .views.setting_views import *  
 
 urlpatterns = [
     # LOADING ORDERS URLS 
     path('orders_loader/launch', launch_orders_loader),
     path('orders_loader/<int:id>/cancel', cancel_orders_loader),
     path('orders_loader/<int:id>/monitor', monitor_orders_loader),
+    path('get_last_undone_step_of_the_last_order_loader', get_last_undone_step_of_the_last_order_loader),
+    
     
 
     # SUBMITTING ORDERS URLS 
@@ -32,7 +35,12 @@ urlpatterns = [
     path('loxbox_areas/<str:select_type>', loxbox_areas_select_unselect_all),
     path('city/<int:city_id>/<str:select_type>', city_select_unselect_all),
     path('delegation/<int:delegation_id>/<str:select_type>', delegation_select_unselect_all),
-    path('locality/<int:locality_id>/<str:select_type>', locality_select_unselect)
+    path('locality/<int:locality_id>/<str:select_type>', locality_select_unselect),
+
+    # SETTING URL  
+    path('get_setting', get_setting),
+    path('update_setting', update_setting),
+
 
 ]
 

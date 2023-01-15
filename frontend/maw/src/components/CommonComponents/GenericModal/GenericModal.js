@@ -17,7 +17,9 @@ const GenericModal = (props)=>{
                         {props.alertData.icon}
                         <p>{props.orders_len} {props.alertData.msg}</p>
                     </div> 
-                : <div style={{marginBottom:'10px'}}>{props.result_table}</div> }
+                : <div style={{marginBottom:'10px'}}>
+                     {props.result_content}
+                   </div>}
                 <div className="generic-modal-footer">
                         <button onClick={props.closeModal} >ok</button>
                 </div>

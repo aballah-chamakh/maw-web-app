@@ -1,0 +1,14 @@
+@import '../../../vars.scss';
+
+
+
+.setting-container{
+
+    &-header {
+        p {
+            @include table-title() ;
+            border-bottom: 1px solid $third_color;
+        }
+    }
+
+}

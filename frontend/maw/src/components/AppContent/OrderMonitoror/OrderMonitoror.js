@@ -4,7 +4,11 @@ import './OrderMonitoror.scss'
 import LoadingPage from "../../CommonComponents/LoadingPage/LoadingPage"
 import GenericTable from "../../CommonComponents/GenericTable/GenericTable"
 import GenericModal from "../../CommonComponents/GenericModal/GenericModal"
+import ResultPopupContent from "./ResultPopupContent/ResultPopupContent"
 import { API_ENDPOINT } from "../../../globals"
+
+
+
 
 const OrderMonitoror = ()=>{
     const [isLoading,setIsLoading] = useState(true)
@@ -12,11 +16,9 @@ const OrderMonitoror = ()=>{
     const [progress,setProgress] = useState(null)
     const [orders,setOrders] = useState([])
     const [isResultPopupShowed,setResultPopupShowed] = useState(false)
-    const [resultPopupData,setResultPopupData] = useState({title:'',orders:[]})
-
+    const [resultPopupData,setResultPopupData] = useState({title:'',conv_errors:{},orders:[],old_monitor_orders_len:0})
+    // useState({title:'',orders:[]})
     const order_keys = ['order_id','state','carrier']
-    const result_popup_order_keys = ['order_id','carrier','old_state','new_state']
-    const result_popup_highlight_keys = {'old_state':'grey','new_state':'green'}
 
     useEffect(()=>{
         axios.get(API_ENDPOINT+"/monitor_orders").then(res=>{
@@ -51,18 +53,25 @@ const OrderMonitoror = ()=>{
                             // UPDATE MONITOR ORDERS AFTER MONITORING 
                             setOrders(data.new_monitor_orders)
 
-                            // CLEAN THE PROGRESS FOR THE NEXT TIME WHEN WE MONITOR WE DON'T START THE LOADING PAGE 
-                            // WITH THE OLD PROGRESS DATA 
-                            setProgress(null)
 
                             // HANDLE RESULTS DATA IF IT EXIST 
                             if(data.results){
                                 // SET THE RESULT DATA FOR THE POPUP 
-                                setResultPopupData({title:data.results.length +'/'+orders.length+' order(s) were updated',orders:data.results})
+                                setResultPopupData({
+                                    title:data.results.length +'/'+progress.orders_to_be_monitored+' order(s) were updated',
+                                    orders:data.results,
+                                    old_monitor_orders_len:progress.orders_to_be_monitored,
+                                    conv_errors : data.conv_errors
+                                })
                 
                                 // LOAD THE RESULT POPUP
                                 setResultPopupShowed(true)
                             }
+
+                            
+                            // CLEAN THE PROGRESS FOR THE NEXT TIME WHEN WE MONITOR WE DON'T START THE LOADING PAGE 
+                            // WITH THE OLD PROGRESS DATA 
+                            //setProgress(null)
 
 
                             // CLEAR THE INTERVAL 
@@ -87,7 +96,7 @@ const OrderMonitoror = ()=>{
             <button className='order-monitoror-monitor-btn' onClick={monitorOrders} >monitor order(s)</button>
             <GenericModal type='result' size='lg' show={isResultPopupShowed} 
                           title={resultPopupData.title} closeModal={closeOrderMonitoror}
-                          result_table={<GenericTable keys={result_popup_order_keys} orders={resultPopupData.orders} maxHeight='75vh' fontSize='13px' textAlign='center'  highlight_keys={result_popup_highlight_keys} />} />
+                          result_content={<ResultPopupContent resultPopupData={resultPopupData}   />} />
         </div>
         : <LoadingPage action_txt={loadingActionTxt} done_action_txt='were monitored' progress={progress} />
     )

@@ -17,6 +17,13 @@ class OrderAction(models.Model):
     type = models.CharField(max_length=50)
     state  = models.JSONField(default=get_order_action_default_state)
 
+    def get_orders_submitter_obj(self): 
+        last_orders_submitter_obj = OrderAction.objects.filter(type=SUBMITTING_ORDERS).last()
+        
+        if last_orders_submitter_obj and last_orders_submitter_obj.state.get('orders_loader_id') == self.id  : 
+            return last_orders_submitter_obj
+        return None 
+
 class AfexMonitorOrder(models.Model):
     order_id= models.IntegerField(unique=True)
     manifest_date = models.CharField(max_length=10)
@@ -86,6 +93,22 @@ class Locality(models.Model):
     delegation = models.ForeignKey(Delegation,on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     selected = models.BooleanField(default=False)
+
+
+# SETTING MODEL 
+
+class Setting(models.Model) : 
+    afex_email = models.EmailField()
+    afex_password = models.CharField(max_length=255)
+
+    loxbox_email = models.EmailField()
+    loxbox_password = models.CharField(max_length=255)
+
+    mawlety_api_key = models.CharField(max_length=255)
+
+    afex_client_id = models.IntegerField()
+    afex_api_key = models.CharField(max_length=255)
+
 
 
     

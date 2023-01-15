@@ -41,7 +41,7 @@ const AppSidebar = (props)=>{
                             <li  onClick={()=>{navigate("/load_orders")}}> <i style={{marginRight:'15px',position:'relative',left:'4px'}} class='fas fa-cloud-download-alt'></i> <p>load orders</p></li>
                             <li onClick={()=>{navigate("/monitor_orders")}}><i style={{marginRight:'15px',position:'relative',left:'4px'}} class='far fa-eye'></i> <p>monitor orders</p></li>
                             <li onClick={()=>{navigate("/loxbox_areas")}}><i class="material-icons">location_on</i><p>loxbox areas</p></li>
-                            <li onClick={()=>{navigate("/load_orders/104/submit_orders")}}><i class="material-icons">settings</i><p>settings</p></li>
+                            <li onClick={()=>{navigate("/settings")}}><i class="material-icons">settings</i><p>settings</p></li>
                         </ul>
                     </div>
                 </div>:

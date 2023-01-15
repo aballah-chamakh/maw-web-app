@@ -7,13 +7,23 @@ HEADERS = {
     'Authorization' : f"BASIC {MAWLETY_AUTHORIZATION_TOKEN}",
 }
 
+
 MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID = {
     'Validé':'3',
-    'En cours de préparation':'18',
+    'En cours de préparation':'16',
     'Expédié':'4',
-    'Retour':'19',
+    'Retour':'17',
     'Annulé':'6',
     'Livré':'5'
+}
+
+MAWLETY_STATE_ID_TO_MAWLETY_STR_STATE= {
+    '3':'Validé',
+    '16':'En cours de préparation',
+    '4':'Expédié',
+    '17':'Retour',
+    '6':'Annulé',
+    '5':'Livré'
 }
 
 

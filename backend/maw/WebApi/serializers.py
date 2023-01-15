@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import AfexMonitorOrder,LoxboxMonitorOrder,LoxboxAreasSelectorProcess,LoxboxCities,City,Delegation,Locality
+from .models import (AfexMonitorOrder,LoxboxMonitorOrder,LoxboxAreasSelectorProcess,
+                    LoxboxCities,City,Delegation,Locality,Setting,)
 
 
 # MONITOR OREDERS SERIALIZERS 
@@ -60,5 +61,18 @@ class LocalitySerializer(serializers.ModelSerializer):
     class Meta: 
         model = Locality
         fields = ['id','name','selected']
+
+
+# SETTING SERIALIZER 
+
+class SettingSerializer(serializers.ModelSerializer) : 
+
+    class Meta: 
+        model = Setting
+        fields = ['afex_email','afex_password',
+                  'loxbox_email','loxbox_password',
+                  'mawlety_api_key',
+                  'afex_client_id','afex_api_key']
+
 
 

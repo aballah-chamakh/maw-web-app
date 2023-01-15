@@ -8,7 +8,7 @@ from multiprocessing import Process
 import psutil
 import os 
 from WebApi.models import LoxboxAreasSelectorProcess,OrderAction,SUBMITTING_ORDERS
-from OrderActionApi import submit_orders_to_carriers
+from OrderActionApi.order_actions import submit_orders_to_carriers
 import time 
 #from OrderActionApi import grab_maw_orders
 
@@ -50,7 +50,7 @@ def toggle_order_selection(request):
 
 @api_view(['PUT'])
 def select_unselect_all_orders(request):
-
+    
     # GRAB THE REQUEST DATA
     orders_loader_id = request.data.get('orders_loader_id')
     action = request.data.get('action')
@@ -61,6 +61,7 @@ def select_unselect_all_orders(request):
     orders_loader_obj = OrderAction.objects.get(id=orders_loader_id)
     orders_loader_obj.state['is_selector_working'] = True 
     orders_loader_obj.save() 
+  
 
     # SET THE STATE OF ALL ORDERS BASED ON THE ACTION
     orders_loader_obj.state['orders_selected_all'] = is_selected 
@@ -102,9 +103,9 @@ def set_order_carrier(request):
 
 @api_view(['POST'])
 def launch_orders_submitter(request):
-    orders_loader_obj_id = request.data.get('orders_loader_id')
-    orders_submitter_obj =  OrderAction.objects.create(type=SUBMITTING_ORDERS)
-    p = Process(target=submit_orders_to_carriers,args=(orders_loader_obj_id,orders_submitter_obj.id,))
+    orders_loader_obj_id = int(request.data.get('orders_loader_id'))
+    orders_submitter_obj =  OrderAction.objects.create(type=SUBMITTING_ORDERS,state={'state':'working','orders_loader_id':orders_loader_obj_id})
+    p = Process(target=submit_orders_to_carriers,args=(orders_submitter_obj.id,))
     p.start()
     return Response({'orders_submitter_id':orders_submitter_obj.id },status = status.HTTP_201_CREATED)
 

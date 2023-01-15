@@ -6,8 +6,20 @@
 
 import time
 
+# THIS ADDITONNAL FUNCTION IS A WRAPPER TO NOT LOAD DJANGO MODELS BEFORE THE DJANGO ENV IS LOADED IN THE NEW 
+# PROCESS 
 
-def submit_orders_to_carriers(orders_loader_id,orders_submitter_id):
+def grab_mawlety_orders(orders_loader_obj_id,nb_of_days_ago=0): 
+    import django
+    import os 
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'maw.settings'
+    django.setup()
+
+    from .Api.mawlety_API import grab_maw_orders
+    grab_maw_orders(orders_loader_obj_id,nb_of_days_ago=nb_of_days_ago)
+
+
+def submit_orders_to_carriers(orders_submitter_id):
     # LOAD THE DJANGO ENV
     import django
     import os 
@@ -37,16 +49,17 @@ def submit_orders_to_carriers(orders_loader_id,orders_submitter_id):
             }
         )
     """
-
+    orders_submitter_obj = OrderAction.objects.get(id=orders_submitter_id)
+    
     # GRAB THE ORDERS FROM THE ORDER LOADER 
-    order_loader_obj = OrderAction.objects.get(id=orders_loader_id)
+    order_loader_obj = OrderAction.objects.get(id=orders_submitter_obj.state['orders_loader_id'])
     orders = order_loader_obj.state['orders']
 
     # SPLIT THE SELECTED ORDERS BETWEEN AFEX AND LOXBOX
     loxbox_orders,afex_orders = split_selected_orders_between_loxbox_and_afex(orders)
 
     # SUBMIT THE ORDERS TO THEIR CARRIERS WHILE SAVING THE PROGRESS OF SUBMITTING THE ORDERS IN THE orders_submitter_obj
-    orders_submitter_obj = OrderAction.objects.get(id=orders_submitter_id)
+    
 
     if len(loxbox_orders) > 0 :  
 
@@ -98,29 +111,35 @@ def monitor_monitor_orders(orders_monitoror_id) :
     fx_monitor_orders = AfexMonitorOrder.objects.all()
 
     # MONITOR LOXBOX MONITOR ORDERS
-    if len(lx_monitor_orders) > 0 : 
+    if len(lx_monitor_orders) > 0: 
+        # INITIATE CONV ERRORS FOR LOXBOX 
+        orders_monitoror_obj.state['conv_errors'] = {'LOXBOX':{}}
         
-        # SET THE INITIAL DATA OF THE PROGRESS OF THE ORDERS MONITOROR
+        # SET THE INITIAL PROGRESS DATA OF LOXBOX
         orders_monitoror_obj.state['progress'] = {'current_order_id' : lx_monitor_orders.first().order_id ,'monitored_orders_len' :  0,'orders_to_be_monitored': lx_monitor_orders.count()+fx_monitor_orders.count()} 
-       
+        
         orders_monitoror_obj.save()
 
-        update_monitor_orders_state_from_loxbox(lx_monitor_orders,update_a_monitor_order_by_id,delete_a_monitor_order_by_id,orders_monitoror_obj=orders_monitoror_obj)
+        update_monitor_orders_state_from_loxbox(lx_monitor_orders,orders_monitoror_obj,update_a_monitor_order_by_id,delete_a_monitor_order_by_id)
     
     # MONITOR AFEX MONITOR ORDERS
-    if len(fx_monitor_orders) > 0 : 
-
-        if orders_monitoror_obj.state.get('monitored_orders_len') == None  : 
-            orders_monitoror_obj.state['monitored_orders_len'] = 0 
-
-        orders_monitoror_obj.state['current_order_id'] = fx_monitor_orders[0].order_id
-        orders_monitoror_obj.save()
-
+    if len(fx_monitor_orders) > 0 :
+        
+        # SET THE INTITAL PROGRESS DATA OF AFEX 
         if not orders_monitoror_obj.state.get('progress') :
             orders_monitoror_obj.state['progress'] = {'current_order_id' : fx_monitor_orders.first().order_id ,'monitored_orders_len' :  0,'orders_to_be_monitored': fx_monitor_orders.count()} 
-            orders_monitoror_obj.save()
         else : 
             orders_monitoror_obj.state['progress']['current_order_id'] = fx_monitor_orders.first().order_id 
+        
+        # INITIATE CONV ERRORS FOR AFEX 
+        if not orders_monitoror_obj.state.get('conv_errors') :
+            orders_monitoror_obj.state['conv_errors'] = {'AFEX':{}}
+        else :
+            orders_monitoror_obj.state['conv_errors']['AFEX'] = {}
+    
+
+        orders_monitoror_obj.save()
+       
 
         update_afex_monitor_orders_state_from_afex(fx_monitor_orders,orders_monitoror_obj)
 
