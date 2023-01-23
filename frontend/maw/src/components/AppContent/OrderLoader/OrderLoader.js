@@ -25,19 +25,21 @@ const OrderLoader = (props)=>{
     const navigate = useNavigate()
     const location = useLocation()
 
-   
-    
-
+    //alert("location.state : "+location.state)
     useEffect(()=>{
-        // SHOW THE SUCCESS MODAL FOR THE LAST SUCCESSFULL SUBMITTING LAUNCH 
-        // NOTE : WE DON'T NEED TO CHECK IF THERE IS A REDIRECTION BECAUSE THE LAST SUBMITTING LAUNCH WAS SUCCESSFULL 
+        //SHOW THE SUCCESS MODAL FOR THE LAST SUCCESSFULL SUBMITTING LAUNCH 
+        // NOTE 1 : WE DON'T NEED TO CHECK IF THERE IS A REDIRECTION BECAUSE THE LAST SUBMITTING LAUNCH WAS SUCCESSFULL 
+        // NOTE 2 : WHEN THE SUCCESS OF THE POPUP WILL BE CLOSED THE LOCATION STATE WILL CLEARED IN THE CLOSE HANDLER FUNCTION OF THE POPUP
         if(location.state && location.state.submitted_orders_len){
+            //alert('success')
             setActionTxt("loading orders")
             setIsLoading(false)
             setSuccessModalShowed(true)
         }else{
+            //alert('check redirection ')
             // CHECK IF THERE IS A REDIRECTION TO DO 
             if (lastUndoneStepChecked == false){ // TO NOT MAKE THE CHECK AGAIN THE INTV IS UPDATED 
+                //alert('really check redirection ')
                 setLastUndoneStepChecked(true)
                 axios.get(API_ENDPOINT+'/get_last_undone_step_of_the_last_order_loader').then((res)=>{
                     let data = res.data
@@ -72,15 +74,13 @@ const OrderLoader = (props)=>{
                     }
                 })
             }
-        }
-
+        } 
         return ()=>{
-          
             if(intv){
                 clearInterval(intv)
             }
         }
-    },[location,intv])
+    },[intv,location])
 
     const closeInfoModal = ()=>{
         setInfoModalShowed(false) ;
@@ -100,9 +100,21 @@ const OrderLoader = (props)=>{
 
     const closeSuccessModal = ()=>{
         setSuccessModalShowed(false)
+        // CLEAR THE LOCATION STATE 
+        // NOTE 1 : WE ARE CLEARING THE STATE OF THE LOCATION IN TIMEOUT TO NOT MAKE THE POPUP DISAPEAR WITH 0 
+        // TECHNICALLY WE ARE CLEARING STATE OF THE LOCATION IN ANOTHER RENDER CYCLE OTHER THAN THE ONE THAT WILL 
+        // CAUSE THE POPUP TO DISAPEAR 
+        // NOTE 2 :  THE CLEARING THE STATE OF THE LOCATION IN A TIMEOUT MAY CAUSE REPLACEMENT OF ANOTHER NAVIGATION 
+        // IF THE USER GO TO ANOTHER PATH AFTER HE CLICK THE CLOSE BTN OF THE POPUP WITHIN 100ms , AND THIS IS NOT A BIG PROBLEM
+        // BECAUSE  : 
+        // RARELY WHEN THIS WILL HAPPEN BECAUSE HE MUST GO TO ANOTHER PATH WITHIN ONLY 100ms 
+        // EVEN IF THIS HAPPENED , EVENTUALLY ONE TIME HE WILL GO TO ANOTHER PATH AFTER THE 100 SECOND
+        // AND REPLACE THE NAVIGATION 
+
+           
         setTimeout(()=>{
-            navigate(location.pathname, { replace: true });
-        },500)
+           navigate(location.pathname, { replace: true });
+        },100)
         
     }
 
@@ -183,15 +195,17 @@ const OrderLoader = (props)=>{
     }
 
     return(
-
-        !isLoading ? 
+        <>
+        {!isLoading ? 
         <div class="order-loader-container">
+           
             <OrderLoaderForm nbDaysAgo={nbDaysAgo} setNbDaysAgo={setNbDaysAgo} loadOrders={loadOrders} /> 
             <GenericModal show={isInfoModalShowed}  type='alert' title={infoAlertData.title} alertData={infoAlertData} closeModal={closeInfoModal} />
             <GenericModal show={isRestrictedModalShowed}  type='alert' title={restrictedAlertData.title} alertData={restrictedAlertData} closeModal={closeRestrictedModal} />
             <GenericModal show={isSuccessModalShowed}  type='alert' title={successAlertData.title} alertData={successAlertData} orders_len={location.state ? location.state.submitted_orders_len : 0 } closeModal={closeSuccessModal} />
+            <button onClick={()=>{navigate(location.pathname,{state:{submitted_orders_len:40}});}}>CLICK ME</button>
         </div> : 
-        <LoadingPage progress={progress} action_txt={actionTxt} done_action_txt="were loaded"  />
+        <LoadingPage progress={progress} action_txt={actionTxt} done_action_txt="were loaded"  />}</>
 
     )
 }

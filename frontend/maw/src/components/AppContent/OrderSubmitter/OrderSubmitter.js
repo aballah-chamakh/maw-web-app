@@ -46,60 +46,48 @@ const OrderSubmitter = (props)=>{
 
             } // LOAD THE ORDERS FROM THE SERVER GIVEN THE orders_loader_id
             else if(orders_loader_id) { 
-                axios.get(API_ENDPOINT+'/orders_loader/'+orders_loader_id+'/monitor').then(res=>{
-                    // SET THE ORDERS AND THEIR SELECTED ALL STATE
-                    let data = res.data
-                    // REDIRECT TO LOADING ORDERS WHEN THE ORDER LOADER IS CANCELED
-                    if (data.canceled){
-                        navigate('/load_orders')
-                    }
-                    let orders = data.orders  
-                    let orders_selected_all = data.orders_selected_all
-                    setOrders(orders)
-                    setOrdersSelectedAll(orders_selected_all)
-                    // REMOVE THE LOADING 
-                    setIsLoading(false)
-                    //alert(res.data.is_selector_working)
-                    // CHECK IF THE SELECTOR IS WORKING 
-                    if(res.data.is_selector_working){
-                        
-                        // SET THE SERVER IS LOADING 
-                        setServerIsLoading(true)
-
-                        // KEEP MONITORING UNTIL THE SELECTOR IS DONE 
+                        // GRAB THE ORDERS TO SUBMIT OR KEEP MONITORING UNTIL THE SELECTOR IS DONE THEN GRAB THE ORDERS 
                         let intv = setInterval(()=>{
                             axios.get(API_ENDPOINT+'/orders_loader/'+orders_loader_id+'/monitor').then(res=>{
+
                                 let data = res.data 
                                 let is_selector_working = data.is_selector_working
-
+                                let orders = data.orders 
+                                let orders_selected_all = data.orders_selected_all
+                                
                                 // ONCE THE SELECTOR IS DONE DO THE FOLLOWING 
                                 if(!is_selector_working){
                                     // UPDATE THE ORDERS 
-                                    let orders = data.orders 
-                                    let orders_selected_all = data.orders_selected_all
+ 
                                     setOrders(orders)
                                     setOrdersSelectedAll(orders_selected_all)
                                     
-                                    // HIDE THE SERVER IS LOADING INTERFACE
+                                    // HIDE THE SERVER IS LOADING INTERFACE IF EXIST 
                                     setServerIsLoading(false)
-
+                                    // REMOVE THE LOADING IF EXIST 
+                                    setIsLoading(false)
+                                    
                                     // CLEAR THE INTERVAL 
-                                    clearInterval(selectorIntv)
+                                    clearInterval(intv)
+                                }else if(isServerLoading == false){ // WHEN THE THE SELECTOR IS WORKING AND THE SERVER LOADING SPINNER WAS NOT SAT 
+                                    setOrders(orders)
+                                    setOrdersSelectedAll(orders_selected_all)
+                                    // REMOVE THE LOADING 
+                                    setIsLoading(false)
+
+                                    // SET THE SERVER IS LOADING 
+                                    setServerIsLoading(true)
                                 }
 
                             })
 
                         },3000)
                         setSelectorIntv(intv)
-                        
-                    }
-                })
             }
         }
         return ()=>{
             //alert("clean up "+monitorIntv)
             if(selectorIntv){
-                
                 clearInterval(selectorIntv)
             }
 
@@ -236,8 +224,9 @@ const OrderSubmitter = (props)=>{
                         setSubmittingProgress(data.progress)
                     }
                     if(data.state=='FINISHED'){
-                        navigate('/load_orders',{state:{submitted_orders_len:data.progress.orders_to_be_submitted}})
+                        navigate('/load_orders',{state:{submitted_orders_len: data.progress.orders_to_be_submitted}})
                         clearInterval(intv)
+                        alert('clean the interval')
                     }
                     req_is_done = true  
                 })

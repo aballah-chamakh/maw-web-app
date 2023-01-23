@@ -37,6 +37,13 @@
                     p{
                         margin-left: 20px;
                     }
+                    .highlight{
+                        background-color: $primary-color;
+                        color: $secondary_color;
+                        padding: 3px 6px;
+                        border-radius: 5px;
+                        font-size: 14px;
+                    }
                 }
                 i{
                     font-size: 18px;

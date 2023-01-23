@@ -382,7 +382,7 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
         afex_monitor_order_state = afex_monitor_order.state
 
         # AFEX ORDER STATE FROM AFEX SITE  
-        afex_order_state = f"failed_state_{int(random.random()*100)}" # orders_from_afex[str(afex_monitor_order.order_id)]
+        afex_order_state =  orders_from_afex[str(afex_monitor_order.order_id)] #f"failed_state_{int(random.random()*100)}"
 
         # CONVERT IT TO MAW STATE
         afex_order_in_maw_state = afex_state_to_mawlety_state_converter(afex_order_state.lower()) 

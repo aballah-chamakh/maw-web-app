@@ -12,11 +12,10 @@ from WebApi.models import AfexMonitorOrder,LoxboxMonitorOrder
  
 
 def create_a_monitor_order(monitor_order,carrier): 
-    if monitor_order['state'] not in  DELETE_MONITOR_ORDER_STATES  : 
-        if carrier == 'AFEX' : 
-            AfexMonitorOrder.objects.create(**monitor_order)
-        else : 
-            LoxboxMonitorOrder.objects.create(**monitor_order)
+    if carrier == 'AFEX' : 
+        AfexMonitorOrder.objects.create(**monitor_order)
+    else : 
+        LoxboxMonitorOrder.objects.create(**monitor_order)
 
 
 def delete_a_monitor_order_by_id(carrier,order_id):

@@ -34,7 +34,7 @@ LOXBOX_STATE_STR_TO_MAWLETY_STATE_STR = {
     "en cours d'acheminement" : 'Expédié',
     'colis déposé au point relais' : 'Expédié',
     'colis livrés' : 'Livré',
-    'colis mis en retour ' : 'Expédié',
+    'colis mis en retour' : 'Expédié',
     'in return' : 'Expédié',
     'colis retournés' : 'Retour',
     'colis annulés' : 'Annulé',
@@ -84,7 +84,7 @@ def get_filtered_state_cards(session):
             state_card_transactions_id = [el.text for el in soup.select('th > a')]
             
             # ADD IT TO THE FILTERED STATE CARDS
-            filtered_state_cards.append({'transactions_id':state_card_transactions_id,'name' : f"failed_state_{int(random.random()*100)}" }) #state_card_name.lower()})
+            filtered_state_cards.append({'transactions_id':state_card_transactions_id,'name' : state_card_name.lower()}) #f"failed_state_{int(random.random()*100)}" }) #
     
     return filtered_state_cards
 

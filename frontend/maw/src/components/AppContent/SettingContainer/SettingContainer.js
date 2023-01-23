@@ -14,7 +14,6 @@ const SettingContainer = (props)=>{
 
     useEffect(()=>{
         axios.get(API_ENDPOINT+'/get_setting').then(res=>{
-     
             setSetting(res.data)
             setLoading(false)
         })

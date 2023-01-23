@@ -16,22 +16,14 @@ const LoxboxAreasContainer = ()=>{
     const [lxSelectorProgress,setLxSelectorProgress] = useState(null)
     const [isLoading,setIsLoading] = useState(true)
     const [isServerLoading,setServerIsLoading] = useState(false)
+    const [selectorIntv,setSelectorIntv] = useState(null)
+    const [didMount,setDidMount] = useState(false)
 
-    useEffect(()=>{
-        // GRAB THE LOBOX AREAS ADDRESS LEVELS 
-        axios.get(API_ENDPOINT+'/loxbox_areas').then((res)=>{
-            let data = res.data 
-            // CHECK IF THE SELECTOR PROCESS IS WORKING , IF SO 
-            if(data.hasOwnProperty('is_working')){
-                // SET THE PROGRESS OF THE SELECTOR 
-                setLxSelectorProgress(data.progress)
-
-                // SET THE LOADING ACTION TEXT RELATED TO THE SELECTOR PROCESS
-                setLoadingActionTxt('selecting or deselecting address levels')
-
-                // KEEP MONIROTING THE SELECTOR PROCESS UNTIL HE FINISH 
+    useEffect(()=>{ 
+            if(didMount == false){
+                setDidMount(true)
+                // LOAD THE LOXBOX AREAS DATA OR KEEP MONIROTING THE SELECTOR PROCESS UNTIL HE FINISH 
                 const intv = setInterval(()=>{
-
                     axios.get(API_ENDPOINT+"/loxbox_areas").then(res=>{
                         let data = res.data 
                         // HANDLE THE FINISH OF THE SELECTOR PROCESS 
@@ -42,17 +34,18 @@ const LoxboxAreasContainer = ()=>{
                         }else{
                             // UPDATE THE PROGRESS DATA 
                             setLxSelectorProgress(data.progress)
+                            // SET THE LOADING ACTION TEXT RELATED TO THE SELECTOR PROCESS
+                            setLoadingActionTxt('still working on your last section or deselection')
                         }
                     })
-    
                 },5000)
-
-            }else{ // OTHERWISE DISABEL THE LOADING PAGE AND SET LOBOX AREAS ADDRESS LEVELS 
-                setIsLoading(false)
-                setLoxboxAreas(res.data)
-            }         
-        })
-    },[])
+                setSelectorIntv(intv)
+            }
+        return ()=>{
+             clearInterval(selectorIntv)
+        }
+            
+    },[selectorIntv])
 
     const address_levels = ['loxbox_areas','cities','delegations','localities']
 
@@ -234,7 +227,6 @@ const LoxboxAreasContainer = ()=>{
         }).then((res)=>{
 
             
-
             const intv = setInterval(()=>{
                 console.log("monitor_loxbox_areas_selector_process")
                 axios.get(API_ENDPOINT+"/monitor_loxbox_areas_selector_process").then(res=>{
@@ -253,6 +245,7 @@ const LoxboxAreasContainer = ()=>{
                 })
 
             },5000)
+            setSelectorIntv(intv)
 
         })
     }

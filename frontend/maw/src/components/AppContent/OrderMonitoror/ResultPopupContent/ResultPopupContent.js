@@ -1,6 +1,7 @@
 
 import './ResultPopupContent.scss' ;
 import GenericTable from '../../../CommonComponents/GenericTable/GenericTable';
+import Dashboard from '../../../CommonComponents/Dashboard/Dashboard';
 
 const ResultPopupContent = (props)=>{
 
@@ -30,16 +31,16 @@ const ResultPopupContent = (props)=>{
     const get_orders_overview = ()=>{
 
         let orders_overview = {
-            'Expédié' : 0 ,
-            'Livré' : 0,
-            'Retour':0,
-            'Annulé':0,
-            'converter error':failed_state_cnt,
+            'Expédiés' : 0 ,
+            'Livrés' : 0,
+            'Retours':0,
+            'Annulés':0,
+            'converter errors':failed_state_cnt,
             'the same': props.resultPopupData.old_monitor_orders_len - props.resultPopupData.orders.length - failed_state_cnt,
         }
 
         props.resultPopupData.orders.map(order=>{
-            orders_overview[order['new_state']] += 1 
+            orders_overview[order['new_state']+'s'] += 1 
         })
 
         return orders_overview
@@ -51,12 +52,7 @@ const ResultPopupContent = (props)=>{
             <div className='monitoring-card'>
                 <p className='monitoring-card-header'>monitoring overview</p>
                 <div className='monitoring-card-overview'>
-                    {Object.keys(orders_overview).map((card_name)=>(
-                        <div className='monitoring-card-overview-item'>
-                            <p className='monitoring-card-overview-item-nb'>{orders_overview[card_name]}</p>
-                            <p className='monitoring-card-overview-item-name'>{card_name+'(s)'}</p>
-                        </div>
-                    ))}
+                    <Dashboard  dashboardData={orders_overview} />                
                 </div>
             </div>
             <div className='monitoring-card'>

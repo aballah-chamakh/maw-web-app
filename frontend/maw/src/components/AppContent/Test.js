@@ -3,22 +3,22 @@ import { useEffect,useState } from "react"
 
 const Test = ()=>{
     const [cnt,setCnt] = useState(0)
-    let any = 0 
 
-    useEffect(()=>{
-        alert('CALLING USE EFFECT')
-        return ()=>{
-            alert("CALLING THE CLEAN UP "+any)
-        }
-    },[])
-
-
+    alert('RE-RENSER '+cnt)
+  
+    const inscrease = ()=>{
+        setTimeout(()=>{
+            alert('START  INCREASING THE CNT')
+            setCnt(prevCnt=>prevCnt+1)
+            alert('END INCREASING THE CNT')
+        },10000)
+    }
 
 
     return(
         <div>
-            <h1>{cnt} {alert("RE-RENDER THE COMPONENT")}</h1>
-            <button onClick={()=>{any += 100 ; alert(any)}}>INCREASE</button>
+            <h1>{cnt} </h1>
+            <button onClick={inscrease}>INCREASE</button>
         </div>
     )
 

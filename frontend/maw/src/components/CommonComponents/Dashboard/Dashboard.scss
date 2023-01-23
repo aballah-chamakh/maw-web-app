@@ -1,0 +1,21 @@
+@import '../../../vars.scss' ;
+
+.dashboard-container{
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    &-item{
+        width: 32.5%;
+        background-color: $primary-color;
+        color: white;
+        border-radius: 5px;
+        margin-top : 10px;
+        padding : 5px ;
+        &-name{
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+    }
+}

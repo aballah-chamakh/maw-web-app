@@ -91,6 +91,10 @@ def submit_orders_to_carriers(orders_submitter_id):
 
 
 def monitor_monitor_orders(orders_monitoror_id) : 
+    print('START FAKE MONITORING')
+    time.sleep(300)
+    print('END FAKE MONITORING')
+    quit()
     # LOAD THE DJANGO ENV
     import django
     import os 
@@ -102,6 +106,8 @@ def monitor_monitor_orders(orders_monitoror_id) :
     from .Api.monitoring_API import update_a_monitor_order_by_id,delete_a_monitor_order_by_id
     from .Api.loxbox_API import update_monitor_orders_state_from_loxbox
     from .Api.afex_API import update_afex_monitor_orders_state_from_afex
+
+
 
     # GRAB  orders_monitoror_obj WHERE WE GONA RECORD THE PREGRESS OF THE MONITOREING AND EVENTUALLY THE RESUTLS
     orders_monitoror_obj = OrderAction.objects.get(id=orders_monitoror_id)

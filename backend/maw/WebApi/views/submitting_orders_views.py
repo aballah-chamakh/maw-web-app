@@ -69,7 +69,7 @@ def select_unselect_all_orders(request):
     # SET THE STATE OF EACH ORDER BASED ON THE ACTION
     for order in orders_loader_obj.state['orders'] : 
         order['selected'] = is_selected
-        
+    
     # SAVE THE ORDER LOADER OBJ
     orders_loader_obj.state['is_selector_working'] = False
     orders_loader_obj.save()
