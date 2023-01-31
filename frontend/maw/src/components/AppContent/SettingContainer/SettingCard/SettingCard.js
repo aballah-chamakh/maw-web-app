@@ -30,7 +30,7 @@ const SettingCard  = (props)=>{
 
     }
 
-    const passwodTypeKey  = ['Password','mawletyApiKey','afexApiKey']
+    const passwodTypeKey  = ['Password','mawletyApiKey','afexApiKey','loxboxApiKey']
 
     const handleCheckboxChange = (input_name)=>{
         let inpEl = document.querySelector('input[name='+input_name+']')

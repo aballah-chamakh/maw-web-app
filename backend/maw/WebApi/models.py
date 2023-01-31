@@ -100,14 +100,17 @@ class Locality(models.Model):
 class Setting(models.Model) : 
     afex_email = models.EmailField()
     afex_password = models.CharField(max_length=255)
+    afex_client_id = models.IntegerField()
+    afex_api_key = models.CharField(max_length=255)
 
     loxbox_email = models.EmailField()
     loxbox_password = models.CharField(max_length=255)
+    loxbox_api_key = models.CharField(max_length=255)
 
     mawlety_api_key = models.CharField(max_length=255)
 
-    afex_client_id = models.IntegerField()
-    afex_api_key = models.CharField(max_length=255)
+
+
 
 
 

@@ -36,7 +36,7 @@ def update_a_monitor_order_by_id(carrier,order_id,new_state):
 
 
 
-def add_loxbox_order_to_monitoring_phase(order,already_created):
+def add_loxbox_order_to_monitoring_phase(order):
     #CREATE THE INITIAL ROW OF THE MONITOR ORDER
     monitor_order = {'order_id':order['id'],'transaction_id': str(order['transaction_id']) ,'state':'En cours de préparation'}
 
@@ -44,7 +44,7 @@ def add_loxbox_order_to_monitoring_phase(order,already_created):
     create_a_monitor_order(monitor_order,"LOXBOX")
     
     #SET THE ORDER STATE IN MAWLETY.COM TO "En cours de préparation" 
-    update_order_state_in_mawlety(monitor_order['order_id'],monitor_order['state']) 
+    #update_order_state_in_mawlety(monitor_order['order_id'],monitor_order['state']) 
 
     # TRASH CODE 
     # HANDLE THE CASE OF THE ORDER WAS CREATED BY THE MODULE OF LOXBOX , CHECK IF FATMA FORGET TO RUN OUR PROG AND THE STATE OF THE ORDER WAS UPDATED IN LOXBOX
@@ -65,7 +65,7 @@ def add_afex_order_to_monitoring_phase(order) :
     manifest_date = datetime.date.today().strftime("%Y-%m-%d")
     monitor_order = {'order_id':order['id'],'state':'En cours de préparation','manifest_date':manifest_date}
     create_a_monitor_order(monitor_order,"AFEX")
-    update_order_state_in_mawlety(monitor_order['order_id'],monitor_order['state'])
+    
 
 
 

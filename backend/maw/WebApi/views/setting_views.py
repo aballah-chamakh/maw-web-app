@@ -27,8 +27,12 @@ def update_setting(request):
         setting_obj.loxbox_email = form_data.get(setting_part+'Email').strip()
         setting_obj.loxbox_password = form_data.get(setting_part+'Password').strip()
 
+    elif setting_part == 'loxbox_api' :
+        setting_obj.loxbox_api_key = form_data.get('loxboxApiKey').strip()
+
     elif  setting_part == 'mawlety_api' : 
         setting_obj.mawlety_api_key = form_data.get('mawletyApiKey').strip()
+
     else : 
         setting_obj.afex_client_id = form_data.get('afexClientId')
         setting_obj.afex_api_key = form_data.get('afexApiKey').strip()

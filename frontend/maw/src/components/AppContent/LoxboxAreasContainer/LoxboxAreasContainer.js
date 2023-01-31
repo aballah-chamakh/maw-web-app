@@ -255,7 +255,7 @@ const LoxboxAreasContainer = ()=>{
         !isLoading ? 
         <div className='loxbox-areas-container'>
             <LoxboxAreas handleSelectChange={handleSelectChange}  current_address_level_data={loxboxAreas} current_address_level_idx={loxboxAreas.id} /> 
-            <ServerLoading show={isServerLoading}/>
+            <ServerLoading show={isServerLoading} title='selecting or deselecting address level(s)'/>
         </div>  : 
         <LoadingPage  action_txt={loadingActionTxt} progress={lxSelectorProgress} items_name='address levels' />
 

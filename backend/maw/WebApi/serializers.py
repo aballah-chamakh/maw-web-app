@@ -70,9 +70,10 @@ class SettingSerializer(serializers.ModelSerializer) :
     class Meta: 
         model = Setting
         fields = ['afex_email','afex_password',
-                  'loxbox_email','loxbox_password',
-                  'mawlety_api_key',
-                  'afex_client_id','afex_api_key']
+                'afex_client_id','afex_api_key',
+                'loxbox_email','loxbox_password','loxbox_api_key',
+                'mawlety_api_key',
+                  ]
 
 
 

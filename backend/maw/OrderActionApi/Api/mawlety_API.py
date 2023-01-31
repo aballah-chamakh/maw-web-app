@@ -11,13 +11,14 @@ from .global_functions import is_it_for_loxbox
 
 MAWLATY_API_BASE_URL = "https://mawlety.com/api"
 
-def load_cities_delegations(): 
-    with open('cities_delegation.json','r') as f :
-        cities_delegations = json.loads(f.read())
-    return cities_delegations
+
+def is_phone_number_valid(phone_number):
+    # REMOVE WHITE SPACES 
+    phone_number = phone_number.replace(" ","")
+    return len(phone_number) == 8 and phone_number.isdigit()
 
 # TODO : UPDATE THE THE WAY WE GRAB ORDERS WITH DISPLAY
-def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID['Validé']):
+def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID['Validé']):
 
     from WebApi.models import OrderAction
     orders_loader_obj = OrderAction.objects.get(id=orders_loader_id)
@@ -27,20 +28,33 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
     ## REQUEST ORDERS 
     
     # PREP REQUEST ORDERS  PARAMS
-    end_date = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
-    start_date = (datetime.today() - timedelta(days=nb_of_days_ago)).strftime("%Y-%m-%d")
+    # INSCREASE THE END DATE BY ONE DATE 
+    date_range['end_date'] = (datetime.strptime(date_range['end_date'], '%Y-%m-%d') + timedelta(days=1)).strftime("%Y-%m-%d")
+    date_range['start_date'] = datetime.strptime(date_range['start_date'], '%Y-%m-%d').strftime("%Y-%m-%d")
+    #(datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
+    # start_date = date_range['start_date']  #(datetime.today() - timedelta(days=nb_of_days_ago)).strftime("%Y-%m-%d")
     fields_to_collect_from_the_order = str(['id','total_paid','id_carrier','transaction_id','address_detail','customer_detail','cart_products','current_state']).replace("'","")
 
     # PREP REQUEST ORDERS URL
     orders_base_endpoint = "/orders/"
-    orders_filter_endpoint = orders_base_endpoint + f"?filter[invoice_date]=[{start_date},{end_date}]&"
+    orders_filter_endpoint = orders_base_endpoint + f"?filter[date_add]=[{date_range['start_date']},{date_range['end_date']}]&"
     orders_filter_endpoint += f"filter[current_state]=[{state}]&"
-    orders_filter_endpoint += f"display={fields_to_collect_from_the_order}"
+    orders_filter_endpoint += f"display={fields_to_collect_from_the_order}&"
+    orders_filter_endpoint += f"date=1"
+
     print(orders_filter_endpoint)
 
     # MAKE THE REQUEST 
     r = requests.get(f"{MAWLATY_API_BASE_URL+orders_filter_endpoint}",headers=HEADERS)
     print(r.status_code)
+
+    if r.status_code == 401 : 
+        orders_loader_obj.state['state']= "FINISHED"
+        orders_loader_obj.state['orders']= []
+        orders_loader_obj.state['canceled'] = True 
+        orders_loader_obj.state['unauthorization_error'] = 'INVALID_MAWLETY_API_KEY' 
+        orders_loader_obj.save()
+        return
 
     # HANDLE REQUEST ERROR
     if not r : 
@@ -50,9 +64,14 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
         orders_loader_obj.state['canceled'] = True 
         orders_loader_obj.save()
         return 
+    
+
 
     # HANDLE JSON ERROR
     if not r.json() : 
+        
+        print("JSON ERROR")
+        print(r.text)
         orders_loader_obj.state['state']= "FINISHED"
         orders_loader_obj.state['orders']= []
         orders_loader_obj.state['canceled'] = True 
@@ -60,9 +79,12 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
         return 
 
     orders = r.json()['orders']
+    print(f"LEN ORDERS  : {len(orders)} || START ORDER ID   : {orders[0]['id']} || END ORDER ID : {orders[-1]['id']}")
+
 
     if len(orders) > 0 : 
         orders_loader_obj.state['orders']  = []
+        orders_loader_obj.state['invalid_orders'] = []
         orders_loader_obj.state['orders_selected_all'] = True #FOR THE ORDERS SET THEM ALL SELECTED 
         # SET THE INITIAL PROGRESS STATE OF GRABBING THE ORDERS 
         orders_loader_obj.state['progress'] = {'current_order_id':orders[0]['id'],'grabbed_orders_len':0,'orders_to_grab_len':len(orders)}
@@ -70,6 +92,7 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
 
         # DECODE FROM STRING THE JSON OF THE VALUES OF THE FOLLOWING KEYS address_detail,customer_detail,cart_products
         for order in orders : 
+            
             # SET THE CURRENT ORDER ID 
             orders_loader_obj.state['progress']['current_order_id'] = order['id']
             orders_loader_obj.save()
@@ -77,19 +100,33 @@ def grab_maw_orders(orders_loader_id,nb_of_days_ago=0,state=MAWLETY_STR_STATE_TO
 
             # DECODE FROM STRING TO JSON 
             order['address_detail'] = json.loads(order['address_detail'])
+
             order['address_detail']['phone_mobile'] = order['address_detail']['phone_mobile'][:8]
             
             order['customer_detail'] = json.loads(order['customer_detail'])
+            
+            # TRIM AND CAPITALIZE CITIES AND DELEGATIONS
+            order['address_detail']['city'] = order['address_detail']['city'].title().strip()
+            order['address_detail']['delegation'] = order['address_detail']['delegation'].title().strip()
             #order['customer_detail']['firstname'] = 'test'
             #order['customer_detail']['lastname'] = 'test'
             order['cart_products'] = json.loads(order['cart_products'])
+            
+            # CHECK IF THE ORDER IS LOXBOX AND THE INVALID FIELDS OF THE ORDER
+            is_it_loxbox,invalid_fields = True,[] if order['transaction_id'] else is_it_for_loxbox(order['address_detail']['city'],order['address_detail']['delegation'],order['address_detail']['locality'])
+            if is_phone_number_valid(order['address_detail']['phone_mobile']) : 
+                invalid_fields.append('phone_mobile')
+            
+            # IF WE ANY INVALID FIELD APPEND THE ORER TO THE INVALID ORDERS ARRAYS OTHERWISE TO THE ORDERS ARRAY 
+            if len(invalid_fields)  > 0 :
+                orders_loader_obj.state['invalid_orders'].append({'order_id':order['id'],'invalid_fields':invalid_fields})
+            else : 
+                # SET THE CARRIER AND THE SELECTED KEY 
+                order['carrier'] = 'LOXBOX' if is_it_loxbox else 'AFEX' 
+                order['selected'] = True 
 
-            # SET THE CARRIER AND THE SELECTED KEY 
-            order['carrier'] = 'LOXBOX' if is_it_for_loxbox(order['address_detail']['city'],order['address_detail']['delegation'],order['address_detail']['locality']) else 'AFEX' 
-            order['selected'] = True 
-
-            # APPEND THE ORDER 
-            orders_loader_obj.state['orders'].append(order)
+                # APPEND THE ORDER 
+                orders_loader_obj.state['orders'].append(order)
 
             # INCREASE THE GRABBED ORDERS LEN
             orders_loader_obj.state['progress']['grabbed_orders_len'] += 1
@@ -111,6 +148,10 @@ def update_order_state_in_mawlety(order_id,order_state_str):
     # GET THE ORDER DATA IN XML 
     orders_base_endpoint = f"/orders/{order_id}"
     r = requests.get(MAWLATY_API_BASE_URL+orders_base_endpoint,headers=HEADERS)
+    
+    if r.status_code == 401 :
+        return  r.status_code
+
     order_data = r.content.decode()
 
     
@@ -141,6 +182,8 @@ def update_order_state_in_mawlety(order_id,order_state_str):
         if r.status_code == 200 : 
             del HEADERS['Output-Format']
             return 
+        elif r.status_code == 401 :
+            return  r.status_code
         print(f"WHILE TRYING TO UPDATE THE STATE OF THE ORDER ID :{order_id} THE FOLLOWING ERROR HAPPENED  : {r.json()} , WE WILL TRY AGAIN IN 2 SECONDS")
         time.sleep(2)
 

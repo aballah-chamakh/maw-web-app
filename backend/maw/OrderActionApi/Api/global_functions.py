@@ -3,29 +3,38 @@ from .global_variables import LOXBOX_CITIES_DELEGATIONS, THE_BIG_TUNIS,LOXBOX_CA
 
 def is_it_for_loxbox(city,delegation,locality):
 
-    if not delegation or not locality : 
-        return True 
-
     from WebApi.models import City 
     
     #CHECK IF THE CITY OF THE ORDER IS SELECTED WHICH MEAN THE LOCALITY IS AUTO SELECTED
     city_obj = City.objects.filter(name=city).first()
     
-    if not city_obj or city_obj.selected : 
-        return True 
+    if  city_obj :
+        if city_obj.selected : 
+            print('CITY LEVEL')
+            return True , []
+    else :
+        return False , ['city','delgation','localities']
 
     #CHECK IF THE DELEGATION OF THE ORDER IS SELECTED WHICH MEAN THE LOCALITY IS AUTO SELECTED
     delegation_obj = city_obj.delegation_set.filter(name=delegation).first()
-    if not delegation_obj or delegation_obj.selected : 
-        return True 
+    if delegation_obj :
+        if delegation_obj.selected : 
+            print('DELEGATION LEVEL')
+            return True,[]
+    else: 
+        return False , ['delgation','localities']
 
     #CHECK IF THE LOCALITY OF THE ORDER IS SELECTED 
     locality_obj  = delegation_obj.locality_set.filter(name=locality).first()
-    if not locality_obj or locality_obj.selected : 
-        return True 
+    if locality_obj :
+        if locality_obj.selected : 
+            print('LOCALITY LEVEL')
+            return True,[]
+    else :
+        return False , ['localities']
 
     # RETURN FALSE IF NONE OF THE ONES BEFORE ARE TRUE 
-    return False 
+    return False, []
 
 
 def split_selected_orders_between_loxbox_and_afex(orders):
@@ -46,3 +55,17 @@ def split_selected_orders_between_loxbox_and_afex(orders):
             afex_orders.append(order)
 
     return loxbox_orders,afex_orders
+
+
+def raise_a_unathorization_error(orders_action_obj,unathorization_error) :
+    orders_action_obj.state['state'] = 'FINISHED'
+    orders_action_obj.state['unauthorization_error'] = unathorization_error 
+    orders_action_obj.save()
+    quit() 
+    
+
+def raise_an_exception_error(orders_action_obj,exception_error) :
+    orders_action_obj.state['state'] = 'FINISHED'
+    orders_action_obj.state['exception_error'] = exception_error 
+    orders_action_obj.save()
+    quit() 

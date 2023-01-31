@@ -16,9 +16,10 @@ const OrderMonitoror = ()=>{
     const [orders,setOrders] = useState([])
     const [monitorIntv,setMonitorIntv] = useState(null)
     const [didMount,setDidMount] = useState(false)
-
     const [isResultPopupShowed,setResultPopupShowed] = useState(false)
+    const [isProcessModalShowed,setProcessModalShowed] = useState(false)
     const [resultPopupData,setResultPopupData] = useState({title:'',conv_errors:{},orders:[],old_monitor_orders_len:0})
+    const [processAlertData,setProcessAlerttData] = useState({title:"",icon:<i style={{color:'#D81010'}} className="fas fa-fingerprint"></i>,msg:""} )
     // useState({title:'',orders:[]})
     const order_keys = ['order_id','state','carrier']
 
@@ -39,6 +40,21 @@ const OrderMonitoror = ()=>{
     const closeOrderMonitoror = ()=>{
         setResultPopupShowed(false)
     }
+
+    const openProcessModal = (title,msg)=>{
+        setProcessModalShowed(true)
+        setProcessAlerttData(prevData=>({
+            ...prevData,
+            title:title, 
+            msg : msg
+        }))
+    }
+
+    const closeProcessModal = ()=>{
+        setProcessModalShowed(false)
+        setIsLoading(false)
+        setProgress(null)
+    }
     
     const monitorOrders = ()=>{
         setIsLoading(true)
@@ -54,17 +70,28 @@ const OrderMonitoror = ()=>{
 
                         if(data.state=='FINISHED'){
                          
-                            // RESET THE LOADING PAGE 
-                            setIsLoading(false)
-                           
+                            
 
                             // UPDATE MONITOR ORDERS AFTER MONITORING 
                             setOrders(data.new_monitor_orders)
-                           
 
+                            // HANDLE UNAUTHORIZATION ERROR IF IT EXIST 
 
-                            // HANDLE RESULTS DATA IF IT EXIST 
-                            if(data.results){
+                            if(data.unauthorization_error){
+
+                                let splitted_unauthorization = data.unauthorization_error.split('_')
+                       
+                                let unauthorization_party = splitted_unauthorization[1].toLowerCase()
+
+                                let unauthorization_element = splitted_unauthorization[2] == 'API' ? 'api key' : 'credentials'
+                                
+                                let title = `${unauthorization_party} unauhorization error`
+                                let msg = `the ${unauthorization_element} of ${unauthorization_party} is invalid , please go to the settings and update it then try again`
+                                
+                                openProcessModal(title,msg)
+                            
+                            }// HANDLE RESULTS DATA IF IT EXIST 
+                            else if(data.results){
                                 // SET THE RESULT DATA FOR THE POPUP 
                                 setResultPopupData({
                                     title:data.results.length +'/'+data.progress.orders_to_be_monitored+' order(s) were updated',
@@ -75,14 +102,20 @@ const OrderMonitoror = ()=>{
                 
                                 // LOAD THE RESULT POPUP
                                 setResultPopupShowed(true)
+                                // RESET THE LOADING PAGE 
+                                setIsLoading(false)
+                                // RESET THE PROGRESS
+                                setProgress(null)
+
+                            }else{
+                                //WHEN THERE IS NEITHER data.results NOR data.unauthorization_error
+                                // RESET THE LOADING PAGE 
+                                setIsLoading(false)
+                                // RESET THE PROGRESS
+                                setProgress(null)
+
                             }
-
-
                             
-                            // CLEAN THE PROGRESS FOR THE NEXT TIME WHEN WE MONITOR WE DON'T START THE LOADING PAGE 
-                            // WITH THE OLD PROGRESS DATA 
-                            setProgress(null)
-
 
                             // CLEAR THE INTERVAL 
                             clearInterval(intv)
@@ -143,7 +176,11 @@ const OrderMonitoror = ()=>{
                           title={resultPopupData.title} closeModal={closeOrderMonitoror}
                           result_content={<ResultPopupContent resultPopupData={resultPopupData}   />} />
         </div>
-        : <LoadingPage action_txt={loadingActionTxt} done_action_txt='were monitored' progress={progress} />
+        :<> 
+            <LoadingPage action_txt={loadingActionTxt} done_action_txt='were monitored' progress={progress} />
+            <GenericModal show={isProcessModalShowed}  type='alert' title={processAlertData.title}
+                         alertData={processAlertData} closeModal={closeProcessModal} />
+        </>
     )
 }
 

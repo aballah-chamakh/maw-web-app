@@ -36,6 +36,7 @@ const ServerLoading = (props)=>{
                
                     cssOverride={{borderWidth:'10px'}}
                 />
+            {props.title ? <p className="server-loading-container-title">{props.title}</p> : null}
         </div>
     )
 }

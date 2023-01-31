@@ -27,18 +27,6 @@ const SettingContainer = (props)=>{
           .required('Required'),
     })
 
-    const loxboxValidation =  Yup.object({
-        loxboxEmail: Yup.string()
-          .required('Required'),
-          loxboxPassword: Yup.string()
-          .required('Required'),
-    })
-
-    const mawletyValidation =  Yup.object({
-        mawletyApiKey: Yup.string()
-          .required('Required'),
-    })
-    
     const afexApiValidation =  Yup.object({
         afexClientId: Yup.number()
           .integer()
@@ -46,6 +34,26 @@ const SettingContainer = (props)=>{
         afexApiKey: Yup.string()
           .required('Required'),
     })
+
+    const loxboxValidation =  Yup.object({
+        loxboxEmail: Yup.string()
+          .required('Required'),
+          loxboxPassword: Yup.string()
+          .required('Required'),
+    })
+
+    const loxboxApiValidation =  Yup.object({
+        loxboxApiKey: Yup.string()
+        .required('Required'),
+    })
+
+    const mawletyValidation =  Yup.object({
+        mawletyApiKey: Yup.string()
+          .required('Required'),
+    })
+    
+
+
 
 
     return (
@@ -55,12 +63,13 @@ const SettingContainer = (props)=>{
                 <p>Settings</p>
             </div>
             <div className='setting-container-body'>
-                <SettingCard title="afex login credentials" setting_part="afex" formData={{afexEmail:setting.afex_email,afexPassword:setting.afex_password}} validationSchema={afexValidation} setServerLoading={setServerLoading}  />
-                <SettingCard title="loxbox login credentials" setting_part="loxbox" formData={{loxboxEmail:setting.loxbox_email,loxboxPassword:setting.loxbox_password}} validationSchema={loxboxValidation} setServerLoading={setServerLoading}  />
                 <SettingCard title="mawlety api credentials" setting_part="mawlety_api" formData={{mawletyApiKey:setting.mawlety_api_key}} validationSchema={mawletyValidation} setServerLoading={setServerLoading}  />
+                <SettingCard title="afex login credentials" setting_part="afex" formData={{afexEmail:setting.afex_email,afexPassword:setting.afex_password}} validationSchema={afexValidation} setServerLoading={setServerLoading}  />
                 <SettingCard title="afex api credentials" setting_part="afex_api" formData={{afexClientId:setting.afex_client_id,afexApiKey:setting.afex_api_key}} validationSchema={afexApiValidation} setServerLoading={setServerLoading}  />
+                <SettingCard title="loxbox login credentials" setting_part="loxbox" formData={{loxboxEmail:setting.loxbox_email,loxboxPassword:setting.loxbox_password}} validationSchema={loxboxValidation} setServerLoading={setServerLoading}  />
+                <SettingCard title="loxbox api credentials" setting_part="loxbox_api" formData={{loxboxApiKey:setting.loxbox_api_key}} validationSchema={loxboxApiValidation} setServerLoading={setServerLoading}  />
             </div>
-            <ServerLoading show={serverLoading} />
+            <ServerLoading show={serverLoading} title='updating the settings' />
         </div> : 
         <LoadingPage action_txt={"loading settings"} />
         

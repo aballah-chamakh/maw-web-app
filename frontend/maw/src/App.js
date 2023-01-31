@@ -2,6 +2,7 @@
 import AppSidebar from './components/AppSidebar/AppSidebar';
 import AppContent from './components/AppContent/AppContent';
 import './App.scss'
+import "react-widgets/styles.css";
 
 
 

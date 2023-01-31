@@ -7,28 +7,33 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    i{
+    &-icon{
         font-size: 100px;
         margin-bottom: 30px;
         color : $third_color ;
     }
     .form-group{
         width: 50%;
+        margin-bottom: 10px;
+        label{
+            text-transform: uppercase;
+        }
         input{
-       
-            margin-bottom: 10px;
-            &::-webkit-inner-spin-button {
-                opacity: 1
-            }
+            width: 100%;
+           
+        }
+        .rw-calendar-popup{
+            width: 100%;
         }
     }
 
-    button{
+    &-button{
         width: 50%;
         border : none ;
         height: 35px;
         background-color: $dark_color;
         color : $secondary_color ;
         border-radius : 5px ;
+        text-transform: uppercase;
     }
 }

@@ -43,3 +43,5 @@ DELETE_MONITOR_ORDER_STATES = ['Retour','Annulé','Livré']
 AFEX_MONITOR_ORDER_TABLE_NAME = "afex_monitor_order"
 LOXBOX_MONITOR_ORDER_TABLE_NAME = "loxbox_monitor_order"
 
+
+

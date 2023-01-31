@@ -21,16 +21,12 @@ def launch_orders_loader(request):
     if loxbox_areas_selector_process_obj.is_working  :
         return Response({'restriction_msg': 'ORDERS_LOADER_IS_DISABLED_NON'} ,status = status.HTTP_200_OK)
 
-    print(request.data.keys())
-    days_ago = request.data.get('days_ago') 
-    if days_ago :
-        days_ago = int(days_ago)
-    else : 
-        days_ago = 0 
+    date_range = request.data.get('date_range') 
+
     orders_loader_obj =  OrderAction.objects.create(type=LOADING_ORDERS,state={'state':'working','canceled':False})
 
     orders_loader_obj_id = orders_loader_obj.id
-    p = Process(target=grab_mawlety_orders,args=(orders_loader_obj_id,),kwargs={'nb_of_days_ago':days_ago})
+    p = Process(target=grab_mawlety_orders,args=(orders_loader_obj_id,date_range))
     p.start()
     print(f"ORDER LOADER ID : {orders_loader_obj_id}")
     return Response({'orders_loader_id':orders_loader_obj_id },status = status.HTTP_201_CREATED)

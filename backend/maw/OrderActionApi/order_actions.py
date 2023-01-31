@@ -9,14 +9,14 @@ import time
 # THIS ADDITONNAL FUNCTION IS A WRAPPER TO NOT LOAD DJANGO MODELS BEFORE THE DJANGO ENV IS LOADED IN THE NEW 
 # PROCESS 
 
-def grab_mawlety_orders(orders_loader_obj_id,nb_of_days_ago=0): 
+def grab_mawlety_orders(orders_loader_obj_id,date_range): 
     import django
     import os 
     os.environ['DJANGO_SETTINGS_MODULE'] = 'maw.settings'
     django.setup()
 
     from .Api.mawlety_API import grab_maw_orders
-    grab_maw_orders(orders_loader_obj_id,nb_of_days_ago=nb_of_days_ago)
+    grab_maw_orders(orders_loader_obj_id,date_range)
 
 
 def submit_orders_to_carriers(orders_submitter_id):
@@ -69,7 +69,7 @@ def submit_orders_to_carriers(orders_submitter_id):
 
         submit_loxbox_orders(loxbox_orders,orders_submitter_obj,add_loxbox_order_to_monitoring_phase) 
 
-    if len(afex_orders) > 0 : 
+    if len(afex_orders)  > 0 : 
 
         # SET THE INITIAL DATA OF THE PROGRESS OF THE ORDERS SUBMITTER
         if not orders_submitter_obj.state.get('progress') :
@@ -91,10 +91,6 @@ def submit_orders_to_carriers(orders_submitter_id):
 
 
 def monitor_monitor_orders(orders_monitoror_id) : 
-    print('START FAKE MONITORING')
-    time.sleep(300)
-    print('END FAKE MONITORING')
-    quit()
     # LOAD THE DJANGO ENV
     import django
     import os 

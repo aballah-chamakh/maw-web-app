@@ -14,6 +14,7 @@ const OrderSubmitter = (props)=>{
     const [loadingActionTxt,setLoadingActionTxt] = useState('loading orders to submit')
     const [submittingProgress,setSubmittingProgress] = useState(null)
     const [isServerLoading,setServerIsLoading] = useState(false)
+    const [loadingServerTxt,setLoadingServerTxt] = useState('selecting or deselecting order(s)')
     const [orders,setOrders] = useState([])
     const [ordersSelectedAll,setOrdersSelectedAll] = useState(false)
     const [monitorIntv,setMonitorIntv] = useState(null)
@@ -101,6 +102,8 @@ const OrderSubmitter = (props)=>{
         // SET SERVER LOADING 
         setServerIsLoading(true)
 
+        
+
         // GRAB THE TARGETED CHECKBOX ELEMENT 
         let checkbox = e.target 
 
@@ -178,6 +181,7 @@ const OrderSubmitter = (props)=>{
     const handleDropdownChange = (e)=>{
         // SET SERVER LOADING 
         setServerIsLoading(true)
+        setLoadingServerTxt('updating the carrier of an order')
 
         let selectEl = e.target 
         let order_id =  parseInt(selectEl.name.split('_')[2])
@@ -199,8 +203,9 @@ const OrderSubmitter = (props)=>{
                 return newOrders ;
             })
 
-            // SET SERVER LOADING 
+            // REMOVE SERVER LOADING 
             setServerIsLoading(false)
+            setLoadingServerTxt('selecting or deselecting order(s)')
 
         })
 
@@ -208,6 +213,7 @@ const OrderSubmitter = (props)=>{
     
     const cancelOrderLoader = ()=>{
         setServerIsLoading(true)
+        setLoadingServerTxt('canceling ...')
         axios.put(API_ENDPOINT+'/orders_loader/'+orders_loader_id+'/cancel').then(res=>{
            
             navigate('/load_orders')
@@ -224,9 +230,19 @@ const OrderSubmitter = (props)=>{
                         setSubmittingProgress(data.progress)
                     }
                     if(data.state=='FINISHED'){
-                        navigate('/load_orders',{state:{submitted_orders_len: data.progress.orders_to_be_submitted}})
+                        let state = { }
+                        if(data.unauthorization_error ){
+                            state = {unauthorization_error : data.unauthorization_error}
+                        }
+                        else if(data.exception_error){
+                            state = {exception_error : data.exception_error}
+                        }
+                        else{
+                            state = {submitted_orders_len: data.progress.orders_to_be_submitted}
+                        }
+                        
+                        navigate('/load_orders',{state:state})
                         clearInterval(intv)
-                        alert('clean the interval')
                     }
                     req_is_done = true  
                 })
@@ -258,7 +274,7 @@ const OrderSubmitter = (props)=>{
                     <button className='order-submitter-actions-submit' onClick={submitOrders}>submit to carriers</button>
                     <button className='order-submitter-actions-cancel' onClick={cancelOrderLoader}>cancel</button>
                 </div>
-                <ServerLoading show={isServerLoading} />
+                <ServerLoading show={isServerLoading} title={loadingServerTxt} />
               
             </div>
         :

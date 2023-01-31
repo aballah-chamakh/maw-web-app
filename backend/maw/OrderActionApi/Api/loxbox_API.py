@@ -3,9 +3,10 @@ from bs4 import BeautifulSoup
 import requests  
 import json 
 import random
-from .credentials import LOXBOX_LOGIN_CREDENTIAL
-from .global_variables import DELETE_MONITOR_ORDER_STATES, HEADERS ,LOXBOX_MONITOR_ORDER_TABLE_NAME
-from .mawlety_API import update_order_state_in_mawlety,MAWLATY_API_BASE_URL
+from .credentials import LOXBOX_LOGIN_CREDENTIAL,LOXBOX_API_CREDENTIAL
+from .global_variables import DELETE_MONITOR_ORDER_STATES
+from .global_functions import raise_a_unathorization_error
+from .mawlety_API import update_order_state_in_mawlety
 
 
 
@@ -41,9 +42,14 @@ LOXBOX_STATE_STR_TO_MAWLETY_STATE_STR = {
 }
 TAB = "    "
 
+def get_loxbox_request_status_code(r):
+    soup = BeautifulSoup(r.text,"html.parser")
+    username = soup.select_one("input[name='username']") 
+    password = soup.select_one("input[name='password']") 
+    return  401 if username and password else 200 
+
 def login_to_loxbox():
     # GO TO THE LOXBOX LOGIN PAGE AND GET THE csrfmiddlewaretoken OF THE FORM
-
     s = requests.Session()
     r = s.get(f"{LOXBOX_BASE_URL}/accounts/login/")
     soup = BeautifulSoup(r.text,"html.parser")
@@ -52,9 +58,9 @@ def login_to_loxbox():
     # LOGIN TO LOXBOX USING THE csrfmiddlewaretoken OF THE FORM , THE LOGIN CREDENTIALS AND THE csrftoken FROM THE COOKIE OF THE PREVIOUS REQUEST
     LOXBOX_LOGIN_CREDENTIAL['csrfmiddlewaretoken'] = csrfmiddlewaretoken
     r = s.post(LOXBOX_LOGIN_URL,data=LOXBOX_LOGIN_CREDENTIAL,headers={'referer': LOXBOX_BASE_URL})
-    return s
+    return s,get_loxbox_request_status_code(r)
 
-def get_filtered_state_cards(session):
+def get_filtered_state_cards(session,orders_monitoror_obj):
     # SET THE PREFERED LANGUAGE AS FRENCH TO BING THE STATE CARDS NAME IN FRENCH 
     lang_headers = {
         'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7,ar;q=0.6'
@@ -80,6 +86,15 @@ def get_filtered_state_cards(session):
 
             # EXTRACT TRANSACTIONS ID OF THE STATE CARD 
             r = session.get(state_card_link)
+            # HANDLE UNAUTHORIZATION ERROR IF IT EXIST 
+            if get_loxbox_request_status_code(r) == 401 : 
+                # UPDATE THE SESSION COOKIES WITH A RELOGIN
+                session,status_code = login_to_loxbox()
+                # HANDLE UNAUTHORIZATION ERROR IF IT EXIST 
+                if status_code == 401 : 
+                    raise_a_unathorization_error(orders_monitoror_obj,'INVALID_LOXBOX_CREDENTIALS')
+                r = session.get(state_card_link)
+
             soup = BeautifulSoup(r.text,"html.parser")
             state_card_transactions_id = [el.text for el in soup.select('th > a')]
             
@@ -90,10 +105,13 @@ def get_filtered_state_cards(session):
 
 def update_monitor_orders_state_from_loxbox(loxbox_monitor_orders,orders_monitoror_obj,update_a_monitor_order_by_id,delete_a_monitor_order_by_id):
     # LOGIN TO LOXBOX
-    session = login_to_loxbox()
+    session,status_code = login_to_loxbox()
+    if status_code == 401 : 
+        raise_a_unathorization_error(orders_monitoror_obj,'INVALID_LOXBOX_CREDENTIALS')
 
+    
     # GET THE FILTERED STATE CARDS WITH THEIR DATA (FILTER IN THE ONES WHO HAVE ORDERS IN THEM)
-    filtered_state_cards = get_filtered_state_cards(session)
+    filtered_state_cards = get_filtered_state_cards(session,orders_monitoror_obj)
 
     # CHECK IF results KEYWORD EXIST OTHERWISE ADD IT 
     if orders_monitoror_obj.state.get('results') == None :
@@ -123,11 +141,18 @@ def update_monitor_orders_state_from_loxbox(loxbox_monitor_orders,orders_monitor
 
                 # CHECK IF THE CURRENT MONITOR ORDER WERE CHANGED
                 if loxbox_monitor_order.state != filtered_state_card_state : 
-        
+                    
+                    #UPDATE THE STATE OF THE ORDER IN MAWLATY.COM
+                    print("update state in mawlety")
+                    print(f"UPDATE TRANSACTION ID : {loxbox_monitor_order.transaction_id}")
+                    status_code = update_order_state_in_mawlety(loxbox_monitor_order.order_id,filtered_state_card_state)
+                    # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
+                    if status_code == 401 : 
+                        raise_a_unathorization_error(orders_monitoror_obj,'INVALID_MAWLETY_API_KEY')
+
                     #CHECK IF THE NEW STATE IN THE DELETE_MONITOR_ORDER_STATES IF SO  : DELETE THE MONITOR ORDER FROM THE TABLE
                     if filtered_state_card_state in DELETE_MONITOR_ORDER_STATES : 
                         delete_a_monitor_order_by_id('LOXBOX',loxbox_monitor_order.order_id)
-
                     # OTHERWISE UPDATE THE LOXBOX MONITOR ORDER
                     else: 
                         update_a_monitor_order_by_id('LOXBOX',loxbox_monitor_order.order_id,filtered_state_card_state)
@@ -142,11 +167,6 @@ def update_monitor_orders_state_from_loxbox(loxbox_monitor_orders,orders_monitor
 
                     orders_monitoror_obj.save()
 
-                    #UPDATE THE STATE OF THE ORDER IN MAWLATY.COM
-                    print("update state in mawlety")
-                    print(f"UPDATE TRANSACTION ID : {loxbox_monitor_order.transaction_id}")
-                    update_order_state_in_mawlety(loxbox_monitor_order.order_id,filtered_state_card_state)
-                    
                 # BREAK ONCE WE FIND IN WHICH STATE CARD THE CURRENT LOXBOX MONITOR ORDER EXITS AND WE DID PROCESS 
                 break 
 
@@ -163,19 +183,6 @@ def get_loxbox_header(loxbox_token):
         "Content-Type":"application/json"
     }
 
-def get_loxbox_token():
-    # SET THE JSON FORMAT AND THE CONFIGUTATION BASE ENDPOINT
-    HEADERS['Output-Format'] = "JSON"
-    config_base_endpoint = f"/configurations/"
-
-    # GET LOXBOX TOKEN ID
-    config_list_filter_endpoint = f"{config_base_endpoint}?filter[name]=loxbox&display=[value]"
-    r = requests.get(f"{MAWLATY_API_BASE_URL+config_list_filter_endpoint}",headers=HEADERS)
-    loxbox_token = r.json()["configurations"][0]["value"]
-
-    # CLEAN THE JSON FORMAT FOR THE OTHER REQUEST AND RETURN THE LOXBOX TOKEN
-    del HEADERS['Output-Format']
-    return loxbox_token
 
 def get_order_content(cart_products) : 
     content = "" 
@@ -207,42 +214,65 @@ def format_loxbox_order(loxbox_order) :
     return loxbox_order_format
 
 
-def insert_a_loxbox_order(loxbox_order,loxbox_header):
-    formatted_loxbox_order = format_loxbox_order(loxbox_order)
 
+
+
+def insert_a_loxbox_order(loxbox_order,loxbox_header,orders_submitter_obj):
+    formatted_loxbox_order = format_loxbox_order(loxbox_order)
     while True : 
         r = requests.post("https://www.loxbox.tn/api/NewTransaction/",data=json.dumps(formatted_loxbox_order),headers=loxbox_header)
-        
         if r.status_code == 200 : 
-            return r.json()['Transaction_instance']
-    
+            return r.json()['Transaction_instance'],r.status_code
+        elif r.status_code == 401 :
+            return '',r.status_code
         print(f"WE DID ENCOUNTER AN ERROR WHILE CREATING THE ORDER WITH THE ID : {loxbox_order['id']} , WE WILL TRY AGAIN IN 2 SECONDS")
         time.sleep(2)
 
 
 def submit_loxbox_orders(loxbox_orders,orders_submitter_obj,add_a_loxbox_order_to_monitoring_phase):
-    loxbox_token = get_loxbox_token()
+    loxbox_token = LOXBOX_API_CREDENTIAL['api_key']
     loxbox_header = get_loxbox_header(loxbox_token)
-    already_created = True 
-    real_cnt = 0
+    submitted_orders_cnt = 0
     for loxbox_order in loxbox_orders : 
         
         # SET THE current_order_id TO THE ORDERS SUBMITTER
         orders_submitter_obj.state['progress']['current_order_id'] = loxbox_order['id']
         orders_submitter_obj.save() 
 
+        # UPDATE THE STATE OF THE ORDER IN MAWLETY TO "En cours de préparation"
+        status_code = update_order_state_in_mawlety(loxbox_order['id'],'En cours de préparation') 
+        # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
+        if status_code == 401 : 
+            raise_a_unathorization_error(orders_submitter_obj,'INVALID_MAWLETY_API_KEY')
+
         # IF WE HAVE THE TRANSACTION ID IT MEAN THAT THE TRANSACTION WAS CREATED BY THE LOXBOX MODULE OTHERWISE WE SHOULD CREATE IT BY OURSELF
         if not loxbox_order['transaction_id'] :
-            already_created = False
-            transaction_id = insert_a_loxbox_order(loxbox_order,loxbox_header)
-            real_cnt += 1 
-            time.sleep(3)
-            loxbox_order['transaction_id'] = transaction_id
+            transaction_id,status_code = insert_a_loxbox_order(loxbox_order,loxbox_header,orders_submitter_obj)
+             
+            # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
+            if status_code == 401 : 
+                # UNDO THE UPDATE OF THE STATE OF ORDER IN MAWLETY 
+                status_code = update_order_state_in_mawlety(loxbox_order['id'],'Validé')
+                # RAISE AN UNAUTORIZATION ERROR ON LX AND MAW
+                if status_code == 401 :
+                     raise_a_unathorization_error(orders_submitter_obj,f'INVALID_LOXBOX_AND_MAWLETY_API_KEY_UNDO_ORDER_ID_{loxbox_order["id"]}')
+                
+                raise_a_unathorization_error(orders_submitter_obj,'INVALID_LOXBOX_API_KEY')
 
-        add_a_loxbox_order_to_monitoring_phase(loxbox_order,already_created)
+            # SET THE TRANSACTION ID OF THE LX ORDER 
+            loxbox_order['transaction_id'] = transaction_id
+            
+            # UPDATE THE NUMBER OF ORDERS SUBMITTED WITH THE API (THIS NUMBER DON'T INCLUDE THE ORDERS WHO WERE ALREADY CREATED IN LOXBOX BY THE PS MODDULE) 
+            submitted_orders_cnt += 1 
+            time.sleep(3)
+        
+
+
+        add_a_loxbox_order_to_monitoring_phase(loxbox_order)
+
         # INSCREASE submitted_orders_len TO THE ORDERS SUBMITTER
         orders_submitter_obj.state['progress']['submitted_orders_len']  += 1 
-        orders_submitter_obj.state['real_cnt']=  real_cnt
+        orders_submitter_obj.state['real_cnt']=  submitted_orders_cnt
         orders_submitter_obj.save()
 
 

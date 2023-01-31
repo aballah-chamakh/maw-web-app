@@ -10,6 +10,10 @@ LOXBOX_LOGIN_CREDENTIAL  = {
     'password' : setting_obj.loxbox_password
 }
 
+LOXBOX_API_CREDENTIAL  = {
+    'api_key' : setting_obj.loxbox_api_key
+}
+
 AFEX_LOGIN_CREDENTIALS  = {
     'email' : setting_obj.afex_email , 
     'password' : setting_obj.afex_password

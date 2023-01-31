@@ -30,6 +30,8 @@ def test2():
     update_order_state_in_mawlety(1066,'Expédié')
 
 
+
+
 load_django_env()
 test2()
 """
