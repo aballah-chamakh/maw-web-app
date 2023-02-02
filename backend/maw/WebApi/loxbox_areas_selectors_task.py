@@ -77,8 +77,6 @@ def handle_loxbox_areas_long_select_or_deselect_task(splitted_identifier,is_sele
     # GRAB THE ADDRESS LEVEL ELEMENT
     address_level_element = get_address_level_element(root_address_level_element,splitted_identifier)
 
-    # SET FOR loxbox_areas_selector_process_obj THE INITIAL VALUES OF items_to_process_cnt AND processed_items_cnt
-    loxbox_areas_selector_process_obj.progress['processed_items_cnt'] = 0
     # NOTE : I DIDN'T SET THE RIGHT NUMBER TO PROCESS HERE BECAUSE I DIDN'T WANT TO WASTE TIME ON GETTING THE RIGHT NUMBER BY USING THE RECURSIVE SELECT 
     # NOTE : THIS NUMBER IS RIGHT address_level_element.get_items_to_process_cnt() ONLY WHEN THEY ARE ALL DOESN'T EQUAL TO IS_SELECT AND IT'S FALSE WHEN THERE IS SOME OF THEM EQUAL TO IS_SELECT
     loxbox_areas_selector_process_obj.progress['items_to_process_cnt'] = address_level_element.get_items_to_process_cnt(is_select)
@@ -116,7 +114,8 @@ def handle_loxbox_areas_long_select_or_deselect_task(splitted_identifier,is_sele
 
 
 
-
+"""
+OLD SELECT AND DESELECT FUNCTIONS 
 
 
 def init_the_loxbox_selector_process(LoxboxAreasSelectorProcess,items_to_process_cnt): 
@@ -259,3 +258,5 @@ def select_unselect_all_a_delegation(delegation_id,is_select=True):
 
     #LOG THE LAST PROGRESS
     log_loxbox_areas_selector_process_progress(LoxboxAreasSelectorProcess,processed_items_cnt,is_finished=True)
+
+"""

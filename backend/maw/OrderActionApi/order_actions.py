@@ -64,21 +64,20 @@ def submit_orders_to_carriers(orders_submitter_id):
     if len(loxbox_orders) > 0 :  
 
         # SET THE INITIAL DATA OF THE PROGRESS OF THE ORDERS SUBMITTER
-        orders_submitter_obj.state['progress'] = {'current_order_id' : loxbox_orders[0]['id'] ,'submitted_orders_len' :  0,'orders_to_be_submitted': len(loxbox_orders)+len(afex_orders)} 
+        orders_submitter_obj.state['progress'] = {'current_order_id' : loxbox_orders[0]['id'] ,'submitted_orders_len' :  0,'orders_to_be_submitted': len(loxbox_orders)+len(afex_orders),'carrier':'LOXBOX'} 
         orders_submitter_obj.save()
 
         submit_loxbox_orders(loxbox_orders,orders_submitter_obj,add_loxbox_order_to_monitoring_phase) 
 
-    if len(afex_orders)  > 0 : 
+    if len(afex_orders) > 0 : 
 
         # SET THE INITIAL DATA OF THE PROGRESS OF THE ORDERS SUBMITTER
         if not orders_submitter_obj.state.get('progress') :
-            
-            orders_submitter_obj.state['progress'] = {'current_order_id' : afex_orders[0]['id'] ,'submitted_orders_len' :  0,'orders_to_be_submitted': len(afex_orders)} 
+            orders_submitter_obj.state['progress'] = {'current_order_id' : afex_orders[0]['id'] ,'submitted_orders_len' :  0,'orders_to_be_submitted': len(afex_orders),'carrier':'AFEX'}
             orders_submitter_obj.save()
-
         else : 
             orders_submitter_obj.state['progress']['current_order_id'] = afex_orders[0]['id']
+            orders_submitter_obj.state['progress']['carrier'] = 'AFEX'
             orders_submitter_obj.save()
 
         submit_afex_orders(afex_orders,orders_submitter_obj)
@@ -108,9 +107,14 @@ def monitor_monitor_orders(orders_monitoror_id) :
     # GRAB  orders_monitoror_obj WHERE WE GONA RECORD THE PREGRESS OF THE MONITOREING AND EVENTUALLY THE RESUTLS
     orders_monitoror_obj = OrderAction.objects.get(id=orders_monitoror_id)
 
+
     # GRAB BOTH THE LOXBOX AND THE AFEX MONITOR ORDERS
     lx_monitor_orders = LoxboxMonitorOrder.objects.all()
     fx_monitor_orders = AfexMonitorOrder.objects.all()
+
+    # INITIATE THE results AND THE conv_errors KEYS INTO THE STATES 
+    orders_monitoror_obj.state['results'] = []
+    orders_monitoror_obj.state['conv_errors'] = {}
 
     # MONITOR LOXBOX MONITOR ORDERS
     if len(lx_monitor_orders) > 0: 
@@ -118,7 +122,7 @@ def monitor_monitor_orders(orders_monitoror_id) :
         orders_monitoror_obj.state['conv_errors'] = {'LOXBOX':{}}
         
         # SET THE INITIAL PROGRESS DATA OF LOXBOX
-        orders_monitoror_obj.state['progress'] = {'current_order_id' : lx_monitor_orders.first().order_id ,'monitored_orders_len' :  0,'orders_to_be_monitored': lx_monitor_orders.count()+fx_monitor_orders.count()} 
+        orders_monitoror_obj.state['progress'] = {'current_order_id' : lx_monitor_orders.first().order_id ,'monitored_orders_len' :  0,'orders_to_be_monitored': lx_monitor_orders.count()+fx_monitor_orders.count(),'carrier':'LOXBOX'} 
         
         orders_monitoror_obj.save()
 
@@ -129,17 +133,13 @@ def monitor_monitor_orders(orders_monitoror_id) :
         
         # SET THE INTITAL PROGRESS DATA OF AFEX 
         if not orders_monitoror_obj.state.get('progress') :
-            orders_monitoror_obj.state['progress'] = {'current_order_id' : fx_monitor_orders.first().order_id ,'monitored_orders_len' :  0,'orders_to_be_monitored': fx_monitor_orders.count()} 
+            orders_monitoror_obj.state['progress'] = {'current_order_id' : fx_monitor_orders.first().order_id ,'monitored_orders_len' :  0,'orders_to_be_monitored': fx_monitor_orders.count(),'carrier':'AFEX'} 
         else : 
             orders_monitoror_obj.state['progress']['current_order_id'] = fx_monitor_orders.first().order_id 
-        
+            orders_monitoror_obj.state['progress']['carrier'] = 'AFEX'
         # INITIATE CONV ERRORS FOR AFEX 
-        if not orders_monitoror_obj.state.get('conv_errors') :
-            orders_monitoror_obj.state['conv_errors'] = {'AFEX':{}}
-        else :
-            orders_monitoror_obj.state['conv_errors']['AFEX'] = {}
+        orders_monitoror_obj.state['conv_errors']['AFEX'] = {}
     
-
         orders_monitoror_obj.save()
        
 

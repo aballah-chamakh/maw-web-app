@@ -9,7 +9,7 @@ import psutil
 import os 
 from WebApi.models import LoxboxCities,LoxboxAreasSelectorProcess,Delegation,Locality
 from WebApi.serializers import LoxboxCitiesSerializer,LoxboxAreasSelectorProcessSerializer
-from WebApi.loxbox_areas_selectors_task import handle_loxbox_areas_long_select_or_deselect_task,get_address_level_element,handle_additional_action,select_unselect_all_loxbox_areas,select_unselect_all_a_city,select_unselect_all_a_delegation
+from WebApi.loxbox_areas_selectors_task import handle_loxbox_areas_long_select_or_deselect_task,get_address_level_element,handle_additional_action #,select_unselect_all_loxbox_areas,select_unselect_all_a_city,select_unselect_all_a_delegation
 import time 
 
 
@@ -33,7 +33,7 @@ def loxbox_areas_list(request):
 def init_loxbox_areas_selector_process() : 
     loxbox_areas_selector_process_obj = LoxboxAreasSelectorProcess.objects.first()
     loxbox_areas_selector_process_obj.is_working = True 
-    loxbox_areas_selector_process_obj.progress = {}
+    loxbox_areas_selector_process_obj.progress = {'processed_items_cnt':0,'items_to_process_cnt':'XXX'}
     loxbox_areas_selector_process_obj.save()
     return loxbox_areas_selector_process_obj
 

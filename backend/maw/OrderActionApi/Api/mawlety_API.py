@@ -11,10 +11,11 @@ from .global_functions import is_it_for_loxbox
 
 MAWLATY_API_BASE_URL = "https://mawlety.com/api"
 
-
 def is_phone_number_valid(phone_number):
+    print(f"{phone_number} || {len(phone_number)} || {phone_number.isdigit()}")
     # REMOVE WHITE SPACES 
     phone_number = phone_number.replace(" ","")
+    print(f"{phone_number} || {len(phone_number)} || {phone_number.isdigit()}")
     return len(phone_number) == 8 and phone_number.isdigit()
 
 # TODO : UPDATE THE THE WAY WE GRAB ORDERS WITH DISPLAY
@@ -33,7 +34,7 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
     date_range['start_date'] = datetime.strptime(date_range['start_date'], '%Y-%m-%d').strftime("%Y-%m-%d")
     #(datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
     # start_date = date_range['start_date']  #(datetime.today() - timedelta(days=nb_of_days_ago)).strftime("%Y-%m-%d")
-    fields_to_collect_from_the_order = str(['id','total_paid','id_carrier','transaction_id','address_detail','customer_detail','cart_products','current_state']).replace("'","")
+    fields_to_collect_from_the_order = str(['id','total_paid','id_carrier','transaction_id','address_detail','customer_detail','cart_products','current_state','date_add']).replace("'","")
 
     # PREP REQUEST ORDERS URL
     orders_base_endpoint = "/orders/"
@@ -81,56 +82,58 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
     orders = r.json()['orders']
     print(f"LEN ORDERS  : {len(orders)} || START ORDER ID   : {orders[0]['id']} || END ORDER ID : {orders[-1]['id']}")
 
-
+    orders_loader_obj.state['orders']  = []
     if len(orders) > 0 : 
-        orders_loader_obj.state['orders']  = []
+       
         orders_loader_obj.state['invalid_orders'] = []
         orders_loader_obj.state['orders_selected_all'] = True #FOR THE ORDERS SET THEM ALL SELECTED 
         # SET THE INITIAL PROGRESS STATE OF GRABBING THE ORDERS 
-        orders_loader_obj.state['progress'] = {'current_order_id':orders[0]['id'],'grabbed_orders_len':0,'orders_to_grab_len':len(orders)}
+        orders_loader_obj.state['progress'] = {'current_order_id':orders[0]['id'],'grabbed_orders_len':0,'orders_to_grab_len':len(orders),'carrier':''}
         orders_loader_obj.save()
 
         # DECODE FROM STRING THE JSON OF THE VALUES OF THE FOLLOWING KEYS address_detail,customer_detail,cart_products
         for order in orders : 
-            
-            # SET THE CURRENT ORDER ID 
-            orders_loader_obj.state['progress']['current_order_id'] = order['id']
-            orders_loader_obj.save()
-
-
-            # DECODE FROM STRING TO JSON 
+            # DECODE FROM STRING TO JSON THE VALUE OF THE address_detail
             order['address_detail'] = json.loads(order['address_detail'])
-
-            order['address_detail']['phone_mobile'] = order['address_detail']['phone_mobile'][:8]
-            
-            order['customer_detail'] = json.loads(order['customer_detail'])
-            
             # TRIM AND CAPITALIZE CITIES AND DELEGATIONS
             order['address_detail']['city'] = order['address_detail']['city'].title().strip()
             order['address_detail']['delegation'] = order['address_detail']['delegation'].title().strip()
-            #order['customer_detail']['firstname'] = 'test'
-            #order['customer_detail']['lastname'] = 'test'
-            order['cart_products'] = json.loads(order['cart_products'])
             
-            # CHECK IF THE ORDER IS LOXBOX AND THE INVALID FIELDS OF THE ORDER
-            is_it_loxbox,invalid_fields = True,[] if order['transaction_id'] else is_it_for_loxbox(order['address_detail']['city'],order['address_detail']['delegation'],order['address_detail']['locality'])
-            if is_phone_number_valid(order['address_detail']['phone_mobile']) : 
+            # CHECK IF THE ORDER IS LOXBOX AND GRAB THE INVALID FIELDS OF THE ORDER
+            is_it_loxbox,invalid_fields = (True,[],) if order['transaction_id'] else is_it_for_loxbox(order['address_detail']['city'],order['address_detail']['delegation'],order['address_detail']['locality'])
+
+            # UPDATE THE PROGRESS OF THE current_order_id AND THE carrier
+            orders_loader_obj.state['progress']['current_order_id'] = order['id']
+            orders_loader_obj.state['progress']['carrier'] = 'LOXBOX' if is_it_loxbox else 'AFEX' if len(invalid_fields)==0 else ''
+            orders_loader_obj.save()
+            
+            # SET THE CARRIER OF THE ORDER 
+            order['carrier'] = orders_loader_obj.state['progress']['carrier']
+
+            # CHANGE THE KEY OF THE DATE (AND GRAB ONLY THE DATE)
+            order['created_at'] = order['date_add'].split(' ')[0]
+            del order['date_add']
+        
+            # CHECK IF THE PHONE NUMBER IS NOT VALID , IF SO ADD IT TO INVALID FIELDS 
+            if not is_phone_number_valid(order['address_detail']['phone_mobile']) : 
                 invalid_fields.append('phone_mobile')
             
-            # IF WE ANY INVALID FIELD APPEND THE ORER TO THE INVALID ORDERS ARRAYS OTHERWISE TO THE ORDERS ARRAY 
+            # IF WE HAVE ANY INVALID FIELD APPEND THE ORDER TO THE INVALID ORDERS ARRAY 
             if len(invalid_fields)  > 0 :
-                orders_loader_obj.state['invalid_orders'].append({'order_id':order['id'],'invalid_fields':invalid_fields})
-            else : 
-                # SET THE CARRIER AND THE SELECTED KEY 
-                order['carrier'] = 'LOXBOX' if is_it_loxbox else 'AFEX' 
+                orders_loader_obj.state['invalid_orders'].append({'order_id':order['id'],'created_at':order['created_at'],'invalid_fields':invalid_fields})
+            else :# OTHERWISE TO THE ORDERS ARRAY
+
+                # DECODE FROM STRING TO JSON OTHER KEYS 
+                order['customer_detail'] = json.loads(order['customer_detail'])
+                order['cart_products'] = json.loads(order['cart_products'])
+
+                # SET THE ORDER AS SELECTED  
                 order['selected'] = True 
 
                 # APPEND THE ORDER 
                 orders_loader_obj.state['orders'].append(order)
-
             # INCREASE THE GRABBED ORDERS LEN
             orders_loader_obj.state['progress']['grabbed_orders_len'] += 1
-            
             orders_loader_obj.save()
     else : 
         orders_loader_obj['orders'] = []

@@ -113,9 +113,7 @@ def update_monitor_orders_state_from_loxbox(loxbox_monitor_orders,orders_monitor
     # GET THE FILTERED STATE CARDS WITH THEIR DATA (FILTER IN THE ONES WHO HAVE ORDERS IN THEM)
     filtered_state_cards = get_filtered_state_cards(session,orders_monitoror_obj)
 
-    # CHECK IF results KEYWORD EXIST OTHERWISE ADD IT 
-    if orders_monitoror_obj.state.get('results') == None :
-        orders_monitoror_obj.state['results'] = []
+
     
     # FOREACH LOXBOX MONITOR ORDER
     for loxbox_monitor_order in loxbox_monitor_orders : 

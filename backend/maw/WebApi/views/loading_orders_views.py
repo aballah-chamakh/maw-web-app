@@ -53,13 +53,13 @@ def get_last_undone_step_of_the_last_order_loader(request):
     data = {'undone_step':undone_step}
     if last_orders_loader_obj : 
         orders_submitter_obj = last_orders_loader_obj.get_orders_submitter_obj()
-        if last_orders_loader_obj.state['state'] == 'working' and last_orders_loader_obj.state['canceled'] == False : 
+        if last_orders_loader_obj.state['state'] == 'working' : 
             undone_step = "SHOW_ORDERS_LOADER_PROGRESS"
             data['orders_loader_id'] = last_orders_loader_obj.id 
-        elif last_orders_loader_obj.state['canceled'] == False and orders_submitter_obj == None : 
+        elif last_orders_loader_obj.state['canceled'] == False and last_orders_loader_obj.state.get('orders') and  orders_submitter_obj == None : 
             undone_step = "SHOW_ORDERS_TO_SUBMIT"
             data['orders_loader_id'] = last_orders_loader_obj.id 
-        elif last_orders_loader_obj.state['canceled'] == False and orders_submitter_obj and orders_submitter_obj.state['state'] == "working": 
+        elif orders_submitter_obj and orders_submitter_obj.state['state'] == "working": 
             undone_step = "SHOW_ORDERS_SUBMITTER_PROGRESS"
             data['orders_loader_id'] = last_orders_loader_obj.id 
             data['orders_submitter_id'] = orders_submitter_obj.id 

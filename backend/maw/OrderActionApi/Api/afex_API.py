@@ -187,6 +187,7 @@ def submit_afex_orders(orders,orders_submitter_obj):
 
 def afex_state_to_mawlety_state_converter(afex_order_state): 
     afex_state_to_mawlety_state = {
+
         "en attente d'enlevement" : 'En cours de préparation', 
         'en attente de livraison':'Expédié', 
         'en cours de livraison':'Expédié', 
@@ -194,6 +195,7 @@ def afex_state_to_mawlety_state_converter(afex_order_state):
         'en attente de retour':'Expédié', 
         'en cours de retour':'Expédié',
         'en cours de transfert' : 'Expédié',
+        'en attente de transfert' :'Expédié',
         'livre':'Livré',
         'retourne':'Retour',
         'annulé':'Annulé',
@@ -302,10 +304,6 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
 
 
 
-            # ADD THE CHANGED ORDER TO THE RESULTS
-            # CHECK IF results KEYWORD EXIST OTHERWISE ADD IT 
-            if orders_monitoror_obj.state.get('results') == None :
-                orders_monitoror_obj.state['results'] = []
 
             # ADD THE CHANGED ORDER OBJ TO THE RESULT KEYWORD
             orders_monitoror_obj.state['results'].append({

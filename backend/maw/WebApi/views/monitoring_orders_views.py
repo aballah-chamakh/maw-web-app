@@ -38,6 +38,13 @@ def monitor_orders_monitoror(request,id):
 
 @api_view(['GET'])
 def monitor_orders_list(request):
+    # GRAB THE STATE OF THE LAST MONITOROR 
+    last_monitoror = {'is_working':False}
+    last_monitoror_obj = OrderAction.objects.filter(type=MONITORING_ORDERS).last()
+    if last_monitoror_obj.state['state'] == 'working' : 
+        last_monitoror['is_working'] = True 
+        last_monitoror['orders_monitoror_id'] = last_monitoror_obj.id 
+
     # GRAB BOTH THE LOXBOX AND THE AFEX MONITOR ORDERS
     lx_monitor_orders = LoxboxMonitorOrder.objects.all()
     lx_ser = LoxboxMonitorOrderSerializer(lx_monitor_orders,many=True)
@@ -45,7 +52,5 @@ def monitor_orders_list(request):
     fx_monitor_orders = AfexMonitorOrder.objects.all()
     fx_ser = AfexMonitorOrderSerializer(fx_monitor_orders,many=True)
 
-
-    all_monitor_order = lx_ser.data + fx_ser.data
-    
-    return Response(all_monitor_order,status=status.HTTP_200_OK)
+    all_monitor_orders = lx_ser.data + fx_ser.data    
+    return Response({'last_monitoror':last_monitoror,'all_monitor_orders':all_monitor_orders},status=status.HTTP_200_OK)

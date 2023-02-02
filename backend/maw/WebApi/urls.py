@@ -32,10 +32,6 @@ urlpatterns = [
     path('monitor_loxbox_areas_selector_process', monitor_loxbox_areas_selector_process),
     path('loxbox_areas', loxbox_areas_list),
     path('launch_loxbox_areas_select_or_deselect',loxbox_areas_select_or_deselect),
-    path('loxbox_areas/<str:select_type>', loxbox_areas_select_unselect_all),
-    path('city/<int:city_id>/<str:select_type>', city_select_unselect_all),
-    path('delegation/<int:delegation_id>/<str:select_type>', delegation_select_unselect_all),
-    path('locality/<int:locality_id>/<str:select_type>', locality_select_unselect),
 
     # SETTING URL  
     path('get_setting', get_setting),
@@ -43,4 +39,14 @@ urlpatterns = [
 
 
 ]
+
+
+"""
+    OLD  WAY OF SELECTING AND DESELECTING 
+    path('loxbox_areas/<str:select_type>', loxbox_areas_select_unselect_all),
+    path('city/<int:city_id>/<str:select_type>', city_select_unselect_all),
+    path('delegation/<int:delegation_id>/<str:select_type>', delegation_select_unselect_all),
+    path('locality/<int:locality_id>/<str:select_type>', locality_select_unselect),
+
+"""
 

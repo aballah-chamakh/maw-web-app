@@ -8,21 +8,13 @@ def is_it_for_loxbox(city,delegation,locality):
     #CHECK IF THE CITY OF THE ORDER IS SELECTED WHICH MEAN THE LOCALITY IS AUTO SELECTED
     city_obj = City.objects.filter(name=city).first()
     
-    if  city_obj :
-        if city_obj.selected : 
-            print('CITY LEVEL')
-            return True , []
-    else :
-        return False , ['city','delgation','localities']
+    if not city_obj :
+        return False,['city','delgation','locality']
 
     #CHECK IF THE DELEGATION OF THE ORDER IS SELECTED WHICH MEAN THE LOCALITY IS AUTO SELECTED
     delegation_obj = city_obj.delegation_set.filter(name=delegation).first()
-    if delegation_obj :
-        if delegation_obj.selected : 
-            print('DELEGATION LEVEL')
-            return True,[]
-    else: 
-        return False , ['delgation','localities']
+    if not delegation_obj : 
+        return False,['delgation','locality']
 
     #CHECK IF THE LOCALITY OF THE ORDER IS SELECTED 
     locality_obj  = delegation_obj.locality_set.filter(name=locality).first()
@@ -31,10 +23,10 @@ def is_it_for_loxbox(city,delegation,locality):
             print('LOCALITY LEVEL')
             return True,[]
     else :
-        return False , ['localities']
+        return False,['locality']
 
     # RETURN FALSE IF NONE OF THE ONES BEFORE ARE TRUE 
-    return False, []
+    return False,[]
 
 
 def split_selected_orders_between_loxbox_and_afex(orders):
