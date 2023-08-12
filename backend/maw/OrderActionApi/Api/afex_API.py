@@ -97,43 +97,39 @@ def submit_afex_order(order) :
         marchandise += f"{product['quantity']} x {product['name']}"
         if idx+1 != cart_product_len :
             marchandise += ','
+    headers = {
+        'Content-Type': "application/text",
+        'X-API-Key': AFEX_API_CREDENTIALS['api_key']
+    }
     
     formatted_afex_order = {
-        **AFEX_API_CREDENTIALS, 
-        'nom_pre_destinataire':f"{order['customer_detail']['firstname']} {order['customer_detail']['lastname']}",
-        'gouvernerat_destinataire':order['address_detail']['city'],
-        'deleg_destinataire':order['address_detail']['delegation'],
-        'adresse_destinataire' : order['address_detail']['address1'],
-        'tel_destinataire' : int(order['address_detail']['phone_mobile']),    
+        'nom':order['address_detail']['firstname'],
+        'gouvernorat':order['address_detail']['city'],
+        'delegation':order['address_detail']['delegation'],
+        'adresse' : order['address_detail']['address1'],
+        'telephone1' : order['address_detail']['phone_mobile'], 
+        'telephone2' : order['address_detail']['phone'],    
         'marchandise' : marchandise ,
-        'ref_destinataire' :str(order['id']),
-        'nbr_colis' : 1 ,
-        'type_envoi_colis' : 'Livraison à domicile',
-        'montant_contre_rembst' : float(order['total_paid']) ,
-        'mode_regl' : 'Chèque ou espèces'
+        'reference' :str(order['reference']),
+        'paquets' : 1 ,
+        'type_envoi' : 'Livraison à domicile',
+        'cod' : order['total_paid'] ,
+        'mode_reglement' : 'Chèque ou espèces',
+        'manifest' : 0 
     }
 
-    url = "http://afex.smart-delivery-systems.com/webgesta/index.php/api/pushOrderDataApi"
+    url = "https://apis.afex.tn/v1/shipments"
 
-    while True : 
-        # SUBMIT THE ORDER TO AFEX SERVER 
-        r = requests.post(url,data=formatted_afex_order)
+    
+
+    # SUBMIT THE ORDER TO AFEX SERVER 
+    r = requests.post(url,data=json.dumps(formatted_afex_order),headers=headers)
+    json_res = json.loads(r.text.replace("'",'"')) 
+    return json_res , r.status_code 
 
 
-        # CHECK IF THE REQUEST WAS SUCCESSFUL THEN EXIT 'status': 'Unauthorized'
-        res = r.json()
-        print(res)
-        # RETURN UNAUTORIZED STATUS CODE 
-        if res.get('status') == 'Unauthorized' :  
-            return 401
-
-        if res.get('success') == True  : 
-            print(res)
-            return 
         
-        # OTHERWISE WAIT FOR 2 SECONDS 
-        print(f"WE DID ENCOUNTER A ERROR WHILE CREATING THE ORDER WITH THE ID : {order['id']} , WE WILL TRY AGAIN IN 2 SECONDS")
-        time.sleep(2)
+     
             
 
 def submit_afex_orders(orders,orders_submitter_obj):
@@ -141,11 +137,13 @@ def submit_afex_orders(orders,orders_submitter_obj):
     # START SUBMITTING ORDERS 
     for order in orders: 
         print(f"WORKING ON SUBMITTING THE ORDER WITH ID : {order['id']}")
-        
+
         # SET THE CURRENT ORDER ID 
         orders_submitter_obj.state['progress']['current_order_id'] = order['id']
         orders_submitter_obj.save()
         
+
+
         try : 
             # UPDATE THE STATE OF THE ORDER IN MAWLETY
             status_code = update_order_state_in_mawlety(order['id'],'En cours de préparation')
@@ -160,8 +158,9 @@ def submit_afex_orders(orders,orders_submitter_obj):
         
 
         try :
+            
             # SUBMIT THE ORDER TO AFEX  
-            status_code = submit_afex_order(order)
+            r,status_code = submit_afex_order(order)
 
             # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
             if status_code == 401 : 
@@ -179,6 +178,18 @@ def submit_afex_orders(orders,orders_submitter_obj):
                     exception_msg += str(e)+' ,'
                     exception_msg += f"PLEASE BACKUP THE STATE OF THE ORDER TO VALIDÉ IN MAWLETY.COM THEN UPDATE THE API KEY OF AFEX IN THE SETTING AFTER FIXING YOUR INTERNET CONNECTION" 
                     raise_a_server_request_exception_error(orders_submitter_obj,exception_msg) 
+            elif status_code != 200 :
+                exception_msg = f"THE STATUS CODE COMMING FROM RESPONSE OF SUBMITTING THE ORDER WIH THE ID : {order['id']} TO AFEX IS : {r.status_code}"
+                exception_msg += " ,PLEASE BACKUP THE STATE OF THE ORDER TO VALIDÉ IN MAWLETY.COM AFTER REPORTING THIS ISSUE TO AFEX" 
+                raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
+
+            order['barcode'] = r['barcode']
+            add_afex_order_to_monitoring_phase(order)
+            
+            # INSCREASE THE submitted_orders_len
+            orders_submitter_obj.state['progress']['submitted_orders_len']  += 1 
+            orders_submitter_obj.save()
+    
         except Exception as e :
             exception_msg = f"THE FOLLOWING ERROR HAPPENED WHILE SUBMITTING THE ORDER WITH THE ID {order['id']} TO AFEX : "
             exception_msg += str(e)+' ,'
@@ -187,44 +198,23 @@ def submit_afex_orders(orders,orders_submitter_obj):
 
 
 
-        add_afex_order_to_monitoring_phase(order)
-        
-        # INSCREASE THE submitted_orders_len
-        orders_submitter_obj.state['progress']['submitted_orders_len']  += 1 
-        orders_submitter_obj.save()
 
         # SLEEP FOR EACH SUBMITTED ORDER TO NOT OVERLOAD THE SERVER 
         time.sleep(2)
         
-    # MANIFEST ORDERS 
-    try :
-        manifest_orders(orders_submitter_obj)
-    except Exception as e:
-        exception_msg = f"THE FOLLOWING ERROR HAPPENED WHILE TRYING TO MANIFEST THE ORDERS OF AFEX : "
-        exception_msg += str(e)+' ,'
-        exception_msg += f"PLEASE MANIFEST THE ORDERS OF AFEX AFTER FIXING YOUR INTERNET CONNECTION  : " 
-        raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
-         
+     
 
 
 def afex_state_to_mawlety_state_converter(afex_order_state): 
     afex_state_to_mawlety_state = {
-
-        "en attente d'enlevement" : 'En cours de préparation', 
-        'en attente de livraison':'Expédié', 
-        'en cours de livraison':'Expédié', 
-        'en attente de relivraison':'Expédié',
-        'en attente de retour':'Expédié', 
-        'en cours de retour':'Expédié',
-        'en cours de transfert' : 'Expédié',
-        'en attente de transfert' :'Expédié',
-        'livre':'Livré',
-        'retourne':'Retour',
-        'annulé':'Annulé',
-        'recupere' : 'Expédié',
-        'en attente':'Expédié',
+        'pre_manifest' : 'En cours de préparation', 
+        'awaiting_removal':'En cours de préparation', 
+        'delivered':'Livré',
+        'returned':'Retour',
+        'canceled':'En cours de retour',
+        'pre_shipping_canceling' : 'Annulé'
     }
-    return afex_state_to_mawlety_state.get(afex_order_state)
+    return afex_state_to_mawlety_state.get(afex_order_state) or 'Expédié'
 
 def move_date_day(date_str,days):
     return (datetime.datetime.strptime(date_str, "%Y-%m-%d").date() + datetime.timedelta(days=days)).strftime("%Y-%m-%d")
@@ -239,96 +229,62 @@ def afex_manifested_orders_to_dict(afex_manifested_orders):
         afex_manifested_orders_dict[afex_manifested_order['ref_destinataire']] = afex_manifested_order['dernier_statut']   
     return afex_manifested_orders_dict
 
+def get_shipment_by_barcode(barcode,shipments) :
+    for idx,shipment in enumerate(shipments) : 
+        if int(shipment['barcode']) == barcode : 
+            shipments.pop(idx)
+            return shipment
+    # IF THE SHIPPMENT DOESN'T EXIST GIVE THE STATE OF PRE SHIPPING CANCELING (BECAUSE THE USER HAS DELETE THE ORDER FROM THE CARRIER PLATFORM BEFORE SHIPPING (CANCELING THE ORDER))
+    return {'barcode' : str(barcode) , 'state':'pre_shipping_canceling'} 
+
 def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monitoror_obj):
 
-    # GET THE MANIFEST DATE RANGE OF AFEX MONITOR ORDER
-    afex_monitor_orders_manifest_date_range = get_afex_monitor_orders_manifest_date_range(afex_monitor_orders)
+    # GRAB THE BARCODES OF AFEX MONITOR ORDERS
+    afex_monitor_orders_barcodes = [ order.barcode for order in afex_monitor_orders]
 
-    # GRAB THE LOGGED SESSION OF AFEX
-    try :
-        afex_logged_session,status_code = get_afex_logged_session()
-        # HANDLE AN UNAUTHORIZATION ERROR IF IT EXIST 
-        if status_code == 401 : 
-            raise_a_unathorization_error(orders_monitoror_obj,'INVALID_AFEX_CREDENTIALS')
-    except Exception as e:
-        exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE TRYING TO LOGIN TO AFEX : '
-        exception_msg += str(e)+' ,'
-        exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
-        raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg)    
-
-
-    # PREP MANIFESTED ORDERS URL 
-    afex_manifested_orders_url = "http://afex.smart-delivery-systems.com/webgesta/index.php/expeditionb/manifest_list?"
-    afex_manifested_orders_url += f"station={AFEX_LOGIN_CREDENTIALS['email']}&"
-    afex_manifested_orders_url += f"client_id={AFEX_API_CREDENTIALS['client_id']}&"
-    afex_manifested_orders_url += "id_prestataire=&"
-    afex_manifested_orders_url += "is_vendeur_marketplace=&"
-    afex_manifested_orders_url += f"start_date={afex_monitor_orders_manifest_date_range['start_date']}&"
-    afex_manifested_orders_url += f"end_date={afex_monitor_orders_manifest_date_range['end_date']}&"
-    afex_manifested_orders_url += "statut=&"
-    afex_manifested_orders_url += "search_type=date manifest&"
-    afex_manifested_orders_url += "barcode=&"
-    afex_manifested_orders_url += "page=1&"
-    afex_manifested_orders_url += "start=1&"
-    afex_manifested_orders_url += "limit=60&"
-
-
-
-    # GRAB AFEX MANIFESTED ORDERS 
-    afex_manifested_orders = []
+    # GRAB THE LIVE STATES OF AFEX MONITOR ORDERS GIVEN THEIR BARCODES
+    url = "https://apis.afex.tn/v1/shipments/status"
+    headers = {
+        'Content-Type': "application/text",
+        'X-API-Key': AFEX_API_CREDENTIALS['api_key']
+    }
+    shipments = []
     try : 
-        r = afex_logged_session.get(afex_manifested_orders_url)
-        afex_manifested_orders = r.json()['records']
+
+        r = requests.post(url, data=json.dumps({'shipmentIds' : afex_monitor_orders_barcodes}), headers=headers)
+       
+        if r.status_code == 401 : 
+            raise_a_unathorization_error(orders_monitoror_obj,'INVALID_AFEX_API_KEY')
+
+        # HANDLE THE CASE OF HAVING ONE ORDER TO MONITOR AND THIS ORDER DOESN'T EXIST
+        elif r.status_code == 404 : 
+            shipments = [{'barcode' : afex_monitor_orders_barcodes[0],'state':'pre_shipping_canceling'}]
+        else : 
+            shipments = json.loads(r.text.replace("'",'"'))['shipments']
+
     except Exception as e : 
-        exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE TRYING TO GRAB ORDERS FROM AFEX : '
+        exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE TRYING TO GRAB THE LIVE STATES OF AFEX ORDERS : '
         exception_msg += str(e)+' ,'
         exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
-        raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg)     
+        raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg) 
 
-    # CONVERT AFEX MANIFESTED ORDERS INTO A DICT WITH THE FOLLOWING FORMAT  {'order_id':'order_state'}
-    afex_manifested_orders_dict = afex_manifested_orders_to_dict(afex_manifested_orders)
     
-
-    # FOR EACH AFEX MONITOR ORDER CHECK IF THE STATE OF THE ORDER WAS UPDATED IF SO DO YOUR THING
-    for afex_monitor_order in afex_monitor_orders : 
+    # FOR EACH BARCODE OF AN AFEX MONITOR ORDER CHECK IF HIS STATE WAS UPDATED , IF SO UPDATE THE AFEX MONITOR ORDER AND UPDATE THE ORDER IN MAWLETY
+    for afex_monitor_order in afex_monitor_orders :
 
         # SET THE NEW current_order_id
         orders_monitoror_obj.state['progress']['current_order_id'] = afex_monitor_order.order_id
         orders_monitoror_obj.save()
 
-        # AFEX ORDER STATE FROM DB 
-        afex_monitor_order_state = afex_monitor_order.state
+        shipment = get_shipment_by_barcode(afex_monitor_order.barcode,shipments)
+        print(f"{afex_monitor_order.barcode} --- {shipment}")
+        new_afex_order_state = afex_state_to_mawlety_state_converter(shipment['state'])
 
-        # AFEX ORDER STATE FROM AFEX SITE  
-        afex_manifested_order_state =  afex_manifested_orders_dict[str(afex_monitor_order.order_id)] #f"failed_state_{int(random.random()*100)}"
-
-        # CONVERT IT TO MAW STATE
-        afex_manifested_order_in_maw_state = afex_state_to_mawlety_state_converter(afex_manifested_order_state.lower()) 
-
-        # HANDLE THE CASE OF THE CONVERTER DIDN'T WORK 
-        if not afex_manifested_order_in_maw_state : 
-
-            # SAVE THE CONVESION ERROR
-            if not orders_monitoror_obj.state['conv_errors']['AFEX'].get(afex_manifested_order_state.lower()) : 
-                orders_monitoror_obj.state['conv_errors']['AFEX'][afex_manifested_order_state.lower()] = 1
-            else :
-                orders_monitoror_obj.state['conv_errors']['AFEX'][afex_manifested_order_state.lower()] += 1 
-            orders_monitoror_obj.save()
-            # INCREASE THE MONITOR ORDERS LEN BY ONE 
-            orders_monitoror_obj.state['progress']['monitored_orders_len'] += 1 
-            orders_monitoror_obj.save()
-            # SKIP THIS ORDER AND CONTINUE MONITORING THE OTHER ORDERS 
-            continue 
-
-
-
-        #CHECK IF THE STATE OF THE CURRENT MONITOR ORDER WAS CHANGED
-        if afex_monitor_order_state != afex_manifested_order_in_maw_state  : 
-            print("THERE IS A CHANGE")
+        if afex_monitor_order.state != new_afex_order_state :
 
             #UPDATE THE STATE OF THE ORDER IN MAWLETY.COM
             try : 
-                status_code = update_order_state_in_mawlety(afex_monitor_order.order_id,afex_manifested_order_in_maw_state)
+                status_code = update_order_state_in_mawlety(afex_monitor_order.order_id,new_afex_order_state)
                 # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
                 if status_code == 401 : 
                     raise_a_unathorization_error(orders_monitoror_obj,'INVALID_MAWLETY_API_KEY')
@@ -338,32 +294,27 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
                 exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
                 raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg) 
 
-
-            # IF THE NEW STATE IS ONE OF THE DELETE STATE DELETE THE ORDER FROM THE TABLE 
-            if afex_manifested_order_in_maw_state in DELETE_MONITOR_ORDER_STATES : 
+            
+            # IF THE NEW STATE IS ONE OF THE DELETE STATE , DELETE THE ORDER FROM THE TABLE 
+            if new_afex_order_state in DELETE_MONITOR_ORDER_STATES : 
                 delete_a_monitor_order_by_id('AFEX',afex_monitor_order.order_id)
             # OTHERWISE UPDATE THE AFEX MONITOR ORDER
             else:
-                update_a_monitor_order_by_id('AFEX',afex_monitor_order.order_id,afex_manifested_order_in_maw_state)
-
-
-
+                update_a_monitor_order_by_id('AFEX',afex_monitor_order.order_id,new_afex_order_state)
 
             # ADD THE CHANGED ORDER OBJ TO THE RESULT KEYWORD
             orders_monitoror_obj.state['results'].append({
                 'order_id': afex_monitor_order.order_id,
                 'carrier' : 'AFEX',
                 'old_state' : afex_monitor_order.state,
-                'new_state' : afex_manifested_order_in_maw_state
+                'new_state' : new_afex_order_state
             })
             orders_monitoror_obj.save()
 
-        else : 
-            print("NO CHANGE ")
-        
         # INCREASE THE MONITOR ORDERS LEN BY ONE 
         orders_monitoror_obj.state['progress']['monitored_orders_len'] += 1 
         orders_monitoror_obj.save()
+
   
                 
 

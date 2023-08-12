@@ -1,15 +1,14 @@
 import os 
 import psutil 
 import time
+from multiprocessing import Process
+import subprocess
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from multiprocessing import Process
-import psutil
-import os 
 from WebApi.models import LoxboxAreasSelectorProcess,OrderAction,SUBMITTING_ORDERS
 from OrderActionApi.order_actions import submit_orders_to_carriers
-import time 
+
 #from OrderActionApi import grab_maw_orders
 
 #pid = os.getpid()
@@ -105,8 +104,7 @@ def set_order_carrier(request):
 def launch_orders_submitter(request):
     orders_loader_obj_id = int(request.data.get('orders_loader_id'))
     orders_submitter_obj =  OrderAction.objects.create(type=SUBMITTING_ORDERS,state={'state':'working','orders_loader_id':orders_loader_obj_id})
-    p = Process(target=submit_orders_to_carriers,args=(orders_submitter_obj.id,))
-    p.start()
+    subprocess.Popen([sys.executable,'-c',f'from OrderActionApi.order_actions import submit_orders_to_carriers; submit_orders_to_carriers({orders_submitter_obj.id})'])
     return Response({'orders_submitter_id':orders_submitter_obj.id },status = status.HTTP_201_CREATED)
 
 

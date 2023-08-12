@@ -37,7 +37,7 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
     date_range['start_date'] = datetime.strptime(date_range['start_date'], '%Y-%m-%d').strftime("%Y-%m-%d")
     #(datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
     # start_date = date_range['start_date']  #(datetime.today() - timedelta(days=nb_of_days_ago)).strftime("%Y-%m-%d")
-    fields_to_collect_from_the_order = str(['id','total_paid','id_carrier','transaction_id','address_detail','customer_detail','cart_products','current_state','date_add']).replace("'","")
+    fields_to_collect_from_the_order = str(['id','reference','total_paid','id_carrier','transaction_id','address_detail','cart_products','current_state','date_add']).replace("'","")
 
     # PREP REQUEST ORDERS URL
     orders_base_endpoint = "/orders/"
@@ -47,11 +47,16 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
     orders_filter_endpoint += f"date=1"
 
     print(orders_filter_endpoint)
+    print(HEADERS)
 
     # MAKE THE REQUEST 
     r = None 
     try : 
         r = requests.get(f"{MAWLATY_API_BASE_URL+orders_filter_endpoint}",headers=HEADERS)
+        content_type = r.headers.get('Content-Type')
+        if content_type:
+            charset = content_type.split('charset=')[-1]
+            print('Charset:', charset)
     except Exception as e :
         orders_loader_obj.state['state']= "FINISHED"
         orders_loader_obj.state['server_request_exception_error'] = 'THE FOLLOWING SERVER REQUEST ERROR HAPPENED WHILE THE GABBING THE VALID ORDERS FROM MAWLETY.COM : \n'
@@ -67,7 +72,7 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
         orders_loader_obj.state['unauthorization_error'] = 'INVALID_MAWLETY_API_KEY' 
         orders_loader_obj.save()
         return
-
+    print(r.content)
     # HANDLE JSON ERROR => EMPTY ARRAY
     if not r.json() : 
         
@@ -76,8 +81,11 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
         orders_loader_obj.state['state']= "FINISHED"
         orders_loader_obj.save()
         return 
+    
+    orders = json.loads(r.content.decode('utf-8'))['orders']
 
-    orders = r.json()['orders']
+    
+
     print(f"LEN ORDERS  : {len(orders)} || START ORDER ID   : {orders[0]['id']} || END ORDER ID : {orders[-1]['id']}")
 
     orders_loader_obj.state['orders']  = []
@@ -91,9 +99,10 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
 
         # DECODE FROM STRING THE JSON OF THE VALUES OF THE FOLLOWING KEYS address_detail,customer_detail,cart_products
         for order in orders : 
+         
             # DECODE FROM STRING TO JSON THE VALUE OF THE address_detail
             order['address_detail'] = json.loads(order['address_detail'])
-            
+            x = order['address_detail']['address1']
             # TRIM AND CAPITALIZE CITIES AND DELEGATIONS
             order['address_detail']['city'] = order['address_detail']['city'].title().strip()
             #order['address_detail']['delegation'] = order['address_detail']['delegation'].title().strip()
@@ -123,7 +132,6 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
             else :# OTHERWISE TO THE ORDERS ARRAY
 
                 # DECODE FROM STRING TO JSON OTHER KEYS 
-                order['customer_detail'] = json.loads(order['customer_detail'])
                 order['cart_products'] = json.loads(order['cart_products'])
 
                 # SET THE ORDER AS SELECTED  
@@ -170,8 +178,6 @@ def update_order_state_in_mawlety(order_id,order_state_str):
     address_detail = order_tag.find('address_detail')
     order_tag.remove(address_detail)
 
-    customer_detail = order_tag.find('customer_detail')
-    order_tag.remove(customer_detail)
 
     cart_products = order_tag.find('cart_products')
     order_tag.remove(cart_products)

@@ -96,15 +96,13 @@ def monitor_monitor_orders(orders_monitoror_id) :
     os.environ['DJANGO_SETTINGS_MODULE'] = 'maw.settings'
     django.setup()
 
-    time.sleep(20)
-
     # IMPORTS 
     from WebApi.models import OrderAction,AfexMonitorOrder,LoxboxMonitorOrder
     from .Api.monitoring_API import update_a_monitor_order_by_id,delete_a_monitor_order_by_id
     from .Api.loxbox_API import update_monitor_orders_state_from_loxbox
     from .Api.afex_API import update_afex_monitor_orders_state_from_afex
 
-    print('TEST THE MONITORING LOGS ...')
+
 
     # GRAB  orders_monitoror_obj WHERE WE GONA RECORD THE PREGRESS OF THE MONITOREING AND EVENTUALLY THE RESUTLS
     orders_monitoror_obj = OrderAction.objects.get(id=orders_monitoror_id)

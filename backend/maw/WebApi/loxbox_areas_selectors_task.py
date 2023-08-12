@@ -58,7 +58,8 @@ def handle_additional_action(root_address_level_element,splitted_identifier,addi
 
 
 
-def handle_loxbox_areas_long_select_or_deselect_task(splitted_identifier,is_select,additional_action):
+def handle_loxbox_areas_long_select_or_deselect_task(arguments_data):
+    splitted_identifier,is_select,additional_action = arguments_data.values()
     # LOAD THE DJANGO ENV 
     import django
     import os 

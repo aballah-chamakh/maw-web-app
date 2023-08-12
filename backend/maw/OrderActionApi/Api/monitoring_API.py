@@ -62,8 +62,7 @@ def add_loxbox_order_to_monitoring_phase(order):
 
 
 def add_afex_order_to_monitoring_phase(order) : 
-    manifest_date = datetime.date.today().strftime("%Y-%m-%d")
-    monitor_order = {'order_id':order['id'],'state':'En cours de préparation','manifest_date':manifest_date}
+    monitor_order = {'order_id':order['id'],'state':'En cours de préparation','barcode':order['barcode']}
     create_a_monitor_order(monitor_order,"AFEX")
     
 

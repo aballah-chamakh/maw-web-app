@@ -6,10 +6,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from multiprocessing import Process
 import psutil
-import os 
+import os,sys
 from WebApi.models import LoxboxAreasSelectorProcess,OrderAction,LOADING_ORDERS
 from OrderActionApi.order_actions import grab_mawlety_orders
-
+import subprocess
 
 #pid = os.getpid()
 #cmd = psutil.Process(pid).cmdline()
@@ -17,6 +17,7 @@ from OrderActionApi.order_actions import grab_mawlety_orders
 
 @api_view(['POST'])
 def launch_orders_loader(request):
+
     loxbox_areas_selector_process_obj = LoxboxAreasSelectorProcess.objects.first()
     if loxbox_areas_selector_process_obj.is_working  :
         return Response({'restriction_msg': 'ORDERS_LOADER_IS_DISABLED_NON'} ,status = status.HTTP_200_OK)
@@ -26,8 +27,7 @@ def launch_orders_loader(request):
     orders_loader_obj =  OrderAction.objects.create(type=LOADING_ORDERS,state={'state':'working','canceled':False})
 
     orders_loader_obj_id = orders_loader_obj.id
-    p = Process(target=grab_mawlety_orders,args=(orders_loader_obj_id,date_range))
-    p.start()
+    subprocess.Popen([sys.executable,'-c',f'from OrderActionApi.order_actions import grab_mawlety_orders; grab_mawlety_orders({orders_loader_obj_id},{date_range})'])
     print(f"ORDER LOADER ID : {orders_loader_obj_id}")
     return Response({'orders_loader_id':orders_loader_obj_id },status = status.HTTP_201_CREATED)
 
@@ -40,15 +40,12 @@ def cancel_orders_loader(request,id):
 
 @api_view(['GET'])
 def monitor_orders_loader(request,id):
-    
     orders_loader_obj =  OrderAction.objects.get(id=id)
     return Response(orders_loader_obj.state,status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def get_last_undone_step_of_the_last_order_loader(request):
-
     last_orders_loader_obj = OrderAction.objects.filter(type=LOADING_ORDERS).last()
-    
     undone_step = ""
     data = {'undone_step':undone_step}
     if last_orders_loader_obj : 

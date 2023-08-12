@@ -13,6 +13,7 @@ from .mawlety_API import update_order_state_in_mawlety
 LOXBOX_BASE_URL = "https://www.loxbox.tn"
 LOXBOX_LOGIN_URL = f"{LOXBOX_BASE_URL}/accounts/login/"
 
+# UNUSED 
 LOXBOX_STATE_ID_TO_MAWLETY_STATE_STR = {
     '0':'En cours de préparation',
     '1':'Expédié',
@@ -22,7 +23,7 @@ LOXBOX_STATE_ID_TO_MAWLETY_STATE_STR = {
     '6' : 'Expédié',
     '7' : 'Livré',
     '8' : 'Expédié',
-    '9' : 'Expédié',
+    '9' : 'En cours de retour',
     '10' : 'Retour',
     '11' : 'Annulé',
 }
@@ -36,10 +37,11 @@ LOXBOX_STATE_STR_TO_MAWLETY_STATE_STR = {
     'colis déposé au point relais' : 'Expédié',
     'colis livrés' : 'Livré',
     'colis mis en retour' : 'Expédié',
-    'in return' : 'Expédié',
+    'in return' : 'En cours de retour',
     'colis retournés' : 'Retour',
     'colis annulés' : 'Annulé',
 }
+
 TAB = "    "
 
 def get_loxbox_request_status_code(r):
@@ -212,6 +214,7 @@ def get_order_content(cart_products) :
 def format_loxbox_order(loxbox_order) : 
     # customer_detail => firstname,lastname,email
     # address_detail => city,delegation,address1,phone_mobile
+    comment =  f"Téléphone2 : {loxbox_order['address_detail']['phone']} --- " if loxbox_order['address_detail']['phone_mobile'] else ""
     loxbox_order_format = {
     "Content":get_order_content(loxbox_order['cart_products']),
     "detail":"",
@@ -220,11 +223,11 @@ def format_loxbox_order(loxbox_order) :
     "Size":"1",
     "Weight":"1" ,
     "DestRelaypoint" : "",
-    "ReceiverName" : f"{loxbox_order['customer_detail']['firstname']} {loxbox_order['customer_detail']['lastname']}" ,
-    "ReceiverMail" : loxbox_order['customer_detail']['email'],
-    "ReceiverNumber" :loxbox_order['address_detail']['phone_mobile'][:8] ,
+    "ReceiverName" : loxbox_order['address_detail']['firstname'] ,
+    "ReceiverMail" : 'guest@mawlety.com',
+    "ReceiverNumber" :f"{loxbox_order['address_detail']['phone_mobile']}" , # {loxbox_order['address_detail']['phone']}
     "ReceiverAddress" : f"{loxbox_order['address_detail']['address1']},{loxbox_order['address_detail']['locality']},{loxbox_order['address_detail']['delegation']},{loxbox_order['address_detail']['city']}",
-    "Comment": f"ORDER ID  : {loxbox_order['id']}",
+    "Comment": f"{comment}Ref : {loxbox_order['reference']}",
     "AcceptsCheck" : "1",
     "IsHomeDelivery":"on"    
     }
@@ -236,6 +239,7 @@ def format_loxbox_order(loxbox_order) :
 
 def insert_a_loxbox_order(loxbox_order,loxbox_header,orders_submitter_obj):
     formatted_loxbox_order = format_loxbox_order(loxbox_order)
+    print(formatted_loxbox_order)
     while True : 
         r = requests.post("https://www.loxbox.tn/api/NewTransaction/",data=json.dumps(formatted_loxbox_order),headers=loxbox_header)
         if r.status_code == 200 : 

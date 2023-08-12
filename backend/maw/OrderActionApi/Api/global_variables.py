@@ -13,6 +13,7 @@ MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID = {
     'En cours de préparation':'16',
     'Expédié':'4',
     'Retour':'17',
+    'En cours de retour' :'18',
     'Annulé':'6',
     'Livré':'5'
 }
@@ -22,6 +23,7 @@ MAWLETY_STATE_ID_TO_MAWLETY_STR_STATE= {
     '16':'En cours de préparation',
     '4':'Expédié',
     '17':'Retour',
+    '18':'En cours de retour' ,
     '6':'Annulé',
     '5':'Livré'
 }
@@ -38,7 +40,7 @@ LOXBOX_CITIES_DELEGATIONS = {}
 #with open('loxbox_cities_dels_locs.json','r',encoding='utf8') as f:
 #    LOXBOX_CITIES_DELEGATIONS = json.loads(f.read())
 
-DELETE_MONITOR_ORDER_STATES = ['Retour','Annulé','Livré']
+DELETE_MONITOR_ORDER_STATES = ['Annulé','Retour','Livré']
 
 AFEX_MONITOR_ORDER_TABLE_NAME = "afex_monitor_order"
 LOXBOX_MONITOR_ORDER_TABLE_NAME = "loxbox_monitor_order"

@@ -16,17 +16,10 @@ def is_it_for_loxbox(city,delegation,locality):
     if not delegation_obj : 
         return False,['delgation','locality']
 
-    #CHECK IF THE LOCALITY OF THE ORDER IS SELECTED 
-    locality_obj  = delegation_obj.locality_set.filter(name=locality).first()
-    if locality_obj :
-        if locality_obj.selected : 
-            print('LOCALITY LEVEL')
-            return True,[]
-    else :
-        return False,['locality']
+
 
     # RETURN FALSE IF NONE OF THE ONES BEFORE ARE TRUE 
-    return False,[]
+    return delegation_obj.selected,[]
 
 
 def split_selected_orders_between_loxbox_and_afex(orders):

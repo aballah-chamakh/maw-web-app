@@ -1,22 +1,21 @@
 import os 
 import psutil 
 import time 
+import subprocess 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-import subprocess 
 from multiprocessing import Process
 from WebApi.models import OrderAction,MONITORING_ORDERS,LoxboxMonitorOrder,AfexMonitorOrder
 from WebApi.serializers import LoxboxMonitorOrderSerializer,AfexMonitorOrderSerializer
 from OrderActionApi.order_actions import monitor_monitor_orders
 
 
+
 @api_view(['POST'])
 def launch_orders_monitoror(request):
     orders_monitoror_obj =  OrderAction.objects.create(type=MONITORING_ORDERS)
-    #p = Process(target=monitor_monitor_orders,args=(orders_monitoror_obj.id,))
-    subprocess.Popen(rf'C:\Users\chama\Desktop\maw\venv\Scripts\python.exe -c "from OrderActionApi.order_actions import monitor_monitor_orders ; monitor_monitor_orders({orders_monitoror_obj.id})" >> monitoring_orders.log',shell=True)
-    print("done done")
+    subprocess.Popen([sys.executable,'-c',f'from OrderActionApi.order_actions import monitor_monitor_orders ; monitor_monitor_orders({orders_monitoror_obj.id})'])
     return Response({'orders_monitoror_id':orders_monitoror_obj.id },status = status.HTTP_201_CREATED)
 
 

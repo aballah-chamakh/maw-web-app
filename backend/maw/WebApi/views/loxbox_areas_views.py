@@ -1,17 +1,13 @@
 import os 
 import psutil 
 import time 
+import subprocess
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from multiprocessing import Process
-import psutil
-import os 
 from WebApi.models import LoxboxCities,LoxboxAreasSelectorProcess,Delegation,Locality
 from WebApi.serializers import LoxboxCitiesSerializer,LoxboxAreasSelectorProcessSerializer
 from WebApi.loxbox_areas_selectors_task import handle_loxbox_areas_long_select_or_deselect_task,get_address_level_element,handle_additional_action #,select_unselect_all_loxbox_areas,select_unselect_all_a_city,select_unselect_all_a_delegation
-import time 
-
 
 @api_view(['GET'])
 def monitor_loxbox_areas_selector_process(request):
@@ -73,9 +69,8 @@ def loxbox_areas_select_or_deselect(request):
         
     else : # FOR THE OTHER ADDRESS LEVELS ABOVE THE LOCALITY LAUNCH A PROCESS
         # LAUNCH THE THE LOXBOX AREAS SELECTOR PROCESS
-        p = Process(target=handle_loxbox_areas_long_select_or_deselect_task,args=(splitted_identifier,is_select,additional_action,))  
-        p.start()
-
+        arguments_data = {'splitted_identifier':splitted_identifier,'is_select' : is_select,'additional_action':additional_action}
+        subprocess.Popen([sys.executable,'-c',f'from WebApi.loxbox_areas_selectors_task import handle_loxbox_areas_long_select_or_deselect_task; handle_loxbox_areas_long_select_or_deselect_task({arguments_data})'])
 
     return Response({'msg':f'THE LOBOX AREAS LONG SELECT OR DESELECT PROCESS WAS LAUNCHED'},status = status.HTTP_200_OK)
 
@@ -100,7 +95,7 @@ def loxbox_areas_select_or_deselect(request):
 
 
 
-
+# THE OLD VIEWS 
 
 @api_view(['PUT']) 
 def loxbox_areas_select_unselect_all(request,select_type):

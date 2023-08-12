@@ -28,6 +28,8 @@ class AfexMonitorOrder(models.Model):
     order_id= models.IntegerField(unique=True)
     manifest_date = models.CharField(max_length=10)
     state = models.CharField(max_length=50)
+    barcode = models.PositiveIntegerField()
+    
 
 class LoxboxMonitorOrder(models.Model):
     order_id= models.IntegerField(unique=True)
