@@ -8,17 +8,29 @@
     &-title{
         @include table-title() ;
     }
-    &-actions{
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        margin-top: 20px;
-        &-submit{
-            @include table-action-btn($dark_color) ;
-            margin-bottom: 5px ;
+    &-card{
+        @include basic-card();
+        padding: 5px 10px 10px 10px;
+        margin-bottom: 15px;
+        &-title{
+            @include table-title() ;
+            font-size: 17px;
+            margin: 0px  0px  5px;
+            padding: 0px;
+
         }
-        &-cancel{
-            @include table-action-btn($third_color) ;
+        &-actions{ 
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-top: 10px;
+            &-submit{
+                @include table-action-btn($dark_color) ;
+                margin-bottom: 5px ;
+            }
+            &-cancel{
+                @include table-action-btn($third_color) ;
+            }
         }
     }
 

@@ -50,19 +50,24 @@ const ResultPopupContent = (props)=>{
     return(
         <>
             <div className='monitoring-card'>
-                <p className='monitoring-card-header'>monitoring overview</p>
+                <p className='monitoring-card-header'>monitoring results overview</p>
                 <div className='monitoring-card-overview'>
-                    <Dashboard  dashboardData={orders_overview} />                
+                    <Dashboard  dashboardData={orders_overview} kpi_item_margin_direction='top' kpi_item_margin_value='10' />                
                 </div>
             </div>
+
+            {props.resultPopupData.orders.length ?
             <div className='monitoring-card'>
-                <p className='monitoring-card-header'>monitoring detail</p>
+                <p className='monitoring-card-header'>updated orders detail</p>
                 <GenericTable keys={result_popup_order_keys} orders={props.resultPopupData.orders} maxHeight='75vh' fontSize='13px' textAlign='center'  highlight_keys={result_popup_highlight_keys} />
-            </div>
-            <div className='monitoring-card'>                        
-                <p className='monitoring-card-header'>carrier states who failed to convert to mawlety state   </p>
-                <GenericTable keys={result_popup_conv_errors_keys} orders={conv_errors_arr} maxHeight='75vh' fontSize='13px' textAlign='left' />
-            </div>
+            </div> : null }
+
+            {conv_errors_arr.length ? 
+                <div className='monitoring-card'>                        
+                    <p className='monitoring-card-header'>carrier states who failed to convert to mawlety state   </p>
+                    <GenericTable keys={result_popup_conv_errors_keys} orders={conv_errors_arr} maxHeight='75vh' fontSize='13px' textAlign='left' />
+                </div>
+             : null}
         </>
     )
 }

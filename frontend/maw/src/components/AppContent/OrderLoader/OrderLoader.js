@@ -5,7 +5,7 @@ import './OrderLoader.scss' ;
 import OrderLoaderForm from './OrderLoaderForm/OrderLoaderForm';
 import LoadingPage from '../../CommonComponents/LoadingPage/LoadingPage';
 import GenericModal from '../../CommonComponents/GenericModal/GenericModal';
-import { API_ENDPOINT } from '../../../globals';
+import { API_ENDPOINT,networkIcon,unauhorizationIcon } from '../../../globals';
 
 
 //fas fa-fingerprint
@@ -15,9 +15,7 @@ const OrderLoader = (props)=>{
     const restrictedAlertData = {title:'restricted',icon:<i style={{color:'#D81010'}} className='fas fa-minus-circle'></i>,msg:"it's restricted to load orders while the lowbox areas selector process is running"};
     const successAlertData = {title:'success',icon:<i style={{color:'#28C20F'}} className="fas fa-check-circle"></i>,msg:"order(s) were submitted"};
     // CONSTANT ICONS 
-    const unauhorizationIcon = <i style={{color:'#D81010'}} className="fas fa-fingerprint"></i>
     const exceptionIcon = <i style={{color:'#D81010'}} className="fas fa-exclamation-triangle"></i>
-
 
     const [lastUndoneStepChecked,setLastUndoneStepChecked] = useState(false)
     const [isLoading,setIsLoading] = useState(true)
@@ -31,11 +29,10 @@ const OrderLoader = (props)=>{
     const [startDate,setStartDate] = useState(new Date())
     const [endDate,setEndDate] = useState(new Date())
     const [intv,setIntv] = useState(null )
-    const [processAlertData,setProcessAlertData] = useState({title:'exception error',icon:exceptionIcon,msg:"mawlety unauthorization mawlety unauthorization mawlety unauthorization mawlety unauthorization mawlety unauthorization"} )
+    const [processAlertData,setProcessAlertData] = useState({title:'exception error',icon:exceptionIcon,msg:"HTTPSConnectionPool(host='mawlety.com', port=443): Max retries exceeded with url: /api/orders/?filter%5Bdate_add%5D=%5B2023-02-05,2023-02-06%5D&filter%5Bcurrent_state%5D=%5B3%5D&display=%5Bid,%20total_paid,%20id_carrier,%20transaction_id,%20address_detail,%20customer_detail,%20cart_products,%20current_state,%20date_add%5D&date=1 (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x000001DDEA98C970>: Failed to establish a new connection: [Errno 11001] getaddrinfo failed'))"} )
     const navigate = useNavigate()
     const location = useLocation()
 
-    console.log(processAlertData)
 
 
     
@@ -80,7 +77,12 @@ const OrderLoader = (props)=>{
                 let title = "THE MANIFEST PROCESS IS NOT WORKING" 
                 let msg = "the manifest process is not working any more , please go to the site of afex and manifest manually the recently created orders then ask abdallah to update the software for you"
                 openProcessModal(exceptionIcon,title,msg)
+            }else if(location.state.server_request_exception_error){
+                let title  = 'server request exception error'
+                let msg = location.state.server_request_exception_error
+                openProcessModal(networkIcon,title,msg)
             }
+
 
         }else{
             //alert('check redirection ')
@@ -131,6 +133,7 @@ const OrderLoader = (props)=>{
 
     const closeInfoModal = ()=>{
         setInfoModalShowed(false) ;
+        
     }
 
     const openInfoModal = ()=>{
@@ -139,8 +142,13 @@ const OrderLoader = (props)=>{
 
     const closeRestrictedModal = ()=>{
         setRestrictedModalShowed(false) ;
+        
     }
-    
+
+    const openRestrictedModal = ()=>{
+        setRestrictedModalShowed(true) ;
+    }
+
     const openProcessModal = (icon,title,msg)=>{
         setProcessModalShowed(true) ;
         setProcessAlertData(prevUnauthorizationAlert=>{
@@ -154,14 +162,11 @@ const OrderLoader = (props)=>{
 
     const closeProcessModal = ()=>{
         setProcessModalShowed(false) ;
-        setTimeout(()=>{
-            navigate(location.pathname, { replace: true });
-         },100)
+        navigate(location.pathname, { replace: true });
+         
     }
 
-    const openRestrictedModal = ()=>{
-        setRestrictedModalShowed(true) ;
-    }
+
 
     const closeSuccessModal = ()=>{
         setSuccessModalShowed(false)
@@ -216,15 +221,19 @@ const OrderLoader = (props)=>{
                     // RESET STATES 
                     setIsLoading(false)
                     setProgress(null)
-                    setNbDaysAgo(0)
                     
                     // OPEN THE INFO MODAL IF WE HAVE NO ORDERS TO LOAD 
-                    if(data.orders.length == 0){
+                    if(data.orders.length == 0 && data.invalid_orders.length == 0){
                         if(data.unauthorization_error == 'INVALID_MAWLETY_API_KEY'){
                             let title = "mawlety unauhorization error"
                             let msg = "the api key of mawlety is invalid , please go to the settings and update it then try again"
                             openProcessModal(unauhorizationIcon,title,msg)
-                        }else{
+                        }else if(data.server_request_exception_error){
+                            let title  = 'server request exception error'
+                            let msg = data.server_request_exception_error
+                            openProcessModal(networkIcon,title,msg)
+                        }
+                        else{
                             openInfoModal() ;
                         }
                         
@@ -266,7 +275,6 @@ const OrderLoader = (props)=>{
           if (data.hasOwnProperty('restriction_msg')){
             setIsLoading(false)
             openRestrictedModal()
-            setNbDaysAgo(0)
             return  ;
           }
           // MONITOR THE ORDER LOADER 
@@ -286,7 +294,7 @@ const OrderLoader = (props)=>{
             <GenericModal show={isInfoModalShowed}  type='alert' title={infoAlertData.title} alertData={infoAlertData} closeModal={closeInfoModal} />
             <GenericModal show={isRestrictedModalShowed}  type='alert' title={restrictedAlertData.title} alertData={restrictedAlertData} closeModal={closeRestrictedModal} />
             <GenericModal show={isSuccessModalShowed}  type='alert' title={successAlertData.title} alertData={successAlertData} orders_len={location.state ? location.state.submitted_orders_len : 0 } closeModal={closeSuccessModal} />
-            <GenericModal show={isProcessModalShowed}  type='alert' title={processAlertData.title} alertData={processAlertData} closeModal={closeProcessModal} />
+            <GenericModal show={isProcessModalShowed}  type='alert'  title={processAlertData.title} alertData={processAlertData} closeModal={closeProcessModal} />
         </div> : 
         <LoadingPage progress={progress} action_txt={actionTxt} done_action_txt="were loaded"  />}</>
 

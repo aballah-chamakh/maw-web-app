@@ -1,3 +1,32 @@
+import requests 
+
+def test() : 
+    r = requests.get('https://mawlety.com')
+ 
+try : 
+    try : 
+        test()
+    except Exception as e  : 
+        print('inner request ')
+except Exception as e :
+    print('outer request')
+
+quit()
+from MySQLdb import _mysql 
+import time 
+db=_mysql.connect(host="151.106.100.89",user="anbae24c_pres274",
+                  password="NJ@[Sp4l39",database="anbae24c_pres274",port=3306)
+
+db.query(f"""
+SELECT Adr.phone_mobile   FROM dal_orders AS Ord
+INNER JOIN dal_cart As Ca ON Ord.id_cart = Ca.id_cart AND Ord.current_state IN (3,4,5,14,15,16,13)
+INNER JOIN dal_address As Adr ON Ord.id_address_delivery = Adr.id_address 
+INNER JOIN dal_cart_product AS Cp ON  Ca.id_cart  = Cp.id_cart
+INNER JOIN dal_product AS Pr ON Pr.id_product =  Cp.id_product 
+WHERE LENGTH(Adr.phone_mobile) = 8 
+""")
+
+ 
  # FOR EACH filtered_state_card 
     #   1- GO IT'S LINK 
     #   2- EXTRACT THEIR TRANSACTIONS ID
@@ -74,6 +103,18 @@ def get_afex_logged_session():
     print(r.text)
     print(r.status_code)
     return session
+
+def do_something():
+    print(aaaa)
+
+try : 
+    #do_something()
+    print(aaa)
+except Exception:
+    print(Exception)
+
+
+quit()
 
 afex_logged_session  = get_afex_logged_session()
 

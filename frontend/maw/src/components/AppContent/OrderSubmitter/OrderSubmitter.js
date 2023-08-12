@@ -6,16 +6,18 @@ import { API_ENDPOINT } from '../../../globals';
 import LoadingPage from '../../CommonComponents/LoadingPage/LoadingPage';
 import GenericTable from '../../CommonComponents/GenericTable/GenericTable';
 import ServerLoading from '../../CommonComponents/ServerLoading/ServerLoading';
+import Dashboard from '../../CommonComponents/Dashboard/Dashboard';
 
 
 const OrderSubmitter = (props)=>{
     const [isLoading,setIsLoading] = useState(true)
     const [didMount,setDidMount] = useState(false)
     const [loadingActionTxt,setLoadingActionTxt] = useState('loading orders to submit')
-    const [submittingProgress,setSubmittingProgress] = useState(null)
+    const [submittingProgress,setSubmittingProgress] = useState(null) //{'current_order_id' : 1000 ,'submitted_orders_len' :  0,'orders_to_be_submitted': 100,'carrier':'afex'})
     const [isServerLoading,setServerIsLoading] = useState(false)
     const [loadingServerTxt,setLoadingServerTxt] = useState('selecting or deselecting order(s)')
     const [orders,setOrders] = useState([])
+    const [invalidOrders,setInvalidOrders] = useState([])
     const [ordersSelectedAll,setOrdersSelectedAll] = useState(false)
     const [monitorIntv,setMonitorIntv] = useState(null)
     const [selectorIntv,setSelectorIntv] = useState(null)
@@ -26,8 +28,11 @@ const OrderSubmitter = (props)=>{
     const location = useLocation()
     const {orders_loader_id}  = useParams()
 
-    const order_keys = ['selected','id','first and last name','city','delegation','locality','carrier']
+    const order_keys = ['selected','id','created_at','firstname','city','delegation','locality','carrier']
     
+    const invalid_order_keys = ['order_id','created_at','invalid_fields']
+    const invalid_order_highlight_keys = {'invalid_fields':'#D33C3C'}
+
     const dropdown_keys = {
         'carrier' : ['AFEX','LOXBOX']
     }   
@@ -54,13 +59,15 @@ const OrderSubmitter = (props)=>{
                                 let data = res.data 
                                 let is_selector_working = data.is_selector_working
                                 let orders = data.orders 
+                                let invalid_orders = data.invalid_orders 
                                 let orders_selected_all = data.orders_selected_all
                                 
                                 // ONCE THE SELECTOR IS DONE DO THE FOLLOWING 
                                 if(!is_selector_working){
                                     // UPDATE THE ORDERS 
- 
+                 
                                     setOrders(orders)
+                                    setInvalidOrders(invalid_orders)
                                     setOrdersSelectedAll(orders_selected_all)
                                     
                                     // HIDE THE SERVER IS LOADING INTERFACE IF EXIST 
@@ -234,6 +241,9 @@ const OrderSubmitter = (props)=>{
                         if(data.unauthorization_error ){
                             state = {unauthorization_error : data.unauthorization_error}
                         }
+                        else if(data.server_request_exception_error){
+                            state = {server_request_exception_error : data.server_request_exception_error}
+                        }
                         else if(data.exception_error){
                             state = {exception_error : data.exception_error}
                         }
@@ -251,6 +261,22 @@ const OrderSubmitter = (props)=>{
         },5000)
         setMonitorIntv(intv)
     }
+    const getOrdersToSubmitDashboardData = ()=>{
+        let ordersToSubmitDashboardData ={
+            'valid orders': orders.length,
+            'valid afex orders':0,
+            'valid loxbox orders':0,
+            'invalid orders':invalidOrders.length
+        }
+        orders.map(order=>{
+            if(order.carrier =='AFEX'){
+                ordersToSubmitDashboardData['valid afex orders'] +=1
+            }else{
+                ordersToSubmitDashboardData['valid loxbox orders'] +=1
+            }
+        })
+        return ordersToSubmitDashboardData
+    } 
     const submitOrders = ()=>{
         setIsLoading(true)
         setLoadingActionTxt('submitting orders')
@@ -266,14 +292,25 @@ const OrderSubmitter = (props)=>{
         !isLoading ? 
             <div className='order-submitter'>
 
-                <p className='order-submitter-title'>{orders.length} order(s) to submit to carrier(s)</p>
+                <p className='order-submitter-title'>order(s) to submit to carrier(s)</p>
 
-                <GenericTable  keys={order_keys} orders={orders} ordersSelectedAll={ordersSelectedAll} dropdown_keys={dropdown_keys} handleDropdownChange={handleDropdownChange} maxHeight='75vh' handleSelectChange={handleSelectChange}/>
+                <Dashboard dashboardData={getOrdersToSubmitDashboardData()} kpi_item_width={'24.5%'} kpi_item_nb_fontSize={'25px'} kpi_item_margin_value='15'  />
+                {invalidOrders.length  ?
+                    <div className='order-submitter-card'>
+                    <p className='order-submitter-card-title'>{invalidOrders.length} invalid order(s) </p>
+                    <GenericTable  keys={invalid_order_keys} orders={invalidOrders} maxHeight='75vh' highlight_keys={invalid_order_highlight_keys} fontSize={'15px'} />
+                </div> : null}
                 
-                <div className='order-submitter-actions'>
-                    <button className='order-submitter-actions-submit' onClick={submitOrders}>submit to carriers</button>
-                    <button className='order-submitter-actions-cancel' onClick={cancelOrderLoader}>cancel</button>
-                </div>
+                {orders.length ? 
+                    <div className='order-submitter-card'>
+                    <p className='order-submitter-card-title'>{orders.length} valid order(s) </p>
+                    <GenericTable fontSize={'15px'}  keys={order_keys} orders={orders} ordersSelectedAll={ordersSelectedAll} dropdown_keys={dropdown_keys} handleDropdownChange={handleDropdownChange} maxHeight='75vh' handleSelectChange={handleSelectChange}/>
+                    <div className='order-submitter-card-actions'>
+                        <button className='order-submitter-card-actions-submit' onClick={submitOrders}>submit to carriers</button>
+                        <button className='order-submitter-card-actions-cancel' onClick={cancelOrderLoader}>cancel</button>
+                    </div>
+                </div> : null}
+
                 <ServerLoading show={isServerLoading} title={loadingServerTxt} />
               
             </div>

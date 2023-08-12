@@ -1,8 +1,8 @@
 @import '../../../vars.scss';
 
 .generic-table{
-   
-    font-size: 15px;
+    margin: 0px;
+    
    
     thead{
         background-color: $primary_color;
@@ -20,6 +20,13 @@
            
         }
     }
+    tbody{
+        tr{
+            border-left: 0.2px solid #F1F1F1;
+            border-right: 0.2px solid #F1F1F1;
+        }
+    }
+
 
     &-highlight{
         color : white  ;

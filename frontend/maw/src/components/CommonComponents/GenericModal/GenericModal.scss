@@ -24,6 +24,7 @@
         }
     }
     &-body{
+        
         padding: 10px;
         display: flex;
         align-items: center;
@@ -35,6 +36,9 @@
         }
         p{
             font-weight: 500;
+            word-break: break-all; /*  */
+            //word-wrap: break-word; /* if you want to cut the complete word */
+            //white-space: normal; /* be sure its not 'nowrap'! ! ! :/ */
         }
      
     }

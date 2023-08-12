@@ -12,7 +12,7 @@ from .credentials import AFEX_LOGIN_CREDENTIALS,AFEX_API_CREDENTIALS
 from .mawlety_API import update_order_state_in_mawlety 
 from .monitoring_API import delete_a_monitor_order_by_id, update_a_monitor_order_by_id,add_afex_order_to_monitoring_phase
 from .global_variables import DELETE_MONITOR_ORDER_STATES
-from .global_functions import raise_a_unathorization_error,raise_an_exception_error
+from .global_functions import raise_a_unathorization_error,raise_an_exception_error,raise_a_server_request_exception_error
 
 
 def get_afex_logged_session(): 
@@ -60,10 +60,6 @@ def manifest_orders(orders_submitter_obj):
     # GRAB AFEX PRE MANIFESTED ORDERS 
     # NOTE THIS REQUEST DOESN'T NEED AUTHORIZATION 
     afex_pre_manifested_orders = get_afex_pre_manifested_orders(afex_logged_session)
-
-
-
-    
 
     # PREP THE ORDERS TO MANIFEST FROM THE PRE MANIFESTED ORDERS 
     orders_to_manifest = {'batch':[]}
@@ -149,28 +145,47 @@ def submit_afex_orders(orders,orders_submitter_obj):
         # SET THE CURRENT ORDER ID 
         orders_submitter_obj.state['progress']['current_order_id'] = order['id']
         orders_submitter_obj.save()
+        
+        try : 
+            # UPDATE THE STATE OF THE ORDER IN MAWLETY
+            status_code = update_order_state_in_mawlety(order['id'],'En cours de préparation')
+            # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
+            if status_code == 401 : 
+                raise_a_unathorization_error(orders_submitter_obj,'INVALID_MAWLETY_API_KEY')
+        except Exception as e : 
+            exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE UPDATING THE STATE OF THE ORDER WITH THE ID {order["id"]} IN MAWLETY.COM : '
+            exception_msg += str(e)+' ,'
+            exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
+            raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
+        
+
+        try :
+            # SUBMIT THE ORDER TO AFEX  
+            status_code = submit_afex_order(order)
+
+            # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
+            if status_code == 401 : 
+                try : 
+                    # UNDO THE UPDATE OF THE STATE OF ORDER IN MAWLETY 
+                    status_code = update_order_state_in_mawlety(order['id'],'Validé')
+
+                    # RAISE AN UNAUTORIZATION ERROR ON AFEX AND MAW
+                    if status_code == 401 :
+                        raise_a_unathorization_error(orders_submitter_obj,f'INVALID_AFEX_AND_MAWLETY_API_KEY_UNDO_ORDER_ID_{order["id"]}')
+                    
+                    raise_a_unathorization_error(orders_submitter_obj,'INVALID_AFEX_API_KEY')
+                except  Exception as e :
+                    exception_msg = f"THE FOLLOWING ERROR HAPPENED WHILE TRYING TO BACKUP THE STATE OF THE ORDER WITH THE ID {order['id']} TO VALIDÉ IN MAWLETY.COM AFTER THE SUBMITTING OF THE ORDER TO AFEX WAS UNAUTHORIZED : "
+                    exception_msg += str(e)+' ,'
+                    exception_msg += f"PLEASE BACKUP THE STATE OF THE ORDER TO VALIDÉ IN MAWLETY.COM THEN UPDATE THE API KEY OF AFEX IN THE SETTING AFTER FIXING YOUR INTERNET CONNECTION" 
+                    raise_a_server_request_exception_error(orders_submitter_obj,exception_msg) 
+        except Exception as e :
+            exception_msg = f"THE FOLLOWING ERROR HAPPENED WHILE SUBMITTING THE ORDER WITH THE ID {order['id']} TO AFEX : "
+            exception_msg += str(e)+' ,'
+            exception_msg += f"PLEASE BACKUP THE STATE OF THE ORDER TO VALIDÉ IN MAWLETY.COM AFTER FIXING YOUR INTERNET CONNECTION" 
+            raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
 
 
-        # UPDATE THE STATE OF THE ORDER IN MAWLETY
-        status_code = update_order_state_in_mawlety(order['id'],'En cours de préparation')
-        # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
-        if status_code == 401 : 
-            raise_a_unathorization_error(orders_submitter_obj,'INVALID_MAWLETY_API_KEY')
-
-        # SUBMIT THE ORDER TO AFEX  
-        status_code = submit_afex_order(order)
-
-        # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
-        if status_code == 401 : 
-
-            # UNDO THE UPDATE OF THE STATE OF ORDER IN MAWLETY 
-            status_code = update_order_state_in_mawlety(order['id'],'Validé')
-
-            # RAISE AN UNAUTORIZATION ERROR ON AFEX AND MAW
-            if status_code == 401 :
-                raise_a_unathorization_error(orders_submitter_obj,f'INVALID_AFEX_AND_MAWLETY_API_KEY_UNDO_ORDER_ID_{order["id"]}')
-            
-            raise_a_unathorization_error(orders_submitter_obj,'INVALID_AFEX_API_KEY')
 
         add_afex_order_to_monitoring_phase(order)
         
@@ -182,7 +197,14 @@ def submit_afex_orders(orders,orders_submitter_obj):
         time.sleep(2)
         
     # MANIFEST ORDERS 
-    manifest_orders(orders_submitter_obj)
+    try :
+        manifest_orders(orders_submitter_obj)
+    except Exception as e:
+        exception_msg = f"THE FOLLOWING ERROR HAPPENED WHILE TRYING TO MANIFEST THE ORDERS OF AFEX : "
+        exception_msg += str(e)+' ,'
+        exception_msg += f"PLEASE MANIFEST THE ORDERS OF AFEX AFTER FIXING YOUR INTERNET CONNECTION  : " 
+        raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
+         
 
 
 def afex_state_to_mawlety_state_converter(afex_order_state): 
@@ -223,10 +245,16 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
     afex_monitor_orders_manifest_date_range = get_afex_monitor_orders_manifest_date_range(afex_monitor_orders)
 
     # GRAB THE LOGGED SESSION OF AFEX
-    afex_logged_session,status_code = get_afex_logged_session()
-    # HANDLE AN UNAUTHORIZATION ERROR IF IT EXIST 
-    if status_code == 401 : 
-        raise_a_unathorization_error(orders_monitoror_obj,'INVALID_AFEX_CREDENTIALS')
+    try :
+        afex_logged_session,status_code = get_afex_logged_session()
+        # HANDLE AN UNAUTHORIZATION ERROR IF IT EXIST 
+        if status_code == 401 : 
+            raise_a_unathorization_error(orders_monitoror_obj,'INVALID_AFEX_CREDENTIALS')
+    except Exception as e:
+        exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE TRYING TO LOGIN TO AFEX : '
+        exception_msg += str(e)+' ,'
+        exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
+        raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg)    
 
 
     # PREP MANIFESTED ORDERS URL 
@@ -244,13 +272,23 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
     afex_manifested_orders_url += "start=1&"
     afex_manifested_orders_url += "limit=60&"
 
+
+
     # GRAB AFEX MANIFESTED ORDERS 
-    r = afex_logged_session.get(afex_manifested_orders_url)
-    afex_manifested_orders = r.json()['records']
+    afex_manifested_orders = []
+    try : 
+        r = afex_logged_session.get(afex_manifested_orders_url)
+        afex_manifested_orders = r.json()['records']
+    except Exception as e : 
+        exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE TRYING TO GRAB ORDERS FROM AFEX : '
+        exception_msg += str(e)+' ,'
+        exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
+        raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg)     
 
     # CONVERT AFEX MANIFESTED ORDERS INTO A DICT WITH THE FOLLOWING FORMAT  {'order_id':'order_state'}
     afex_manifested_orders_dict = afex_manifested_orders_to_dict(afex_manifested_orders)
     
+
     # FOR EACH AFEX MONITOR ORDER CHECK IF THE STATE OF THE ORDER WAS UPDATED IF SO DO YOUR THING
     for afex_monitor_order in afex_monitor_orders : 
 
@@ -289,10 +327,16 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
             print("THERE IS A CHANGE")
 
             #UPDATE THE STATE OF THE ORDER IN MAWLETY.COM
-            status_code = update_order_state_in_mawlety(afex_monitor_order.order_id,afex_manifested_order_in_maw_state)
-            # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
-            if status_code == 401 : 
-                raise_a_unathorization_error(orders_monitoror_obj,'INVALID_MAWLETY_API_KEY')
+            try : 
+                status_code = update_order_state_in_mawlety(afex_monitor_order.order_id,afex_manifested_order_in_maw_state)
+                # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
+                if status_code == 401 : 
+                    raise_a_unathorization_error(orders_monitoror_obj,'INVALID_MAWLETY_API_KEY')
+            except Exception as e : 
+                exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE TRYING TO UPDATE THE STATE OF ORDER WITH THE ID {afex_monitor_order.order_id} IN MAWLETY.COM : '
+                exception_msg += str(e)+' ,'
+                exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
+                raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg) 
 
 
             # IF THE NEW STATE IS ONE OF THE DELETE STATE DELETE THE ORDER FROM THE TABLE 
@@ -313,8 +357,6 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
                 'new_state' : afex_manifested_order_in_maw_state
             })
             orders_monitoror_obj.save()
-
-
 
         else : 
             print("NO CHANGE ")

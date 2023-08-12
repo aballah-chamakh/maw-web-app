@@ -17,9 +17,17 @@ $third_color : #3C3C3C ;
 }
 
 @mixin table-title() {
-font-size: 20px;
-text-transform: uppercase;
-margin: 10px 0px; 
-color: $third_color;
-font-weight: 500;
+    font-size: 20px;
+    text-transform: uppercase;
+    margin: 5px 0px; 
+    color: $third_color;
+    font-weight: 500;
+}
+
+@mixin basic-card() {
+    border-top: 1px solid #A0A0A0 ;
+    border-left: 1px solid #E6E4E4;
+    border-right: 1px solid #E6E4E4 ;
+    border-bottom: 1px solid #A0A0A0 ;
+    border-radius: 5px;
 }

@@ -38,9 +38,17 @@ const LoadingPage = (props)=>{
                     />
                     <div class="lower-txt">
                         {props.progress.current_order_id ? 
-                            <>
-                                <p>working on the order with id : </p>
-                                <p class="highlight highlight-bg">{props.progress.current_order_id}</p>
+                            <>{props.progress.carrier ? 
+                                <>
+                                    <p style={{marginBottom:'10px'}}>working on the <span className="highlight highlight-bg">{props.progress.carrier}</span> order</p>
+                                    <p >with the id :</p>
+                                    <span className="highlight highlight-bg">{props.progress.current_order_id}</span> 
+                                </> :
+                                <>
+                                    <p style={{marginBottom:'10px'}}>working on the order with the id :</p>
+                                    <span className="highlight highlight-bg">{props.progress.current_order_id}</span>
+                                </>
+                                }
                             </>:
                             <p>{props.action_txt}</p>
                         }

@@ -5,7 +5,7 @@ import json
 import random
 from .credentials import LOXBOX_LOGIN_CREDENTIAL,LOXBOX_API_CREDENTIAL
 from .global_variables import DELETE_MONITOR_ORDER_STATES
-from .global_functions import raise_a_unathorization_error
+from .global_functions import raise_a_unathorization_error,raise_a_server_request_exception_error
 from .mawlety_API import update_order_state_in_mawlety
 
 
@@ -105,14 +105,27 @@ def get_filtered_state_cards(session,orders_monitoror_obj):
 
 def update_monitor_orders_state_from_loxbox(loxbox_monitor_orders,orders_monitoror_obj,update_a_monitor_order_by_id,delete_a_monitor_order_by_id):
     # LOGIN TO LOXBOX
-    session,status_code = login_to_loxbox()
-    if status_code == 401 : 
-        raise_a_unathorization_error(orders_monitoror_obj,'INVALID_LOXBOX_CREDENTIALS')
+    try :
+        session,status_code = login_to_loxbox()
+        if status_code == 401 : 
+            raise_a_unathorization_error(orders_monitoror_obj,'INVALID_LOXBOX_CREDENTIALS')
+    except Exception as e:
+        exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE TRYING TO LOGIN TO LOXBOX : '
+        exception_msg += str(e)+' ,'
+        exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
+        raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg)         
 
-    
+
+
     # GET THE FILTERED STATE CARDS WITH THEIR DATA (FILTER IN THE ONES WHO HAVE ORDERS IN THEM)
-    filtered_state_cards = get_filtered_state_cards(session,orders_monitoror_obj)
-
+    filtered_state_cards = []
+    try : 
+        filtered_state_cards = get_filtered_state_cards(session,orders_monitoror_obj)
+    except Exception as e : 
+        exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE TRYING TO GRAB ORDERS FROM LOXBOX.TN : '
+        exception_msg += str(e)+' ,'
+        exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
+        raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg)       
 
     
     # FOREACH LOXBOX MONITOR ORDER
@@ -143,10 +156,16 @@ def update_monitor_orders_state_from_loxbox(loxbox_monitor_orders,orders_monitor
                     #UPDATE THE STATE OF THE ORDER IN MAWLATY.COM
                     print("update state in mawlety")
                     print(f"UPDATE TRANSACTION ID : {loxbox_monitor_order.transaction_id}")
-                    status_code = update_order_state_in_mawlety(loxbox_monitor_order.order_id,filtered_state_card_state)
-                    # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
-                    if status_code == 401 : 
-                        raise_a_unathorization_error(orders_monitoror_obj,'INVALID_MAWLETY_API_KEY')
+                    try : 
+                        status_code = update_order_state_in_mawlety(loxbox_monitor_order.order_id,filtered_state_card_state)
+                        # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
+                        if status_code == 401 : 
+                            raise_a_unathorization_error(orders_monitoror_obj,'INVALID_MAWLETY_API_KEY')
+                    except Exception as e :
+                        exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE TRYING TO UPDATE THE STATE OF THE ORDER WITH THE ID {loxbox_monitor_order.order_id} IN MAWLETY.COM: '
+                        exception_msg += str(e)+' ,'
+                        exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
+                        raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg)       
 
                     #CHECK IF THE NEW STATE IN THE DELETE_MONITOR_ORDER_STATES IF SO  : DELETE THE MONITOR ORDER FROM THE TABLE
                     if filtered_state_card_state in DELETE_MONITOR_ORDER_STATES : 
@@ -204,7 +223,7 @@ def format_loxbox_order(loxbox_order) :
     "ReceiverName" : f"{loxbox_order['customer_detail']['firstname']} {loxbox_order['customer_detail']['lastname']}" ,
     "ReceiverMail" : loxbox_order['customer_detail']['email'],
     "ReceiverNumber" :loxbox_order['address_detail']['phone_mobile'][:8] ,
-    "ReceiverAddress" : f"{loxbox_order['address_detail']['address1']},{loxbox_order['address_detail']['city']},{loxbox_order['address_detail']['delegation']},{loxbox_order['address_detail']['locality']}",
+    "ReceiverAddress" : f"{loxbox_order['address_detail']['address1']},{loxbox_order['address_detail']['locality']},{loxbox_order['address_detail']['delegation']},{loxbox_order['address_detail']['city']}",
     "Comment": f"ORDER ID  : {loxbox_order['id']}",
     "AcceptsCheck" : "1",
     "IsHomeDelivery":"on"    
@@ -236,26 +255,46 @@ def submit_loxbox_orders(loxbox_orders,orders_submitter_obj,add_a_loxbox_order_t
         # SET THE current_order_id TO THE ORDERS SUBMITTER
         orders_submitter_obj.state['progress']['current_order_id'] = loxbox_order['id']
         orders_submitter_obj.save() 
-
-        # UPDATE THE STATE OF THE ORDER IN MAWLETY TO "En cours de préparation"
-        status_code = update_order_state_in_mawlety(loxbox_order['id'],'En cours de préparation') 
-        # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
-        if status_code == 401 : 
-            raise_a_unathorization_error(orders_submitter_obj,'INVALID_MAWLETY_API_KEY')
+        
+        try : 
+            # UPDATE THE STATE OF THE ORDER IN MAWLETY TO "En cours de préparation"
+            status_code = update_order_state_in_mawlety(loxbox_order['id'],'En cours de préparation') 
+            # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
+            if status_code == 401 : 
+                raise_a_unathorization_error(orders_submitter_obj,'INVALID_MAWLETY_API_KEY')
+        except Exception as e  : 
+            exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE UPDATING THE STATE OF THE ORDER WITH THE ID {loxbox_order["id"]} IN MAWLETY.COM : '
+            exception_msg += str(e)+' ,'
+            exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
+            raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
+        
 
         # IF WE HAVE THE TRANSACTION ID IT MEAN THAT THE TRANSACTION WAS CREATED BY THE LOXBOX MODULE OTHERWISE WE SHOULD CREATE IT BY OURSELF
         if not loxbox_order['transaction_id'] :
-            transaction_id,status_code = insert_a_loxbox_order(loxbox_order,loxbox_header,orders_submitter_obj)
-             
-            # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
-            if status_code == 401 : 
-                # UNDO THE UPDATE OF THE STATE OF ORDER IN MAWLETY 
-                status_code = update_order_state_in_mawlety(loxbox_order['id'],'Validé')
-                # RAISE AN UNAUTORIZATION ERROR ON LX AND MAW
-                if status_code == 401 :
-                     raise_a_unathorization_error(orders_submitter_obj,f'INVALID_LOXBOX_AND_MAWLETY_API_KEY_UNDO_ORDER_ID_{loxbox_order["id"]}')
+            try : 
+                transaction_id,status_code = insert_a_loxbox_order(loxbox_order,loxbox_header,orders_submitter_obj)
                 
-                raise_a_unathorization_error(orders_submitter_obj,'INVALID_LOXBOX_API_KEY')
+                # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
+                if status_code == 401 : 
+                    try : 
+                        # UNDO THE UPDATE OF THE STATE OF ORDER IN MAWLETY 
+                        status_code = update_order_state_in_mawlety(loxbox_order['id'],'Validé')
+                        # RAISE AN UNAUTORIZATION ERROR ON LX AND MAW
+                        if status_code == 401 :
+                            raise_a_unathorization_error(orders_submitter_obj,f'INVALID_LOXBOX_AND_MAWLETY_API_KEY_UNDO_ORDER_ID_{loxbox_order["id"]}')
+                        
+                        raise_a_unathorization_error(orders_submitter_obj,'INVALID_LOXBOX_API_KEY')
+                    except Exception as e :
+                        exception_msg = f"THE FOLLOWING ERROR HAPPENED WHILE TRYING TO BACKUP THE STATE OF THE ORDER WITH THE ID {loxbox_order['id']} TO VALIDÉ IN MAWLETY.COM AFTER THE SUBMITTING OF THE ORDER TO LOXBOX WAS UNAUTHORIZED : "
+                        exception_msg += str(e)+' '
+                        exception_msg += f"PLEASE BACKUP THE STATE OF THE ORDER TO VALIDÉ IN MAWLETY.COM THEN UPDATE THE API KEY OF LOXBOX IN THE SETTING AFTER FIXING YOUR INTERNET CONNECTION" 
+                        raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
+
+            except Exception as e :
+                exception_msg = f"THE FOLLOWING ERROR HAPPENED WHILE SUBMITTING THE ORDER WITH THE ID {loxbox_order['id']} TO LOXBOX : "
+                exception_msg += str(e)+' ,'
+                exception_msg += f"PLEASE BACKUP THE STATE OF THE ORDER TO VALIDÉ IN MAWLETY.COM AFTER FIXING YOUR INTERNET CONNECTION" 
+                raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
 
             # SET THE TRANSACTION ID OF THE LX ORDER 
             loxbox_order['transaction_id'] = transaction_id

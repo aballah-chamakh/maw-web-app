@@ -7,8 +7,12 @@
     &-header {
         p {
             @include table-title() ;
+            padding-bottom  : 5px ;
             border-bottom: 1px solid $third_color;
+            margin-bottom: 15px;
         }
     }
+    padding-bottom: 1px; // TO LET THE LAST CARD MARGIN BOTTOM APPEAR
+
 
 }

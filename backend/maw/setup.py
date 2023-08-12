@@ -26,8 +26,24 @@ def test() :
                     
 
 def test2():
-    from OrderActionApi.Api.mawlety_API import update_order_state_in_mawlety
-    update_order_state_in_mawlety(1066,'Expédié')
+    from MySQLdb import _mysql 
+    from WebApi.models import Delegation
+    db=_mysql.connect(host="151.106.100.89",user="anbae24c_pres274",
+                    password="NJ@[Sp4l39",database="anbae24c_pres274",port=3306)
+
+    db.query(f"""
+        SELECT id_address,firstname,lastname,delegation FROM dal_address where delegation != ''
+    """)
+
+    r=db.store_result()
+    addresses = list(r.fetch_row(maxrows=0,how=1))
+    print(len(addresses))
+    for idx, address in  enumerate(addresses):
+        qs = Delegation.objects.filter(name=address['delegation'].decode())
+        if not qs : 
+            print(f"address : {address} is not valid")
+    db.close()
+    
 
 
 

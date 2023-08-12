@@ -61,3 +61,10 @@ def raise_an_exception_error(orders_action_obj,exception_error) :
     orders_action_obj.state['exception_error'] = exception_error 
     orders_action_obj.save()
     quit() 
+
+
+def raise_a_server_request_exception_error(orders_action_obj,exception_error) :
+    orders_action_obj.state['state'] = 'FINISHED'
+    orders_action_obj.state['server_request_exception_error'] = exception_error 
+    orders_action_obj.save()
+    quit() 

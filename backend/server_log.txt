@@ -1,0 +1,155 @@
+INFO:waitress:Serving on http://127.0.0.1:8000
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\chama\Desktop\maw\src\backend\maw\OrderActionApi\order_actions.py", line 106, in monitor_monitor_orders
+    num = int("ssssssss")
+ValueError: invalid literal for int() with base 10: 'ssssssss'
+Internal Server Error: /api/orders_monitoror/728/monitor
+Traceback (most recent call last):
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\core\handlers\exception.py", line 47, in inner
+    response = get_response(request)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\views\generic\base.py", line 69, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\src\backend\maw\WebApi\views\monitoring_orders_views.py", line 24, in monitor_orders_monitoror
+    orders_monitoror_obj =  OrderAction.objects.get(id=id)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\db\models\manager.py", line 85, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\db\models\query.py", line 439, in get
+    raise self.model.DoesNotExist(
+WebApi.models.OrderAction.DoesNotExist: OrderAction matching query does not exist.
+ERROR:django.request:Internal Server Error: /api/orders_monitoror/728/monitor
+Traceback (most recent call last):
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\core\handlers\exception.py", line 47, in inner
+    response = get_response(request)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\views\generic\base.py", line 69, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\src\backend\maw\WebApi\views\monitoring_orders_views.py", line 24, in monitor_orders_monitoror
+    orders_monitoror_obj =  OrderAction.objects.get(id=id)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\db\models\manager.py", line 85, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\db\models\query.py", line 439, in get
+    raise self.model.DoesNotExist(
+WebApi.models.OrderAction.DoesNotExist: OrderAction matching query does not exist.
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\chama\Desktop\maw\src\backend\maw\OrderActionApi\order_actions.py", line 106, in monitor_monitor_orders
+    num = int("ssssssss")
+ValueError: invalid literal for int() with base 10: 'ssssssss'
+Internal Server Error: /api/orders_monitoror/729/monitor
+Traceback (most recent call last):
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\core\handlers\exception.py", line 47, in inner
+    response = get_response(request)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\views\generic\base.py", line 69, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\src\backend\maw\WebApi\views\monitoring_orders_views.py", line 24, in monitor_orders_monitoror
+    orders_monitoror_obj =  OrderAction.objects.get(id=id)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\db\models\manager.py", line 85, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\db\models\query.py", line 439, in get
+    raise self.model.DoesNotExist(
+WebApi.models.OrderAction.DoesNotExist: OrderAction matching query does not exist.
+ERROR:django.request:Internal Server Error: /api/orders_monitoror/729/monitor
+Traceback (most recent call last):
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\core\handlers\exception.py", line 47, in inner
+    response = get_response(request)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\views\generic\base.py", line 69, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\src\backend\maw\WebApi\views\monitoring_orders_views.py", line 24, in monitor_orders_monitoror
+    orders_monitoror_obj =  OrderAction.objects.get(id=id)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\db\models\manager.py", line 85, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "C:\Users\chama\Desktop\maw\venv\lib\site-packages\django\db\models\query.py", line 439, in get
+    raise self.model.DoesNotExist(
+WebApi.models.OrderAction.DoesNotExist: OrderAction matching query does not exist.
+INFO:waitress:Serving on http://127.0.0.1:8000
+{'success': True}
+<class 'list'>
+THERE IS A CHANGE
+INFO:waitress:Serving on http://127.0.0.1:8000
+ORDER LOADER ID : 742
+/orders/?filter[date_add]=[2023-03-22,2023-03-27]&filter[current_state]=[3]&display=[id, total_paid, id_carrier, transaction_id, address_detail, customer_detail, cart_products, current_state, date_add]&date=1
+200
+LEN ORDERS  : 5 || START ORDER ID   : 1505 || END ORDER ID : 1509
+98901246 || 8 || True
+98901246 || 8 || True
+LOCALITY LEVEL
+22238824 || 8 || True
+22238824 || 8 || True
+27425474 || 8 || True
+27425474 || 8 || True
+95067787 || 8 || True
+95067787 || 8 || True
+26465477 || 8 || True
+26465477 || 8 || True
+WORKING ON SUBMITTING THE ORDER WITH ID : 1505
+{'success': True, 'awb': '591824631162', 'feedback': 'Success: Enregistrement effectué avec succès.'}
+{'success': True, 'awb': '591824631162', 'feedback': 'Success: Enregistrement effectué avec succès.'}
+WORKING ON SUBMITTING THE ORDER WITH ID : 1507
+{'success': True, 'awb': '591824632162', 'feedback': 'Success: Enregistrement effectué avec succès.'}
+{'success': True, 'awb': '591824632162', 'feedback': 'Success: Enregistrement effectué avec succès.'}
+WORKING ON SUBMITTING THE ORDER WITH ID : 1508
+{'success': True, 'awb': '591824633162', 'feedback': 'Success: Enregistrement effectué avec succès.'}
+{'success': True, 'awb': '591824633162', 'feedback': 'Success: Enregistrement effectué avec succès.'}
+WORKING ON SUBMITTING THE ORDER WITH ID : 1509
+{'success': True, 'awb': '591824634162', 'feedback': 'Success: Enregistrement effectué avec succès.'}
+{'success': True, 'awb': '591824634162', 'feedback': 'Success: Enregistrement effectué avec succès.'}
+{'success': True}
+manifest res : {"success":true,"code_manifest":"3539282","feedback":"Success: Enregistrement effectu\u00e9 avec succ\u00e8s."}
+INFO:waitress:Serving on http://127.0.0.1:8000
+INFO:waitress:Serving on http://127.0.0.1:8000

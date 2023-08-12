@@ -23,7 +23,10 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
 
     from WebApi.models import OrderAction
     orders_loader_obj = OrderAction.objects.get(id=orders_loader_id)
-
+    orders_loader_obj.state['orders']= []
+    orders_loader_obj.state['invalid_orders'] = []
+    orders_loader_obj.save()
+    
     HEADERS['Output-Format'] = "JSON"
     
     ## REQUEST ORDERS 
@@ -46,36 +49,31 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
     print(orders_filter_endpoint)
 
     # MAKE THE REQUEST 
-    r = requests.get(f"{MAWLATY_API_BASE_URL+orders_filter_endpoint}",headers=HEADERS)
+    r = None 
+    try : 
+        r = requests.get(f"{MAWLATY_API_BASE_URL+orders_filter_endpoint}",headers=HEADERS)
+    except Exception as e :
+        orders_loader_obj.state['state']= "FINISHED"
+        orders_loader_obj.state['server_request_exception_error'] = 'THE FOLLOWING SERVER REQUEST ERROR HAPPENED WHILE THE GABBING THE VALID ORDERS FROM MAWLETY.COM : \n'
+        orders_loader_obj.state['server_request_exception_error'] += str(e)+' ,'
+        orders_loader_obj.state['server_request_exception_error'] += 'PLEASE FIX YOUR INTERNET CONNECTION'
+        orders_loader_obj.save()
+        return
+
     print(r.status_code)
 
     if r.status_code == 401 : 
         orders_loader_obj.state['state']= "FINISHED"
-        orders_loader_obj.state['orders']= []
-        orders_loader_obj.state['canceled'] = True 
         orders_loader_obj.state['unauthorization_error'] = 'INVALID_MAWLETY_API_KEY' 
         orders_loader_obj.save()
         return
 
-    # HANDLE REQUEST ERROR
-    if not r : 
-        print(" NO ORDERS TO BE COLLECTED")
-        orders_loader_obj.state['state']= "FINISHED"
-        orders_loader_obj.state['orders']= []
-        orders_loader_obj.state['canceled'] = True 
-        orders_loader_obj.save()
-        return 
-    
-
-
-    # HANDLE JSON ERROR
+    # HANDLE JSON ERROR => EMPTY ARRAY
     if not r.json() : 
         
         print("JSON ERROR")
         print(r.text)
         orders_loader_obj.state['state']= "FINISHED"
-        orders_loader_obj.state['orders']= []
-        orders_loader_obj.state['canceled'] = True 
         orders_loader_obj.save()
         return 
 
@@ -95,9 +93,10 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
         for order in orders : 
             # DECODE FROM STRING TO JSON THE VALUE OF THE address_detail
             order['address_detail'] = json.loads(order['address_detail'])
+            
             # TRIM AND CAPITALIZE CITIES AND DELEGATIONS
             order['address_detail']['city'] = order['address_detail']['city'].title().strip()
-            order['address_detail']['delegation'] = order['address_detail']['delegation'].title().strip()
+            #order['address_detail']['delegation'] = order['address_detail']['delegation'].title().strip()
             
             # CHECK IF THE ORDER IS LOXBOX AND GRAB THE INVALID FIELDS OF THE ORDER
             is_it_loxbox,invalid_fields = (True,[],) if order['transaction_id'] else is_it_for_loxbox(order['address_detail']['city'],order['address_detail']['delegation'],order['address_detail']['locality'])

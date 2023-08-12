@@ -35,7 +35,7 @@ const LoxboxAreasContainer = ()=>{
                             // UPDATE THE PROGRESS DATA 
                             setLxSelectorProgress(data.progress)
                             // SET THE LOADING ACTION TEXT RELATED TO THE SELECTOR PROCESS
-                            setLoadingActionTxt('still working on your last section or deselection')
+                            setLoadingActionTxt('still working on your last selection or deselection')
                         }
                     })
                 },5000)
