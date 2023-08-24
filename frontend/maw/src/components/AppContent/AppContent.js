@@ -18,6 +18,7 @@ const AppContent = (props)=>{
                     <Route path="/loxbox_areas" element={<LoxboxAreasContainer />} />
                     <Route path="/settings" element={<SettingContainer />} />
                     <Route path="/test" element={<Test />} />
+                    <Route path="/account" element={<Test />} />
           </Routes>
           
         </div>

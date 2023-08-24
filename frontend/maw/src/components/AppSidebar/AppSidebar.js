@@ -1,5 +1,5 @@
 
-import {useState} from 'react'
+import { useState,useEffect } from "react"
 import { useNavigate } from 'react-router-dom';
 import App from '../../App';
 import './AppSidebar.scss' ;
@@ -9,6 +9,17 @@ import {Link} from 'react-router-dom' ;
 const AppSidebar = (props)=>{
     const [isSidebarHidden,setIsSidebarHidden] = useState(false) ;
     const navigate = useNavigate()
+    const [currentNavIdx,setCurrentNavIdx] = useState(1)
+
+    useEffect(()=>{
+       console.log("useEffect")
+       let activeEl = document.querySelector(`img.active, li.active`);
+       let clickedEl =  document.querySelector(`img[data-nav-idx='${currentNavIdx}'], li[data-nav-idx='${currentNavIdx}']`);
+       if (activeEl) {
+        activeEl.classList.remove('active')
+       }
+       clickedEl.classList.add('active')
+    },[currentNavIdx])
 
     const toggleSidebar = ()=>{
         setIsSidebarHidden((prevIsSidebarHidden)=>{
@@ -24,24 +35,32 @@ const AppSidebar = (props)=>{
             return newIsSidebarHidden
         })
      }
+    const handleNavigation = function (e,route){
+      
+        console.log("handle navigation")
+        let clickedEl = e.target.tagName == 'P' || e.target.tagName == 'I'  ? e.target.parentElement : e.target ;
+        setCurrentNavIdx(clickedEl.getAttribute('data-nav-idx'))
+        navigate(route)
+        
+    }
 
     return(
         <div className="app-sidebar-container">
             { ! isSidebarHidden  ? 
                 <div class="app-sidebar-apparent">
                     <div class="app-sidebar-apparent-header">
-                        <p>mawlety</p>
+                        <img src='http://127.0.0.1:8000/media/upper_logo.png' height={'30px'}/>
                         <i onClick={toggleSidebar} class='fas fa-arrow-left'></i>
                     </div>
                     <div class="app-sidebar-apparent-logo">
-                        <img src='http://127.0.0.1:8000/media/maw_logo.jpg' />
+                        <img data-nav-idx={0} onClick={(e)=>{handleNavigation(e,"/account")}}  src='http://127.0.0.1:8000/media/logo_8.png' />
                     </div>
                     <div class="app-sidebar-apparent-navigation">
                         <ul>
-                            <li  onClick={()=>{navigate("/load_orders")}}> <i style={{marginRight:'15px',position:'relative',left:'4px'}} class='fas fa-cloud-download-alt'></i> <p>load orders</p></li>
-                            <li onClick={()=>{navigate("/monitor_orders")}}><i style={{marginRight:'15px',position:'relative',left:'4px'}} class='far fa-eye'></i> <p>monitor orders</p></li>
-                            <li onClick={()=>{navigate("/loxbox_areas")}}><i class="material-icons">location_on</i><p>loxbox areas</p></li>
-                            <li onClick={()=>{navigate("/settings")}}><i class="material-icons">settings</i><p>settings</p></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/load_orders")}} data-nav-idx={1}> <i style={{marginRight:'15px',position:'relative',left:'4px'}} class='fas fa-cloud-download-alt'></i> <p>load orders</p></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/monitor_orders")}} data-nav-idx={2} ><i style={{marginRight:'15px',position:'relative',left:'4px'}} class='far fa-eye'></i> <p>monitor orders</p></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/loxbox_areas")}} data-nav-idx={3} ><i class="material-icons">location_on</i><p>loxbox areas</p></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/settings")}} data-nav-idx={4} ><i class="material-icons active">settings</i><p>settings</p></li>
                         </ul>
                     </div>
                 </div>:
@@ -51,14 +70,14 @@ const AppSidebar = (props)=>{
                         <i onClick={toggleSidebar} class='fas fa-arrow-right'></i>
                     </div>
                     <div class="app-sidebar-hidden-logo">
-                        <img src='http://127.0.0.1:8000/media/maw_logo.jpg' />
+                        <img data-nav-idx={0} onClick={(e)=>{handleNavigation(e,"/account")}}  src='http://127.0.0.1:8000/media/icon_logo.png' />
                     </div>
                     <div class="app-sidebar-hidden-navigation">
                         <ul>
-                            <li  onClick={()=>{navigate("/load_orders")}}> <i class='fas fa-cloud-download-alt'></i></li>
-                            <li onClick={()=>{navigate("/monitor_orders")}}><i class='far fa-eye'></i> </li>
-                            <li onClick={()=>{navigate("/loxbox_areas")}}><i class="material-icons">location_on</i></li>
-                            <li onClick={()=>{navigate("/settings")}}><i class="material-icons">settings</i></li>
+                            <li  onClick={(e)=>{handleNavigation(e,"/load_orders")}} data-nav-idx={1} > <i class='fas fa-cloud-download-alt'></i></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/monitor_orders")}} data-nav-idx={2} ><i class='far fa-eye'></i> </li>
+                            <li style={{paddingBottom:'0px'}} onClick={(e)=>{handleNavigation(e,"/loxbox_areas")}}  data-nav-idx={3}><i class="material-icons">location_on</i></li>
+                            <li style={{paddingBottom:'0px'}} onClick={(e)=>{handleNavigation(e,"/settings")}}  data-nav-idx={4}><i class="material-icons">settings</i></li>
                         </ul>
                     </div>
                 </div>

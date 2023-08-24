@@ -3,22 +3,19 @@ import { useEffect,useState } from "react"
 
 const Test = ()=>{
     const [cnt,setCnt] = useState(0)
+    const [name,setName] = useState('abdallah')
 
-    alert('RE-RENSER '+cnt)
-  
-    const inscrease = ()=>{
-        setTimeout(()=>{
-            alert('START  INCREASING THE CNT')
-            setCnt(prevCnt=>prevCnt+1)
-            alert('END INCREASING THE CNT')
-        },10000)
-    }
+    useEffect(()=>{
+        console.log("use Effect ")
+        return ()=>{console.log("clean up ...")}
+    },[cnt])
 
+    console.log("Rendering")
 
     return(
         <div>
             <h1>{cnt} </h1>
-            <button onClick={inscrease}>INCREASE</button>
+            <button onClick={()=>{setCnt(prevCnt=>prevCnt+1)}}>increase</button>
         </div>
     )
 
