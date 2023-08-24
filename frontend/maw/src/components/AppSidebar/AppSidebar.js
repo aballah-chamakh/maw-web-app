@@ -57,10 +57,12 @@ const AppSidebar = (props)=>{
                     </div>
                     <div class="app-sidebar-apparent-navigation">
                         <ul>
-                            <li onClick={(e)=>{handleNavigation(e,"/load_orders")}} data-nav-idx={1}> <i style={{marginRight:'15px',position:'relative',left:'4px'}} class='fas fa-cloud-download-alt'></i> <p>load orders</p></li>
-                            <li onClick={(e)=>{handleNavigation(e,"/monitor_orders")}} data-nav-idx={2} ><i style={{marginRight:'15px',position:'relative',left:'4px'}} class='far fa-eye'></i> <p>monitor orders</p></li>
-                            <li onClick={(e)=>{handleNavigation(e,"/loxbox_areas")}} data-nav-idx={3} ><i class="material-icons">location_on</i><p>loxbox areas</p></li>
-                            <li onClick={(e)=>{handleNavigation(e,"/settings")}} data-nav-idx={4} ><i class="material-icons active">settings</i><p>settings</p></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/load_orders")}} data-nav-idx={1}> <i style={{marginRight:'15px',position:'relative',left:'4px'}} class='fas fa-cloud-download-alt'></i> <p>Chargement des commandes</p></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/monitor_orders")}} data-nav-idx={2} ><i style={{marginRight:'15px',position:'relative',left:'4px'}} class='far fa-eye'></i> <p>Suivi des Commandes</p></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/carrier_per_zone")}} data-nav-idx={3} ><i class="material-icons">location_on</i><p>Transporteur par Zone</p></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/carriers")}} data-nav-idx={4} ><i class="material-icons" style={{marginLeft:'2px'}}>local_shipping</i><p>Transporteur</p></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/errors")}} data-nav-idx={5} ><i class="material-icons">error_outline</i><p>Erreur</p></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/settings")}} data-nav-idx={6} ><i class="material-icons">settings</i><p>Paramètres</p></li>
                         </ul>
                     </div>
                 </div>:
@@ -76,8 +78,10 @@ const AppSidebar = (props)=>{
                         <ul>
                             <li  onClick={(e)=>{handleNavigation(e,"/load_orders")}} data-nav-idx={1} > <i class='fas fa-cloud-download-alt'></i></li>
                             <li onClick={(e)=>{handleNavigation(e,"/monitor_orders")}} data-nav-idx={2} ><i class='far fa-eye'></i> </li>
-                            <li style={{paddingBottom:'0px'}} onClick={(e)=>{handleNavigation(e,"/loxbox_areas")}}  data-nav-idx={3}><i class="material-icons">location_on</i></li>
-                            <li style={{paddingBottom:'0px'}} onClick={(e)=>{handleNavigation(e,"/settings")}}  data-nav-idx={4}><i class="material-icons">settings</i></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/carrier_per_zone")}} data-nav-idx={3} ><i class="material-icons">location_on</i></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/carriers")}} data-nav-idx={4} ><i class="material-icons" >local_shipping</i></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/errors")}} data-nav-idx={5} ><i class="material-icons">error_outline</i></li>
+                            <li onClick={(e)=>{handleNavigation(e,"/settings")}} data-nav-idx={6} ><i class="material-icons">settings</i></li>
                         </ul>
                     </div>
                 </div>
