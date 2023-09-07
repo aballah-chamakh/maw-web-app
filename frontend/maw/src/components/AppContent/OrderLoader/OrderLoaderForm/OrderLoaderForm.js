@@ -16,7 +16,7 @@ const OrderLoaderForm = (props)=>{
             <i  className='fa fa-cart-arrow-down order-loader-form-container-icon'></i>
 
             <div class='form-group'>
-                <label>start date</label>
+                <label>Date du début</label>
                 <DatePicker
                     defaultValue={new Date()}
                     valueFormat={{ dateStyle: "medium" }}
@@ -24,7 +24,7 @@ const OrderLoaderForm = (props)=>{
                 />
             </div>
             <div class='form-group'>
-                <label>end date</label>
+                <label>Date du fin</label>
                 <DatePicker
                     defaultValue={new Date()}
                     valueFormat={{ dateStyle: "medium" }}
@@ -32,7 +32,7 @@ const OrderLoaderForm = (props)=>{
                     min={props.startDate}
                 />
             </div>
-            <button className='order-loader-form-container-button' onClick={props.loadOrders} >load orders</button>
+            <button className='order-loader-form-container-button' onClick={props.loadOrders} >Chargez les commandes</button>
         </div>
     )
 }

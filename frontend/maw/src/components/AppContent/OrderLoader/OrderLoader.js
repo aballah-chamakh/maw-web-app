@@ -39,7 +39,7 @@ const OrderLoader = (props)=>{
 
     //alert("location.state : "+location.state)
     useEffect(()=>{
-        //SHOW THE SUCCESS MODAL FOR THE LAST SUCCESSFULL SUBMITTING LAUNCH 
+        // SHOW ALERTS IF THEY EXISTS 
         // NOTE 1 : WE DON'T NEED TO CHECK IF THERE IS A REDIRECTION BECAUSE THE LAST SUBMITTING LAUNCH WAS SUCCESSFULL 
         // NOTE 2 : WHEN THE SUCCESS OF THE POPUP WILL BE CLOSED THE LOCATION STATE WILL CLEARED IN THE CLOSE HANDLER FUNCTION OF THE POPUP
         if(location.state){
@@ -85,8 +85,8 @@ const OrderLoader = (props)=>{
 
 
         }else{
-            //alert('check redirection ')
-            // CHECK IF THERE IS A REDIRECTION TO DO 
+
+            // CHECK IF THERE IS AN UNCOMPTED STEP AND  REDIRECT TO IT 
             if (lastUndoneStepChecked == false){ // TO NOT MAKE THE CHECK AGAIN THE INTV IS UPDATED 
                 //alert('really check redirection ')
                 setLastUndoneStepChecked(true) 
@@ -291,7 +291,7 @@ const OrderLoader = (props)=>{
         <div class="order-loader-container">
            
             <OrderLoaderForm loadOrders={loadOrders} setStartDate={setStartDate} setEndDate={setEndDate} startDate={startDate} /> 
-            <GenericModal show={isInfoModalShowed}  type='alert' title={infoAlertData.title} alertData={infoAlertData} closeModal={closeInfoModal} />
+            <GenericModal show={true}  type='alert' title={infoAlertData.title} alertData={infoAlertData} closeModal={closeInfoModal} />
             <GenericModal show={isRestrictedModalShowed}  type='alert' title={restrictedAlertData.title} alertData={restrictedAlertData} closeModal={closeRestrictedModal} />
             <GenericModal show={isSuccessModalShowed}  type='alert' title={successAlertData.title} alertData={successAlertData} orders_len={location.state ? location.state.submitted_orders_len : 0 } closeModal={closeSuccessModal} />
             <GenericModal show={isProcessModalShowed}  type='alert'  title={processAlertData.title} alertData={processAlertData} closeModal={closeProcessModal} />

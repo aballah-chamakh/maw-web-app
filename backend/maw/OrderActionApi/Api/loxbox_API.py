@@ -214,7 +214,7 @@ def get_order_content(cart_products) :
 def format_loxbox_order(loxbox_order) : 
     # customer_detail => firstname,lastname,email
     # address_detail => city,delegation,address1,phone_mobile
-    comment =  f"Téléphone2 : {loxbox_order['address_detail']['phone']} --- " if loxbox_order['address_detail']['phone_mobile'] else ""
+    comment =  f"Téléphone2 : {loxbox_order['address_detail']['phone']} --- " if loxbox_order['address_detail']['phone'] else ""
     loxbox_order_format = {
     "Content":get_order_content(loxbox_order['cart_products']),
     "detail":"",
