@@ -7,9 +7,9 @@ from .credentials import LOXBOX_LOGIN_CREDENTIAL,LOXBOX_API_CREDENTIAL
 from .global_variables import DELETE_MONITOR_ORDER_STATES
 from .global_functions import raise_a_unathorization_error,raise_a_server_request_exception_error
 from .mawlety_API import update_order_state_in_mawlety
+from .DolzayRequest import DolzayRequest
 
-
-
+LOXBOX_DOMAIN_NAME = 'loxbox.tn'
 LOXBOX_BASE_URL = "https://www.loxbox.tn"
 LOXBOX_LOGIN_URL = f"{LOXBOX_BASE_URL}/accounts/login/"
 
@@ -234,20 +234,74 @@ def format_loxbox_order(loxbox_order) :
     return loxbox_order_format
 
 
+def custom_unauthorization_err_handler(order_action_obj,order_id):
+    # BACKUP THE ORDER TO HIS INITIAL STATE
+    context = f"Dans le processus de la soumission de la commande portant l'identifiant {order_id} à Lobox, plus précisément lors de la tentative de restaurer l'état de la commande à l'état initial, après avoir constaté que les identifiants d'Afex sont invalides."
+    additional_instructions =  {
+        'internet_or_website_err' : [
+            {'pos' : 3, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
+            {'pos' : 4, 'instruction' : f"Mettez à jour les identifiants du site web {LOXBOX_DOMAIN_NAME}"}
+        ],
+        'unexpected_err' :  [
+            {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
+            {'pos' : 2, 'instruction' : f"Mettez à jour les identifiants du site web {LOXBOX_DOMAIN_NAME}"}
+        ],
+        'slow_website_or_internet_err' :  [
+            {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
+            {'pos' : 2, 'instruction' : f"Mettez à jour les identifiants du site web {LOXBOX_DOMAIN_NAME}"}
+        ]
+        'unauthorization_err' : [
+            {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."}
+            {'pos' : 3, 'instruction' : f"Mettez à jour les identifiants du site web {LOXBOX_DOMAIN_NAME}."}
+        ]    
+    }
+    update_order_state_in_mawlety(order_action_obj,order['id'],'Validé',context,additional_instructions)
 
+    # HANDLE THE UNAUTHORIZATION OF AFEX AFTER THE SUCCESS OF THE BACKUP
+    order_action_obj.state['alert'] = {
+            'alert_type' : 'error',
+            'error_msg' :  f"Les identifiants du site web {LOXBOX_DOMAIN_NAME} sont invalides.",
+            'error_context' : f"Durant la tentation de soumettre la commande avec l'identifiant : {order['id']} à Loxbox.",
+            'instructions' : [
+                f"Mettez à jour les identifiants du site web {LOXBOX_DOMAIN_NAME}"
+                "Si les/l' étape(s) précédente(s) n'ont/a pas résolu le problème, appelez l'équipe de support Dolzay au : 58671414."
+            ]
+        }
+    order_action_obj.save()
 
 
 def insert_a_loxbox_order(loxbox_order,loxbox_header,orders_submitter_obj):
     formatted_loxbox_order = format_loxbox_order(loxbox_order)
-    print(formatted_loxbox_order)
-    while True : 
-        r = requests.post("https://www.loxbox.tn/api/NewTransaction/",data=json.dumps(formatted_loxbox_order),headers=loxbox_header)
-        if r.status_code == 200 : 
-            return r.json()['Transaction_instance'],r.status_code
-        elif r.status_code == 401 :
-            return '',r.status_code
-        print(f"WE DID ENCOUNTER AN ERROR WHILE CREATING THE ORDER WITH THE ID : {loxbox_order['id']} , WE WILL TRY AGAIN IN 2 SECONDS")
-        time.sleep(2)
+
+    additional_instructions = {
+        'internet_or_website_err' : [
+            {'pos' : 3, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."}
+            {'pos' : 4, 'instruction' : f"Vérifiez qu'il n'existe aucune commande portant la référence {order['reference']} sur {LOXBOX_DOMAIN_NAME}."}
+        ],
+        'unexpected_err' :  [
+            {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."}
+            {'pos' : 2, 'instruction' : f"Vérifiez qu'il n'existe aucune commande portant la référence {order['reference']} sur {LOXBOX_DOMAIN_NAME}."}
+        ],
+        'slow_website_or_internet_err' :  [
+            {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."}
+            {'pos' : 2, 'instruction' : f"Vérifiez qu'il n'existe aucune commande portant la référence {order['reference']} sur {LOXBOX_DOMAIN_NAME}."}
+        ],
+    }
+
+    url = "https://www.loxbox.tn/api/NewTransaction/"
+
+    res = DolzayRequest(
+            method='POST',
+            header = loxbox_header,
+            url = url,
+            body=json.dumps(formatted_loxbox_order) ,
+            context = f"Durant la tentation de soumettre la commande avec l'identifiant : {order['id']} à Loxbox.",
+            parameters = {'website':LOXBOX_DOMAIN_NAME,'order_id':loxbox_order['id']},
+            order_action_obj = orders_submitter_obj,
+            custom_unauthorization_err_handler=custom_unauthorization_err_handler
+    ).make_request()
+
+    return res.json()['Transaction_instance']
 
 
 def submit_loxbox_orders(loxbox_orders,orders_submitter_obj,add_a_loxbox_order_to_monitoring_phase):
@@ -260,45 +314,22 @@ def submit_loxbox_orders(loxbox_orders,orders_submitter_obj,add_a_loxbox_order_t
         orders_submitter_obj.state['progress']['current_order_id'] = loxbox_order['id']
         orders_submitter_obj.save() 
         
-        try : 
-            # UPDATE THE STATE OF THE ORDER IN MAWLETY TO "En cours de préparation"
-            status_code = update_order_state_in_mawlety(loxbox_order['id'],'En cours de préparation') 
-            # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
-            if status_code == 401 : 
-                raise_a_unathorization_error(orders_submitter_obj,'INVALID_MAWLETY_API_KEY')
-        except Exception as e  : 
-            exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE UPDATING THE STATE OF THE ORDER WITH THE ID {loxbox_order["id"]} IN MAWLETY.COM : '
-            exception_msg += str(e)+' ,'
-            exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
-            raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
+        # UPDATE THE STATE OF THE ORDER
+        context = f"Dans le processus de soumission de la commande avec l'identifiant {order['id']} à Loxbox, plus précisément lors de la mise à jour de l'état de la commande sur mawlety.com."
         
+        additional_instructions = {
+            'internet_or_website_err' : [{'pos' : 3, 'instruction' : f"Assurez-vous que l'état de la commande avec l'identifiant {order['id']} est dans l'état initial sur mawlety.com."}],
+            'unexpected_err' : [{'pos':1,'instruction' : f"Assurez-vous que l'état de la commande avec l'identifiant {order['id']} est dans l'état initial sur mawlety.com."}],
+            'slow_website_or_internet_err' : [{'pos':1,'instruction' : f"Assurez-vous que l'état de la commande avec l'identifiant {order['id']} est dans l'état initial sur mawlety.com."}],
+        }
+        
+        update_order_state_in_mawlety(orders_submitter_obj,order['id'],'En cours de préparation',context,additional_instructions)
+
 
         # IF WE HAVE THE TRANSACTION ID IT MEAN THAT THE TRANSACTION WAS CREATED BY THE LOXBOX MODULE OTHERWISE WE SHOULD CREATE IT BY OURSELF
         if not loxbox_order['transaction_id'] :
-            try : 
-                transaction_id,status_code = insert_a_loxbox_order(loxbox_order,loxbox_header,orders_submitter_obj)
-                
-                # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
-                if status_code == 401 : 
-                    try : 
-                        # UNDO THE UPDATE OF THE STATE OF ORDER IN MAWLETY 
-                        status_code = update_order_state_in_mawlety(loxbox_order['id'],'Validé')
-                        # RAISE AN UNAUTORIZATION ERROR ON LX AND MAW
-                        if status_code == 401 :
-                            raise_a_unathorization_error(orders_submitter_obj,f'INVALID_LOXBOX_AND_MAWLETY_API_KEY_UNDO_ORDER_ID_{loxbox_order["id"]}')
-                        
-                        raise_a_unathorization_error(orders_submitter_obj,'INVALID_LOXBOX_API_KEY')
-                    except Exception as e :
-                        exception_msg = f"THE FOLLOWING ERROR HAPPENED WHILE TRYING TO BACKUP THE STATE OF THE ORDER WITH THE ID {loxbox_order['id']} TO VALIDÉ IN MAWLETY.COM AFTER THE SUBMITTING OF THE ORDER TO LOXBOX WAS UNAUTHORIZED : "
-                        exception_msg += str(e)+' '
-                        exception_msg += f"PLEASE BACKUP THE STATE OF THE ORDER TO VALIDÉ IN MAWLETY.COM THEN UPDATE THE API KEY OF LOXBOX IN THE SETTING AFTER FIXING YOUR INTERNET CONNECTION" 
-                        raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
-
-            except Exception as e :
-                exception_msg = f"THE FOLLOWING ERROR HAPPENED WHILE SUBMITTING THE ORDER WITH THE ID {loxbox_order['id']} TO LOXBOX : "
-                exception_msg += str(e)+' ,'
-                exception_msg += f"PLEASE BACKUP THE STATE OF THE ORDER TO VALIDÉ IN MAWLETY.COM AFTER FIXING YOUR INTERNET CONNECTION" 
-                raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
+             
+            transaction_id = insert_a_loxbox_order(loxbox_order,loxbox_header,orders_submitter_obj)
 
             # SET THE TRANSACTION ID OF THE LX ORDER 
             loxbox_order['transaction_id'] = transaction_id

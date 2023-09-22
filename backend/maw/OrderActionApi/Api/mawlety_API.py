@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 import time 
 from .global_variables import HEADERS, MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID
 from .global_functions import is_it_for_loxbox
-
+from .DolzayRequest import DolzayRequest
 
 
 
@@ -50,39 +50,18 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
     print(HEADERS)
 
     # MAKE THE REQUEST 
-    r = None 
-    try : 
-        r = requests.get(f"{MAWLATY_API_BASE_URL+orders_filter_endpoint}",headers=HEADERS)
-        content_type = r.headers.get('Content-Type')
-        if content_type:
-            charset = content_type.split('charset=')[-1]
-            print('Charset:', charset)
-    except Exception as e :
-        orders_loader_obj.state['state']= "FINISHED"
-        orders_loader_obj.state['server_request_exception_error'] = 'THE FOLLOWING SERVER REQUEST ERROR HAPPENED WHILE THE GABBING THE VALID ORDERS FROM MAWLETY.COM : \n'
-        orders_loader_obj.state['server_request_exception_error'] += str(e)+' ,'
-        orders_loader_obj.state['server_request_exception_error'] += 'PLEASE FIX YOUR INTERNET CONNECTION'
-        orders_loader_obj.save()
-        return
 
-    print(r.status_code)
-
-    if r.status_code == 401 : 
-        orders_loader_obj.state['state']= "FINISHED"
-        orders_loader_obj.state['unauthorization_error'] = 'INVALID_MAWLETY_API_KEY' 
-        orders_loader_obj.save()
-        return
-    print(r.content)
-    # HANDLE JSON ERROR => EMPTY ARRAY
-    if not r.json() : 
-        
-        print("JSON ERROR")
-        print(r.text)
-        orders_loader_obj.state['state']= "FINISHED"
-        orders_loader_obj.save()
-        return 
+    res = DolzayRequest(
+        method='GET',
+        header = HEADERS,
+        url = MAWLATY_API_BASE_URL+orders_filter_endpoint,
+        context = 'Chargement des commande',
+        parameters = {'website':'mawlety.com','date_range':date_range},
+        order_action_obj = orders_loader_obj,
+        check_json = True
+        ).make_request()
     
-    orders = json.loads(r.content.decode('utf-8'))['orders']
+    orders = res.json()['orders']
 
     
 
@@ -139,6 +118,7 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
 
                 # APPEND THE ORDER 
                 orders_loader_obj.state['orders'].append(order)
+
             # INCREASE THE GRABBED ORDERS LEN
             orders_loader_obj.state['progress']['grabbed_orders_len'] += 1
             orders_loader_obj.save()
@@ -152,26 +132,29 @@ def grab_maw_orders(orders_loader_id,date_range,state=MAWLETY_STR_STATE_TO_MAWLE
     del HEADERS['Output-Format']
 
 
-def update_order_state_in_mawlety(order_id,order_state_str):
-   
-    
+def update_order_state_in_mawlety(order_action_obj,order_id,order_state_str,context,additional_instuctions=[]):
     # GET THE ORDER DATA IN XML 
     orders_base_endpoint = f"/orders/{order_id}"
-    r = requests.get(MAWLATY_API_BASE_URL+orders_base_endpoint,headers=HEADERS)
-    
-    if r.status_code == 401 :
-        return  r.status_code
-
-    order_data = r.content.decode()
-
-    
-    # UPDATE THE ORDER CURRENT STATE
+    res = DolzayRequest(
+            method='GET',
+            header = HEADERS,
+            url = MAWLATY_API_BASE_URL+orders_base_endpoint,
+            context = context,
+            parameters = {'website':'mawlety.com'},
+            order_action_obj = order_action_obj,
+            additional_instuctions=additional_instuctions,
+            ).make_request()
+            
+    # EXTRACT THE ORDER DATA IN XML
+    order_data = res.content.decode()
     root = ET.fromstring(order_data)
     order_tag = root[0]
-
+    
+    # UPDATE THE CURRENT STATE OF THE ORDER IN THE XML OBJECT
     current_state = order_tag.find('current_state')
     current_state.text = MAWLETY_STR_STATE_TO_MAWLETY_STATE_ID[order_state_str]
 
+    # REMOVE UNEEDED KEYS 
     transaction_id = order_tag.find('transaction_id')
     order_tag.remove(transaction_id)
 
@@ -183,17 +166,24 @@ def update_order_state_in_mawlety(order_id,order_state_str):
     order_tag.remove(cart_products)
 
     
-    # PUT THE UPDATE ORDER DATA
+    # UPDATE THE CURRRENT STATE OF THE ORDER IN THE SERVER
     HEADERS['Output-Format'] = "JSON"
-    while True :
-        r = requests.put(MAWLATY_API_BASE_URL+orders_base_endpoint,data=ET.tostring(root),headers=HEADERS)
-        if r.status_code == 200 : 
-            del HEADERS['Output-Format']
-            return 
-        elif r.status_code == 401 :
-            return  r.status_code
-        print(f"WHILE TRYING TO UPDATE THE STATE OF THE ORDER ID :{order_id} THE FOLLOWING ERROR HAPPENED  : {r.json()} , WE WILL TRY AGAIN IN 2 SECONDS")
-        time.sleep(2)
+
+    res = DolzayRequest(
+        method='PUT',
+        header = HEADERS,
+        url = MAWLATY_API_BASE_URL+orders_base_endpoint,
+        body=ET.tostring(root),
+        context = context,
+        parameters = {'website':'mawlety.com'},
+        order_action_obj = order_action_obj,
+        additional_instuctions = instuctions
+    ).make_request()
+    
+
+    del HEADERS['Output-Format']
+
+
 
 # from OrderActionApi.Api.mawlety_API import update_order_state_in_mawlety
 # update_order_state_in_mawlety(608,'Expédié')

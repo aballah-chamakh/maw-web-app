@@ -13,7 +13,9 @@ from .mawlety_API import update_order_state_in_mawlety
 from .monitoring_API import delete_a_monitor_order_by_id, update_a_monitor_order_by_id,add_afex_order_to_monitoring_phase
 from .global_variables import DELETE_MONITOR_ORDER_STATES
 from .global_functions import raise_a_unathorization_error,raise_an_exception_error,raise_a_server_request_exception_error
+from .DolzayRequest import DolzayRequest
 
+AFEX_DOMAIN_NAME = "afex.tn"
 
 def get_afex_logged_session(): 
     login_data = {
@@ -83,20 +85,55 @@ def manifest_orders(orders_submitter_obj):
     # MANIFEST ORDERS
     # NOTE THIS REQUEST DOESN'T NEED AUTHORIZATION 
     r = afex_logged_session.post("http://afex.smart-delivery-systems.com/webgesta/index.php/expeditionb/manifest",data=orders_to_manifest)
-    print(f"manifest res : {r.text}")
+
     # CHECK IF THE MANIFEST DIDN'T WORK , IF SO RAISE AN EXCEPTION ERROR
     if not ('success' in r.text and r.json()['success'] == True) : 
         raise_an_exception_error(orders_submitter_obj,'THE_MANIFEST_REQUEST_NOT_WORKING')
 
+def custom_unauthorization_err_handler(order_action_obj,order_id):
+    # BACKUP THE ORDER TO HIS INITIAL STATE
+    context = f"Dans le processus de la soumission de la commande portant l'identifiant {order_id} à Afex, plus précisément lors de la tentative de restaurer l'état de la commande à l'état initial, après avoir constaté que les identifiants d'Afex sont invalides."
+    additional_instructions =  {
+        'internet_or_website_err' : [
+            {'pos' : 3, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
+            {'pos' : 4, 'instruction' : f"Mettez à jour les identifiants du site web {AFEX_DOMAIN_NAME}"}
+        ],
+        'unexpected_err' :  [
+            {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
+            {'pos' : 2, 'instruction' : f"Mettez à jour les identifiants du site web {AFEX_DOMAIN_NAME}"}
+        ],
+        'slow_website_or_internet_err' :  [
+            {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
+            {'pos' : 2, 'instruction' : f"Mettez à jour les identifiants du site web {AFEX_DOMAIN_NAME}"}
+        ]
+        'unauthorization_err' : [
+            {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
+            {'pos' : 3, 'instruction' : f"Mettez à jour les identifiants du site web {AFEX_DOMAIN_NAME}."}
+        ]    
+    }
+    update_order_state_in_mawlety(order_action_obj,order['id'],'Validé',context,additional_instructions)
+
+    # HANDLE THE UNAUTHORIZATION OF AFEX AFTER THE SUCCESS OF THE BACKUP
+    order_action_obj.state['alert'] = {
+            'alert_type' : 'error',
+            'error_msg' :  f"Les identifiants du site web {AFEX_DOMAIN_NAME} sont invalides.",
+            'error_context' : f"Durant la tentation de soumettre la commande avec l'identifiant : {order['id']} à Afex.",
+            'instructions' : [
+                f"Mettez à jour les identifiants du site web {AFEX_DOMAIN_NAME}",
+                "Si les/l' étape(s) précédente(s) n'ont/a pas résolu le problème, appelez l'équipe de support Dolzay au : 58671414."
+            ]
+        }
+    order_action_obj.save()
 
 
-def submit_afex_order(order) : 
+def submit_afex_order(orders_submitter_obj,order) : 
     marchandise = ""
     cart_product_len = len(order['cart_products'])
     for idx,product in enumerate(order['cart_products']) : 
         marchandise += f"{product['quantity']} x {product['name']}"
         if idx+1 != cart_product_len :
             marchandise += ','
+
     headers = {
         'Content-Type': "application/text",
         'X-API-Key': AFEX_API_CREDENTIALS['api_key']
@@ -123,9 +160,33 @@ def submit_afex_order(order) :
     
 
     # SUBMIT THE ORDER TO AFEX SERVER 
-    r = requests.post(url,data=json.dumps(formatted_afex_order),headers=headers)
-    json_res = json.loads(r.text.replace("'",'"')) 
-    return json_res , r.status_code 
+    additional_instructions = {
+        'internet_or_website_err' : [
+            {'pos' : 3, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
+            {'pos' : 4, 'instruction' : f"Vérifiez qu'il n'existe aucune commande portant la référence {order['reference']} sur {AFEX_DOMAIN_NAME}."}
+        ],
+        'unexpected_err' :  [
+            {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
+            {'pos' : 2, 'instruction' : f"Vérifiez qu'il n'existe aucune commande portant la référence {order['reference']} sur {AFEX_DOMAIN_NAME}."}
+        ],
+        'slow_website_or_internet_err' :  [
+            {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
+            {'pos' : 2, 'instruction' : f"Vérifiez qu'il n'existe aucune commande portant la référence {order['reference']} sur {AFEX_DOMAIN_NAME}."}
+        ],
+    }
+
+    res = DolzayRequest(
+        method='POST',
+        header = headers,
+        url = url,
+        body=json.dumps(formatted_afex_order),
+        context = f"Durant la tentation de soumettre la commande avec l'identifiant : {order['id']} à Afex.",
+        parameters = {'website':AFEX_DOMAIN_NAME,'order_id':order['id']},
+        order_action_obj = orders_submitter_obj,
+        custom_unauthorization_err_handler=custom_unauthorization_err_handler
+        ).make_request()
+            
+    return json.loads(res.text.replace("'",'"'))   
 
 
         
@@ -143,62 +204,28 @@ def submit_afex_orders(orders,orders_submitter_obj):
         orders_submitter_obj.save()
         
 
-
-        try : 
-            # UPDATE THE STATE OF THE ORDER IN MAWLETY
-            status_code = update_order_state_in_mawlety(order['id'],'En cours de préparation')
-            # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
-            if status_code == 401 : 
-                raise_a_unathorization_error(orders_submitter_obj,'INVALID_MAWLETY_API_KEY')
-        except Exception as e : 
-            exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE UPDATING THE STATE OF THE ORDER WITH THE ID {order["id"]} IN MAWLETY.COM : '
-            exception_msg += str(e)+' ,'
-            exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
-            raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
+        # UPDATE THE STATE OF THE ORDER
+        context = f"Dans le processus de soumission de la commande avec l'identifiant {order['id']} à Afex, plus précisément lors de la mise à jour de l'état de la commande sur mawlety.com."
+        additional_instructions = {
+            'internet_or_website_err' : [{'pos' : 3, 'instruction' : f"Assurez-vous que l'état de la commande avec l'identifiant {order['id']} est dans l'état initial sur mawlety.com."}],
+            'unexpected_err' : [{'pos':1,'instruction' : f"Assurez-vous que l'état de la commande avec l'identifiant {order['id']} est dans l'état initial sur mawlety.com."}],
+            'slow_website_or_internet_err' : [{'pos':1,'instruction' : f"Assurez-vous que l'état de la commande avec l'identifiant {order['id']} est dans l'état initial sur mawlety.com."}],
+        }
         
+        update_order_state_in_mawlety(orders_submitter_obj,order['id'],'En cours de préparation',context,additional_instructions)
 
-        try :
-            
-            # SUBMIT THE ORDER TO AFEX  
-            r,status_code = submit_afex_order(order)
+        
+        # SUBMIT THE ORDER TO AFEX  
+        json_data = submit_afex_order(orders_submitter_obj,order)
 
-            # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
-            if status_code == 401 : 
-                try : 
-                    # UNDO THE UPDATE OF THE STATE OF ORDER IN MAWLETY 
-                    status_code = update_order_state_in_mawlety(order['id'],'Validé')
-
-                    # RAISE AN UNAUTORIZATION ERROR ON AFEX AND MAW
-                    if status_code == 401 :
-                        raise_a_unathorization_error(orders_submitter_obj,f'INVALID_AFEX_AND_MAWLETY_API_KEY_UNDO_ORDER_ID_{order["id"]}')
-                    
-                    raise_a_unathorization_error(orders_submitter_obj,'INVALID_AFEX_API_KEY')
-                except  Exception as e :
-                    exception_msg = f"THE FOLLOWING ERROR HAPPENED WHILE TRYING TO BACKUP THE STATE OF THE ORDER WITH THE ID {order['id']} TO VALIDÉ IN MAWLETY.COM AFTER THE SUBMITTING OF THE ORDER TO AFEX WAS UNAUTHORIZED : "
-                    exception_msg += str(e)+' ,'
-                    exception_msg += f"PLEASE BACKUP THE STATE OF THE ORDER TO VALIDÉ IN MAWLETY.COM THEN UPDATE THE API KEY OF AFEX IN THE SETTING AFTER FIXING YOUR INTERNET CONNECTION" 
-                    raise_a_server_request_exception_error(orders_submitter_obj,exception_msg) 
-            elif status_code != 200 :
-                exception_msg = f"THE STATUS CODE COMMING FROM RESPONSE OF SUBMITTING THE ORDER WIH THE ID : {order['id']} TO AFEX IS : {r.status_code}"
-                exception_msg += " ,PLEASE BACKUP THE STATE OF THE ORDER TO VALIDÉ IN MAWLETY.COM AFTER REPORTING THIS ISSUE TO AFEX" 
-                raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
-
-            order['barcode'] = r['barcode']
-            add_afex_order_to_monitoring_phase(order)
-            
-            # INSCREASE THE submitted_orders_len
-            orders_submitter_obj.state['progress']['submitted_orders_len']  += 1 
-            orders_submitter_obj.save()
+        # ADD THE BARCODE TO THE ORDER THEN ADD IT TO THE MONITORING PHASE
+        order['barcode'] = json_data['barcode']
+        add_afex_order_to_monitoring_phase(order)
+        
+        # INSCREASE THE submitted_orders_len
+        orders_submitter_obj.state['progress']['submitted_orders_len']  += 1 
+        orders_submitter_obj.save()
     
-        except Exception as e :
-            exception_msg = f"THE FOLLOWING ERROR HAPPENED WHILE SUBMITTING THE ORDER WITH THE ID {order['id']} TO AFEX : "
-            exception_msg += str(e)+' ,'
-            exception_msg += f"PLEASE BACKUP THE STATE OF THE ORDER TO VALIDÉ IN MAWLETY.COM AFTER FIXING YOUR INTERNET CONNECTION" 
-            raise_a_server_request_exception_error(orders_submitter_obj,exception_msg)
-
-
-
-
         # SLEEP FOR EACH SUBMITTED ORDER TO NOT OVERLOAD THE SERVER 
         time.sleep(2)
         
@@ -249,24 +276,21 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
         'X-API-Key': AFEX_API_CREDENTIALS['api_key']
     }
     shipments = []
-    try : 
+    res = DolzayRequest(
+        method='POST',
+        header = headers,
+        url = url,
+        body=json.dumps({'shipmentIds' : afex_monitor_orders_barcodes}),
+        context = "Pendant le chargement des états des commandes en phase de suivi",
+        parameters = {'website':AFEX_DOMAIN_NAME},
+        order_action_obj = orders_monitoror_obj,
+        ignore_404 = True
+        ).make_request()
 
-        r = requests.post(url, data=json.dumps({'shipmentIds' : afex_monitor_orders_barcodes}), headers=headers)
-       
-        if r.status_code == 401 : 
-            raise_a_unathorization_error(orders_monitoror_obj,'INVALID_AFEX_API_KEY')
-
-        # HANDLE THE CASE OF HAVING ONE ORDER TO MONITOR AND THIS ORDER DOESN'T EXIST
-        elif r.status_code == 404 : 
-            shipments = [{'barcode' : afex_monitor_orders_barcodes[0],'state':'pre_shipping_canceling'}]
-        else : 
-            shipments = json.loads(r.text.replace("'",'"'))['shipments']
-
-    except Exception as e : 
-        exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE TRYING TO GRAB THE LIVE STATES OF AFEX ORDERS : '
-        exception_msg += str(e)+' ,'
-        exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
-        raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg) 
+    elif res.status_code == 404 : 
+        shipments = [{'barcode' : afex_monitor_order_barcode ,'state':'pre_shipping_canceling'} for afex_monitor_order_barcode in afex_monitor_orders_barcodes]
+    else : 
+        shipments = json.loads(r.text.replace("'",'"'))['shipments']
 
     
     # FOR EACH BARCODE OF AN AFEX MONITOR ORDER CHECK IF HIS STATE WAS UPDATED , IF SO UPDATE THE AFEX MONITOR ORDER AND UPDATE THE ORDER IN MAWLETY
@@ -283,16 +307,8 @@ def update_afex_monitor_orders_state_from_afex(afex_monitor_orders,orders_monito
         if afex_monitor_order.state != new_afex_order_state :
 
             #UPDATE THE STATE OF THE ORDER IN MAWLETY.COM
-            try : 
-                status_code = update_order_state_in_mawlety(afex_monitor_order.order_id,new_afex_order_state)
-                # RAISE AN UNAUTORIZATION ERROR IF IT EXIST 
-                if status_code == 401 : 
-                    raise_a_unathorization_error(orders_monitoror_obj,'INVALID_MAWLETY_API_KEY')
-            except Exception as e : 
-                exception_msg = f'THE FOLLOWING ERROR HAPPENED WHILE TRYING TO UPDATE THE STATE OF ORDER WITH THE ID {afex_monitor_order.order_id} IN MAWLETY.COM : '
-                exception_msg += str(e)+' ,'
-                exception_msg += 'PLEASE FIX YOUR INTERNET CONNECTION'
-                raise_a_server_request_exception_error(orders_monitoror_obj,exception_msg) 
+            context = f"Pendant le processus de suivi des commandes, plus précisément lors de la mise à jour de l'état de la commande avec l'identifiant {afex_monitor_order.order_id} transportée par Afex sur mawlety.com."
+            update_order_state_in_mawlety(orders_monitoror_obj,afex_monitor_order.order_id,new_afex_order_state,context)
 
             
             # IF THE NEW STATE IS ONE OF THE DELETE STATE , DELETE THE ORDER FROM THE TABLE 
