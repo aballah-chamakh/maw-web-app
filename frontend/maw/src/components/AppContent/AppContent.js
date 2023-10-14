@@ -15,7 +15,7 @@ const AppContent = (props)=>{
                     <Route path="/load_orders" element={<OrderLoader />} />
                     <Route path="/load_orders/:orders_loader_id/submit_orders" element={<OrderSubmitter />} />
                     <Route path="/monitor_orders" element={<OrderMonitoror />} />
-                    <Route path="/loxbox_areas" element={<LoxboxAreasContainer />} />
+                    <Route path="/carrier_per_zone" element={<LoxboxAreasContainer />} />
                     <Route path="/settings" element={<SettingContainer />} />
                     <Route path="/test" element={<Test />} />
                     <Route path="/account" element={<Test />} />

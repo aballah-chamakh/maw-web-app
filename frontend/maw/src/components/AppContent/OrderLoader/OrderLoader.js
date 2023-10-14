@@ -291,7 +291,7 @@ const OrderLoader = (props)=>{
         <div class="order-loader-container">
            
             <OrderLoaderForm loadOrders={loadOrders} setStartDate={setStartDate} setEndDate={setEndDate} startDate={startDate} /> 
-            <GenericModal show={true}  type='alert' title={infoAlertData.title} alertData={infoAlertData} closeModal={closeInfoModal} />
+            <GenericModal show={isInfoModalShowed}  type='alert' title={infoAlertData.title} alertData={infoAlertData} closeModal={closeInfoModal} />
             <GenericModal show={isRestrictedModalShowed}  type='alert' title={restrictedAlertData.title} alertData={restrictedAlertData} closeModal={closeRestrictedModal} />
             <GenericModal show={isSuccessModalShowed}  type='alert' title={successAlertData.title} alertData={successAlertData} orders_len={location.state ? location.state.submitted_orders_len : 0 } closeModal={closeSuccessModal} />
             <GenericModal show={isProcessModalShowed}  type='alert'  title={processAlertData.title} alertData={processAlertData} closeModal={closeProcessModal} />
