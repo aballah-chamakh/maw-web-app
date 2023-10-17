@@ -40,10 +40,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    'Account',
     'OrderActionApi',
     'WebApi'
+
 ]
 
+AUTH_USER_MODEL = 'Account.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

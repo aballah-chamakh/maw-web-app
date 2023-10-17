@@ -15,11 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.http import HttpResponse
-from django.urls import path,re_path
-from django.urls import include
+from django.urls import path,re_path,include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from rest_framework_simplejwt.views import TokenRefreshView
+from Account.token import MyTokenObtainPairView
+
 #import time 
 #from WebApi import urls as web_api_urls
 
@@ -27,14 +29,17 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/',include('Account.urls')),
     path('api/',include('WebApi.urls')),
-
+    path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh')
 ]
+
 urlpatterns+=static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
 urlpatterns+=static(settings.STATIC_URL,document_root=settings.STATIC_ROOT)
 
 urlpatterns += [
-re_path(r'(?P<path>.*)',TemplateView.as_view(template_name='base.html')),
+    re_path(r'(?P<path>.*)',TemplateView.as_view(template_name='base.html')),
 ]
 
 

@@ -1,12 +1,48 @@
 # LOAD THE DJANGO ENV
 import time 
-
 def load_django_env(): 
     import django
     import os 
     import json 
     os.environ['DJANGO_SETTINGS_MODULE'] = 'maw.settings'
     django.setup()
+
+
+load_django_env()
+from WebApi.models import City,Delegation,Locality,LoxboxCities
+import json
+
+# LOAD THE og_cities_delgs_locs
+f = open('city_del_loc_latest.json','r',encoding='UTF-8')
+og_cities_delgs_locs = json.loads(f.read())
+f.close()
+
+
+
+#INIT THE PROGRESS COUNTER
+progress_cnt = 0
+
+# GRAB THE loxbox_cities_obj OR CREATE A ONE 
+loxbox_cities_obj = LoxboxCities.objects.first() or LoxboxCities.objects.create()
+progress_cnt += 1
+
+# TO DELETE AN OLD INSETION
+# LoxboxCities.objects.first().delete()
+
+for city,delgs in og_cities_delgs_locs.items():
+    city_obj = City.objects.create(loxbox_cities=loxbox_cities_obj,name=city)
+    progress_cnt += 1 
+    for delg,locs in delgs.items() : 
+        delg_obj = Delegation.objects.create(city=city_obj,name=delg)
+        progress_cnt += 1 
+        for loc in locs  : 
+            loc_obj = Locality.objects.create(delegation=delg_obj,name=loc)
+            progress_cnt += 1 
+            print(f"{progress_cnt} / {LoxboxCities.ALL_ELEMENTS_TO_BE_SELECTED_OR_UNSELECTED_COUNT} WERE INSERTED")
+
+quit()
+
+
 
     #test()
 
@@ -81,34 +117,6 @@ if LoxboxCities.objects.first() :
     LoxboxCities.objects.first().delete()
 
 # INSERT CITIES DELGS LOCS 
-
-# LOAD THE og_cities_delgs_locs
-f = open('og_cities_delgs_locs.json','r',encoding='UTF-8')
-og_cities_delgs_locs = json.loads(f.read())
-f.close()
-
-
-
-#INIT THE PROGRESS COUNTER
-progress_cnt = 0
-
-# GRAB THE loxbox_cities_obj OR CREATE A ONE 
-loxbox_cities_obj = LoxboxCities.objects.first() or LoxboxCities.objects.create()
-progress_cnt += 1
-
-# TO DELETE AN OLD INSETION
-# LoxboxCities.objects.first().delete()
-
-for city,delgs in og_cities_delgs_locs.items():
-    city_obj = City.objects.create(loxbox_cities=loxbox_cities_obj,name=city)
-    progress_cnt += 1 
-    for delg,locs in delgs.items() : 
-        delg_obj = Delegation.objects.create(city=city_obj,name=delg)
-        progress_cnt += 1 
-        for loc in locs  : 
-            loc_obj = Locality.objects.create(delegation=delg_obj,name=loc)
-            progress_cnt += 1 
-            print(f"{progress_cnt} / {LoxboxCities.ALL_ELEMENTS_TO_BE_SELECTED_OR_UNSELECTED_COUNT} WERE INSERTED")
 
 
 
