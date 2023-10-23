@@ -7,7 +7,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token['company_profile_id'] =  user.companyprofile
+        token['company_profile_id'] =  user.companyprofile.id
         return token
 
 class MyTokenObtainPairView(TokenObtainPairView):

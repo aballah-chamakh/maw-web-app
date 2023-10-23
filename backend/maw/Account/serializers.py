@@ -8,8 +8,8 @@ class CompanyOrderStateSerializer(serializers.ModelSerializer):
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
     company_order_states = serializers.SerializerMethodField()
-    loading_state = CompanyOrderStateSerializer(many=False, read_only=True)
-    post_submit_state = CompanyOrderStateSerializer(many=False, read_only=True)
+    #loading_state = CompanyOrderStateSerializer(many=False, read_only=True)
+    #post_submit_state = CompanyOrderStateSerializer(many=False, read_only=True)
     api_base_url = serializers.CharField(read_only=True)
     class Meta:
         model = CompanyProfile
@@ -19,4 +19,5 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
         # Retrieve related CompanyWebsiteState objects
         company_order_states = CompanyOrderState.objects.filter(company=obj)
         # Serialize the related objects
-        return CompanyWebsiteStateSerializer(company_order_states, many=True).data
+        return CompanyOrderStateSerializer(company_order_states, many=True).data
+

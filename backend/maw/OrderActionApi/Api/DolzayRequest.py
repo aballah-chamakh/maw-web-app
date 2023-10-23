@@ -84,7 +84,7 @@ class DolzayRequest  :
         # ADD THE DATA OF THE ALERT 
         self.order_action_obj.state['alert'] = {
             'alert_type' : 'error',
-            'error_msg' :  "Votre site web est lent" if is_website else "Votre site web ou votre connexion internet est lent(e).",
+            'error_msg' :  f"Votre site web : {self.parameters['website']} est lent" if is_website else f"Votre site web : {self.parameters['website']} ou votre connexion internet est lent(e).",
             'error_details' : err_msg,
             'error_context' : self.context,
             'instructions' : [
