@@ -9,7 +9,7 @@ from .DolzayRequest import DolzayRequest
 
 
 
-MAWLATY_API_BASE_URL = "https://mawlety.com/api"
+MAWLATY_API_BASE_URL = "http://localhost/ecom/api"
 
 def is_phone_number_valid(phone_number):
     print(f"{phone_number} || {len(phone_number)} || {phone_number.isdigit()}")

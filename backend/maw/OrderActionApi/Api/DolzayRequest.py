@@ -1,5 +1,6 @@
 import requests
 from requests.exceptions import ConnectionError, RequestException ,HTTPError,Timeout,JSONDecodeError
+import traceback
 
 class DolzayRequest  : 
 
@@ -30,13 +31,14 @@ class DolzayRequest  :
         self.ignore_404 = kwargs.get('ignore_404')
         self.custom_unauthorization_err_handler = kwargs.get('custom_unauthorization_err_handler')
 
-    def internet_or_website_err_handler(self,err_msg):
+    def internet_or_website_err_handler(self,err_traceback):
         print("internet_or_website_err_handler")
 
         self.order_action_obj.state['alert'] = {
-            'alert_type' : 'error',
-            'error_msg' : f"Votre connexion internet ou le site web {self.parameters['website']} ne fonctionne pas",
-            'error_details' : err_msg,
+            'alert_type' : 'erreur',
+            'error_type' : 'en ligne',
+            'user_friendly_error_msg' : f"Votre connexion internet ou le site web {self.parameters['website']} ne fonctionne pas",
+            'error_traceback' : err_traceback,
             'error_context' : self.context,
             'instructions' : [
                 "Vérifiez si votre connexion internet fonctionne.",
@@ -57,12 +59,13 @@ class DolzayRequest  :
         quit()
 
 
-    def unexpected_err_handler(self,err_msg):
+    def unexpected_err_handler(self,err_traceback):
         # ADD THE DATA OF THE ALERT 
         self.order_action_obj.state['alert'] = {
             'alert_type' : 'error',
-            'error_msg' :  f"Cette erreur est inattendue et survient généralement parce que le site web {self.parameters['website']} a modifié son système.",
-            'error_details' : err_msg,
+            'error_type' : 'en ligne',
+            'user_friendly_error_msg' :  f"Cette erreur est inattendue et survient généralement parce que le site web {self.parameters['website']} a modifié son système.",
+            'error_traceback' : err_traceback,
             'error_context' : self.context,
             'instructions' : [
                 "Essayez la même action à nouveau.",
@@ -80,12 +83,13 @@ class DolzayRequest  :
         self.order_action_obj.save()
         quit()
 
-    def slow_website_or_internet_err_handler(self,err_msg,is_website=False):
+    def slow_website_or_internet_err_handler(self,err_traceback,is_website=False):
         # ADD THE DATA OF THE ALERT 
         self.order_action_obj.state['alert'] = {
             'alert_type' : 'error',
-            'error_msg' :  f"Votre site web : {self.parameters['website']} est lent" if is_website else f"Votre site web : {self.parameters['website']} ou votre connexion internet est lent(e).",
-            'error_details' : err_msg,
+            'error_type' : 'en ligne',
+            'user_friendly_error_msg' :  f"Votre site web : {self.parameters['website']} est lent" if is_website else f"Votre site web : {self.parameters['website']} ou votre connexion internet est lent(e).",
+            'error_traceback' : err_traceback,
             'error_context' : self.context,
             'instructions' : [
                 f"Essayez la même action plus tard lorsque le site web  : {self.parameters['website']} n'est pas surchargé." if is_website else f"Essayez la même action plus tard lorsque votre Internet est rapide et le site web  : {self.parameters['website']} n'est pas surchargé.",
@@ -103,10 +107,12 @@ class DolzayRequest  :
         self.order_action_obj.save()
         quit()
 
-    def unauthorization_err_handler(self,err_msg):
+    def unauthorization_err_handler(self,err_traceback):
         self.order_action_obj.state['alert'] = {
             'alert_type' : 'error',
-            'error_msg' :  f"Les identifiants du site web {self.parameters['website']} sont invalides.",
+            'error_type' : 'en ligne',
+            'user_friendly_error_msg' :  f"Les identifiants du site web {self.parameters['website']} sont invalides.",
+            'error_traceback' : err_traceback,
             'error_context' : self.context,
             'instructions' : [
                 f"Mettez à jour les identifiants du site web {self.parameters['website']}",
@@ -124,14 +130,6 @@ class DolzayRequest  :
         self.order_action_obj.save()
         quit()
 
-    def no_orders_handler(self):
-        self.order_action_obj.state['alert'] = {
-            'alert_type' : 'info',
-            'info_msg' :  f"Il n'y a pas de commandes à charger entre le {self.parameters['date_range']['start_date']} et le {self.parameters['date_range']['end_date']}."
-        }
-        self.order_action_obj.state['state']="FINISHED"
-        self.order_action_obj.save()
-        quit()
 
 
     def make_request(self):
@@ -145,32 +143,32 @@ class DolzayRequest  :
 
         except ConnectionError as ce : 
             err_msg = str(ce)
+            err_traceback = traceback.format_exc()
             forcibly_closed_err_msg = "An existing connection was forcibly closed by the remote host"
             if self.forcibly_closed_err_msg in err_msg : 
-                self.slow_website_or_internet_err_handler(err_msg,is_website=True)
+                self.slow_website_or_internet_err_handler(err_traceback,is_website=True)
             else : 
-                self.internet_or_website_err_handler(err_msg)
+                self.internet_or_website_err_handler(err_traceback)
 
         except HTTPError as he :
-            err_msg = str(he)
+            err_traceback = traceback.format_exc()
             if res.status_code == 401 :
                 if self.custom_unauthorization_err_handler : 
                     self.custom_unauthorization_err_handler(self.order_action_obj,self.parameters['order_id'])
-                self.unauthorization_err_handler(err_msg)
+                else :
+                    self.unauthorization_err_handler(err_traceback)
             elif self.ignore_404 and res.status_code == 404 :
                 return res 
             else :
-                self.unexpected_err_handler(err_msg)
+                self.unexpected_err_handler(err_traceback)
     
         except Timeout as to : 
-            err_msg = str(to)
-            self.slow_website_or_internet_err_handler(err_msg)
+            err_traceback = traceback.format_exc()
+            self.slow_website_or_internet_err_handler(err_traceback)
 
         except RequestException as re : 
-            err_msg = str(re)
-            self.unexpected_err_handler(err_msg)
+            err_traceback = traceback.format_exc()
+            self.unexpected_err_handler(err_traceback)
         
-        except JSONDecodeError as jde : 
-            err_msg = str(jde)
-            self.no_orders_handler()
+
  

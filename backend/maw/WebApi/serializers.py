@@ -9,7 +9,7 @@ class AfexMonitorOrderSerializer(serializers.ModelSerializer):
     carrier = serializers.CharField(default='AFEX')
     class Meta: 
         model = AfexMonitorOrder
-        fields = ['order_id','manifest_date','state','carrier']
+        fields = ['order_id','state','carrier']
 
 class LoxboxMonitorOrderSerializer(serializers.ModelSerializer): 
     carrier = serializers.CharField(default='LOXBOX')

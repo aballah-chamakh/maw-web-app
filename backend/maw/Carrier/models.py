@@ -1,3 +1,16 @@
 from django.db import models
 
-# Create your models here.
+class Carrier(models.Model):
+    logo = models.ImageField(upload_to='carriers/', null=True)
+    name = models.CharField(max_length=255)
+    api_base_url = models.URLField()
+    api_key = models.CharField(max_length=255)
+    active = models.BooleanField(default=True)
+
+class CarrierStateConversion(models.Model):
+    carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE)
+    carrier_state = models.CharField(max_length=255)
+    company_website_state = models.CharField(max_length=255)
+
+
+
