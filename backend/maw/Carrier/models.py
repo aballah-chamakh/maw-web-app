@@ -1,7 +1,7 @@
 from django.db import models
 
 class Carrier(models.Model):
-    logo = models.ImageField(upload_to='carriers/', null=True)
+    logo = models.ImageField(default='carrier_logos/default_logo.png',upload_to='carrier_logos/', null=True)
     name = models.CharField(max_length=255)
     api_base_url = models.URLField()
     api_key = models.CharField(max_length=255)

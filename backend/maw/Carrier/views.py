@@ -1,23 +1,25 @@
-from django.shortcuts import render
-
-# Create your views here.
-
 # carrier/views.py
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status , mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Carrier, CarrierStateConversion
-from .serializers import CarrierSerializer, CarrierStateConversionSerializer,BulkActionSerializer
+from .serializers import (CarrierSerializer, CarrierStateConversionSerializer,
+                          BulkActionSerializer,BulkDeleteSerializer)
 
-class CarrierViewSet(viewsets.ModelViewSet):
+class CarrierViewSet(mixins.ListModelMixin,
+                     mixins.RetrieveModelMixin,
+                     mixins.UpdateModelMixin,
+                     viewsets.GenericViewSet):
+
     queryset = Carrier.objects.all()
     serializer_class = CarrierSerializer
+    #permission_classes = [IsUserAssociatedWithCompany]
 
     # THIS FUNCTION PERFORMS BULK ACTIONS ON CARRIER INSTANCES BASED ON REQUEST DATA
     # IT VALIDATES THE REQUEST DATA USING BulkActionSerializer AND HANDLES ACTIONS
     # SUCH AS ACTIVATING, DEACTIVATING, OR DELETING CARRIER INSTANCES.
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['patch'])
     def bulk_action(self, request):
         # CREATE AN INSTANCE OF BulkActionSerializer TO VALIDATE REQUEST DATA
         ser = BulkActionSerializer(data=request.data)
@@ -48,27 +50,32 @@ class CarrierViewSet(viewsets.ModelViewSet):
         return Response({'res': 'success'}, status=status.HTTP_200_OK)
 
 
-    def create(self, request, *args, **kwargs):
-        carrier_state_conversions = request.data.pop('carrier_state_conversions', [])
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        carrier = serializer.instance
 
-        for conversion_data in carrier_state_conversions:
-            CarrierStateConversion.objects.create(carrier=carrier, **conversion_data)
+class CarrierStateConversionViewSet(mixins.ListModelMixin,
+                                    mixins.CreateModelMixin,
+                                    mixins.UpdateModelMixin,
+                                    mixins.DestroyModelMixin,
+                                    viewsets.GenericViewSet):
 
-        headers = self.get_success_headers(serializer.data)
-        return Response({'res': 'success'}, status=status.HTTP_201_CREATED, headers=headers)
-
-class CarrierStateConversionViewSet(viewsets.ModelViewSet):
     queryset = CarrierStateConversion.objects.all()
     serializer_class = CarrierStateConversionSerializer
+    #permission_classes = [IsUserAssociatedWithCompany]
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['delete'])
     def bulk_delete(self, request):
         # Handle bulk delete of carrier state conversions
         # Use request.data to access the data sent in the request
+                # CREATE AN INSTANCE OF BulkActionSerializer TO VALIDATE REQUEST DATA
+        ser = BulkDeleteSerializer(data=request.data)
+        
+        # IF THE SERIALIZER IS NOT VALID, RETURN A BAD REQUEST RESPONSE
+        if not ser.is_valid():
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        carrier_state_conversion_ids = ser.data.get('carrier_state_conversion_ids')
+        carriers_qs = Carrier.objects.filter(id__in=carrier_state_conversion_ids)
+
+        carriers_qs.delete()
 
         return Response({'res': 'success'}, status=status.HTTP_200_OK)
 

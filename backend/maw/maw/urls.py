@@ -29,6 +29,7 @@ app_name= 'maw'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/',include('Account.urls')),
+    path('api/',include('Carrier.urls')),
     path('api/',include('WebApi.urls')),
 ]
 

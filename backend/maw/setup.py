@@ -9,6 +9,18 @@ def load_django_env():
 
 
 load_django_env()
+from Carrier.models import Carrier 
+for i in range(20) : 
+    data = {
+                'name':f'carrier_{i+1}',
+                'api_base_url':'http://test.com/api/',
+                'api_key':'test_key'
+           }
+    carrier_obj = Carrier.objects.create(**data)
+
+quit()
+
+
 from WebApi.models import City,Delegation,Locality,LoxboxCities
 import json
 
