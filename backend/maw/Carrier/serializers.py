@@ -8,6 +8,8 @@ class CarrierStateConversionSerializer(serializers.ModelSerializer):
 
 class CarrierSerializer(serializers.ModelSerializer):
     carrier_state_conversions = CarrierStateConversionSerializer(many=True, required=False)
+    relative_logo = serializers.CharField(source='logo.url',read_only=True)
+    logo = serializers.ImageField(write_only=True)
     name = serializers.CharField(read_only=True)
 
     class Meta:
@@ -23,4 +25,3 @@ class BulkActionSerializer(serializers.Serializer):
 
 class BulkDeleteSerializer(serializers.Serializer):
     carrier_state_conversion_ids = serializers.ListField(child=serializers.IntegerField(), min_length=1)
-    
