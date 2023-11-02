@@ -13,6 +13,7 @@ class CarrierViewSet(mixins.ListModelMixin,
 
     queryset = Carrier.objects.all()
     serializer_class = CarrierSerializer
+
     #permission_classes = [IsUserAssociatedWithCompany]
 
     # THIS FUNCTION PERFORMS BULK ACTIONS ON CARRIER INSTANCES BASED ON REQUEST DATA

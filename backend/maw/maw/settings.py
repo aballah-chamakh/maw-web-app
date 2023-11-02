@@ -154,8 +154,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    #'DEFAULT_PAGINATION_CLASS': 'maw.CustomPagination.CustomPagination',
-    #'PAGE_SIZE': 100
+    'DEFAULT_PAGINATION_CLASS': 'maw.CustomPagination.CustomPagination',
+    'PAGE_SIZE': 100
 }
 
 
