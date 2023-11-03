@@ -7,10 +7,15 @@ class Carrier(models.Model):
     api_key = models.CharField(max_length=255)
     active = models.BooleanField(default=True)
 
+    class Meta:
+        ordering = ['id']
+
 class CarrierStateConversion(models.Model):
     carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE)
     carrier_state = models.CharField(max_length=255)
     company_website_state = models.CharField(max_length=255)
+    class Meta:
+        ordering = ['id']
 
 
 

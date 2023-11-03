@@ -4,9 +4,11 @@ from django.core.files import File
 from rest_framework.test import APITestCase
 from rest_framework.reverse import reverse as api_reverse 
 from rest_framework import status
-from .models import Carrier, CarrierStateConversion
+from django.contrib.auth import get_user_model
+from Account.models import User 
+from .models import Carrier, CarrierStateConversion,CompanyProfile
 from .serializers import CarrierSerializer,CarrierStateConversionSerializer
-import pprint
+from .views import CarrierViewSet,CarrierStateConversionViewSet
 
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -29,6 +31,15 @@ class CarrierStateConversion(models.Model):
 """
 
 class CarrierViewSetTests(APITestCase):
+
+    EXPECTED_MODEL_CLASS = Carrier 
+    EXPECTED_SERIALIZER_CLASS = CarrierSerializer 
+    company_profile_data = {
+        'username' : 'Paraclic',
+        'email' : 'paraclic@gmail.com' , 
+        'password' : 'paraclic1234'
+    }
+
     def setUp(self):
         # CREATE A CARRIER FOR THE TESTS 
         self.carrier = Carrier.objects.create(name='Test Carrier', api_base_url='http://example.com', api_key='test-key')
@@ -40,61 +51,43 @@ class CarrierViewSetTests(APITestCase):
         # SET THE URL OF THE LIST AND CREATE ACTIONS 
         self.url = api_reverse('Carrier:carrier-list') # THIS URL WORKS FOR THE BOTH CREATE AND LIST 
 
-    def test_list_carriers_with_no_carrier_state_conversions(self):
-        # DELETE THE CARRIER STATE CONVERSION OF THE CARRIER CREATED IN THE SETUP
-        self.carrier_state_converion.delete()
+    def create_company_profile(self) : 
+        User = get_user_model()
+        user_obj = User.objectscreate_user(**self.company_profile_data)
+        CompanyProfile.objects.create(user=user_obj,user_obj,api_base_url='http://www.google.com',api_key='154876ddf41ds')
 
-        # ADD AN ADDITIONAL CARRIER TO TEST WITH A LIST WITH AT LEAST 2 RECORDS 
+    def get_company_profile_token(self): 
+        del self.company_profile_data['username']
+        response = self.client.post(api_reverse('Account:token_obtain_pair'),self.company_profile_data)
+        return response.data['access']
+
+    def test_basic_view_attrtibutes(self): 
+        # CHECK THE MODEL CLASS OF THE CarrierViewSet 
+        self.assertEqual(CarrierViewSet.queryset.model,self.EXPECTED_MODEL_CLASS)
+        # CHECK THE SERIALIZER CLASS OF THE CarrierViewSet 
+        self.assertEqual(CarrierViewSet.serializer_class,self.EXPECTED_SERIALIZER_CLASS)
+        # CHECK THE MODEL CLASS OF THE SERIALIZER CLASS 
+        self.assertEqual(CarrierViewSet.serializer_class.Meta.model,self.EXPECTED_MODEL_CLASS)
+
+
+    def test_list_carriers(self):
+
+        # ADD AN ADDITIONAL CARRIER WITH CARRIER STATE CONVERSION TO TEST WITH A LIST WITH AT LEAST 2 ELEMENTS 
         carrier_2 = Carrier.objects.create(name='Test Carrier 2', api_base_url='http://example2.com', api_key='test-key2')
-
-        # DEFINE THE EXPECTED RESPONSE 
-        expected_response = { 
-                            'count': 2,
-                            'next': None,
-                            'previous': None,
-                            'results': [   
-                                        {   
-                                            'active': True,
-                                            'api_base_url': 'http://example.com',
-                                            'api_key': 'test-key',
-                                            'carrier_state_conversions': None,
-                                            'id': 1,
-                                            'name': 'Test Carrier',
-                                            'relative_logo': '/media/carrier_logos/default_logo.png'
-                                        },
-                                        {  
-                                            'active': True,
-                                            'api_base_url': 'http://example2.com',
-                                            'api_key': 'test-key2',
-                                            'carrier_state_conversions': None,
-                                            'id': 2,
-                                            'name': 'Test Carrier 2',
-                                            'relative_logo': '/media/carrier_logos/default_logo.png'
-                                        }
-                        ]
-        }
-        
-        # SEND A CARRIER LIST REQUEST 
-        response = self.client.get(self.url)
-        json_response_data = json.loads(response.content.decode('utf-8'))
-    
-        self.assertEqual(json_response_data,expected_json_response_data)
-
-
-    def test_list_carriers_with_carrier_state_conversions(self):
-
-        # ADD AN ADDITIONAL CARRIER TO TEST WITH A LIST WITH AT LEAST 2 ELEMENTS 
-        carrier_2 = Carrier.objects.create(name='Test Carrier 2', api_base_url='http://example2.com', api_key='test-key2')
-
-        # CREATE AN ADDITIONAL CARRIER AND A CARRIER STATE CONVERSION TO HAVE A LIST OF AT LEAST TWO ELEMENTS 
         carrier_state_converions_2 = CarrierStateConversion.objects.create(
             carrier=carrier_2,
             carrier_state='State2',
             company_website_state='StateB'
         )
         
-        # DEFINE THE EXPECTED RESPONSE 
-        expected_response = { 
+        # SEND A CARRIER LIST REQUEST 
+        response = self.client.get(self.url)
+
+        # ASSERT THAT THE STATUS CODE OF THE RESPONSE IS SUCCESSFUL
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # DEFINE THE EXPECTED JSON RESPONSE DATA
+        expected_json_response_data = { 
                             'count': 2,
                             'next': None,
                             'previous': None,
@@ -119,27 +112,45 @@ class CarrierViewSetTests(APITestCase):
                                         }
                         ]
         }
-        
-        # SEND A CARRIER LIST REQUEST 
-        response = self.client.get(self.url)
-        json_response_data = json.loads(response.content.decode('utf-8'))
 
-        # ASSERT THAT THE STATUS CODE OF THE RESPONSE IS SUCCESSFUL
-        self.assertEqual(response.status_code, 'status.HTTP_200_OK')
-        
-        # USING THE SERIALIZER ASSERT THAT THE CARRIER ROWS IN THE DB ARE THE SAME IN THE RESPONSE DATA 
-        self.assertEqual(json_response_data, expected_response)
+        # ASSERT THAT THE JSON RESPONSE DATA IS AS EXPECTED 
+        json_response_data = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(json_response_data, expected_json_response_data)
 
     def test_retrieve_carrier(self):
         # SEND A CARRIER RETREIVE REQUEST 
         response = self.client.get(api_reverse('Carrier:carrier-detail', args=[self.carrier.id]))
-
+        
         # ASSERT THAT THE STATUS CODE OF THE RESPONSE IS SUCCESSFUL
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # USING THE SERIALIZER ASSERT THAT THIS PATICULAR CARRIER ROW IN THE DB ARE THE SAME IN THE RESPONSE DATA 
-        serializer = CarrierSerializer(instance=self.carrier)
-        self.assertEqual(response.data, serializer.data)
+        # DEFINE THE EXPECTED JSON RESPONSE DATA
+        expected_json_response_data = {
+                                        "id": 1,
+                                        "carrier_state_conversions": {
+                                            "count": 1,
+                                            "next": None,
+                                            "previous": None,
+                                            "results": [
+                                                {
+                                                    "id": 1,
+                                                    "carrier_state": "State1",
+                                                    "company_website_state": "StateA",
+                                                    "carrier": 1,
+                                                }
+                                            ],
+                                        },
+                                        "relative_logo": "/media/carrier_logos/default_logo.png",
+                                        "name": "Test Carrier",
+                                        "api_base_url": "http://example.com",
+                                        "api_key": "test-key",
+                                        "active": True,
+                                        }
+
+        # ASSERT THAT THE JSON RESPONSE DATA IS AS EXPECTED 
+        json_response_data = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(json_response_data, expected_json_response_data)
+
 
     def test_patch_update_carrier(self):
         # SEND A CARRIER PATCH REQUEST TO UPATE ONLY ONE FIELD
@@ -175,7 +186,7 @@ class CarrierViewSetTests(APITestCase):
         data['id'] = self.carrier.id # BECAUSE THIS FIELD IS READ ONLY 
         data['relative_logo'] =  self.carrier.logo.url # BECAUSE THIS FIELD IS READ ONLY 
         data['name'] =  self.carrier.name  # BECAUSE THIS FIELD IS READ ONLY 
-
+        data['carrier_state_conversions'] =  response.data['carrier_state_conversions'] # BECAUSE THIS FIELD IS READ ONLY 
         # USING THE SERIALIZER ASSERT THAT THIS PATICULAR CARRIER ROW IN THE DB WAS UPDATED 
         ser = CarrierSerializer(self.carrier,many=False)
         self.assertEqual(data, ser.data)
@@ -277,6 +288,11 @@ class CarrierViewSetTests(APITestCase):
 
 
 class TestCarrierStateConversionViewSet(APITestCase):
+
+    EXPECTED_MODEL_CLASS = CarrierStateConversion
+    EXPECTED_SERIALIZER_CLASS = CarrierStateConversionSerializer 
+
+
     def setUp(self):
         # CREATE A CARRIER FOR THE TESTS 
         self.carrier = Carrier.objects.create(
@@ -294,6 +310,14 @@ class TestCarrierStateConversionViewSet(APITestCase):
         # SET THE URL OF THE LIST AND CREATE ACTIONS 
         self.url = api_reverse('Carrier:carrierstateconversion-list')
 
+    def test_basic_view_attributes(self): 
+        # CHECK THE MODEL CLASS OF THE CarrierViewSet 
+        self.assertEqual(CarrierStateConversionViewSet.queryset.model,self.EXPECTED_MODEL_CLASS)
+        # CHECK THE SERIALIZER CLASS OF THE CarrierViewSet 
+        self.assertEqual(CarrierStateConversionViewSet.serializer_class,self.EXPECTED_SERIALIZER_CLASS)
+        # CHECK THE MODEL CLASS OF THE SERIALIZER CLASS 
+        self.assertEqual(CarrierStateConversionViewSet.serializer_class.Meta.model,self.EXPECTED_MODEL_CLASS)
+
 
     def test_list_carrier_state_conversions(self):
         # CREATE AN ADDITIONAL CARRIER STATE COVERSION FOR TO HAVE A LIST OF AT LEAST TWO ELEMENTS 
@@ -302,17 +326,44 @@ class TestCarrierStateConversionViewSet(APITestCase):
             carrier_state='State_2',
             company_website_state='StateA_2'
         )
+        # CREATE AN ADDITIONAL CARRIER STATE COVERSION THAT DOESN'T BELONG TO THE FIRST CARRIER TO TEST THE QUERY PARAM 'carrier_id'
+        carrier_state_conversion_3 = CarrierStateConversion.objects.create(
+            carrier=Carrier.objects.create(name='Test Carrier 2', api_base_url='http://example2.com', api_key='test-key2'),
+            carrier_state='State_1x',
+            company_website_state='StateA_1x'
+        )
 
 
         # SEND A CARRIER STATE CONVERSION LIST REQUEST 
-        response = self.client.get(self.url)
+        response = self.client.get(self.url,{'carrier_id':self.carrier.id})
 
         # ASSERT THAT THE STATUS CODE OF THE RESPONSE IS SUCCESSFUL
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
-        # USING THE SERIALIZER ASSERT THAT THE CARRIER STATE CONVERSION ROWS IN THE DB ARE THE SAME IN THE RESPONSE DATA 
-        serializer = CarrierStateConversionSerializer(CarrierStateConversion.objects.all(), many=True)
-        self.assertEqual(response.data, serializer.data)
+        # DEFINE THE EXCPECTED JSON RESPONSE DATA 
+        expected_json_response_data = {
+                                        "count": 2,
+                                        "next": None,
+                                        "previous": None,
+                                        "results": [
+                                            {
+                                                "id": 1,
+                                                "carrier_state": "State1",
+                                                "company_website_state": "StateA",
+                                                "carrier": 1,
+                                            },
+                                            {
+                                                "id": 2,
+                                                "carrier_state": "State_2",
+                                                "company_website_state": "StateA_2",
+                                                "carrier": 1,
+                                            },
+                                        ],
+                                    }
+
+        # ASSERT THAT THE JSON RESPONSE DATA IS AS EXPECTED 
+        json_respone_data = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(json_respone_data,expected_json_response_data)
 
     def test_create_carrier_state_conversion(self):
         # SEND A CARRIER STATE CONVERSION CREATE REQUEST 

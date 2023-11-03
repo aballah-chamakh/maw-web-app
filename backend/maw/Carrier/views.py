@@ -62,6 +62,29 @@ class CarrierStateConversionViewSet(mixins.ListModelMixin,
     serializer_class = CarrierStateConversionSerializer
     #permission_classes = [IsUserAssociatedWithCompany]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Apply filtering based on the query parameter carrier_id
+        query_param_carrier_id = self.request.query_params.get('carrier_id')
+        if query_param_carrier_id :
+            queryset = queryset.filter(carrier=query_param_carrier_id)
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        # Get the value of the query parameter carrier_id
+        query_param_carrier_id = request.query_params.get('carrier_id')
+
+        # If the query parameter carrier_id is None, respond with a 400 Bad Request
+        if query_param_carrier_id is None :
+            return Response(
+                {'detail': 'The "carrier_id" query parameter is required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return super().list(self, request, *args, **kwargs)
+
     @action(detail=False, methods=['delete'])
     def bulk_delete(self, request):
         # Handle bulk delete of carrier state conversions
