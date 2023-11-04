@@ -2,9 +2,12 @@
 from rest_framework import viewsets, status , mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from Account.permissions import IsUserAuthenticatedAndAssociatedWithCompany
 from .models import Carrier, CarrierStateConversion
 from .serializers import (CarrierSerializer, CarrierStateConversionSerializer,
                           BulkActionSerializer,BulkDeleteSerializer)
+
 
 class CarrierViewSet(mixins.ListModelMixin,
                      mixins.RetrieveModelMixin,
@@ -14,7 +17,7 @@ class CarrierViewSet(mixins.ListModelMixin,
     queryset = Carrier.objects.all()
     serializer_class = CarrierSerializer
 
-    #permission_classes = [IsUserAssociatedWithCompany]
+    permission_classes = [IsUserAuthenticatedAndAssociatedWithCompany] #[IsUserAssociatedWithCompany]
 
     # THIS FUNCTION PERFORMS BULK ACTIONS ON CARRIER INSTANCES BASED ON REQUEST DATA
     # IT VALIDATES THE REQUEST DATA USING BulkActionSerializer AND HANDLES ACTIONS
@@ -60,7 +63,7 @@ class CarrierStateConversionViewSet(mixins.ListModelMixin,
 
     queryset = CarrierStateConversion.objects.all()
     serializer_class = CarrierStateConversionSerializer
-    #permission_classes = [IsUserAssociatedWithCompany]
+    permission_classes = [IsUserAuthenticatedAndAssociatedWithCompany]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -102,4 +105,6 @@ class CarrierStateConversionViewSet(mixins.ListModelMixin,
         carriers_qs.delete()
 
         return Response({'res': 'success'}, status=status.HTTP_200_OK)
+
+
 

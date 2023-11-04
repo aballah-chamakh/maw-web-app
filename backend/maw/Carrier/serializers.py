@@ -25,11 +25,9 @@ class CarrierSerializer(serializers.ModelSerializer):
         view = self.context.get('view')
 
         if not request or not view :
-            print("NOT REQUEST OR NOT VIEW")
             return None
 
         if request.method != 'GET' or view.action != 'retrieve' : 
-            print(f"NOT GET OR NOT RETREIVE : method : {request.method} action : {view.action}")
             return None 
         
         # GRAB THE CARRIER STATE CONVERSIONS OF ONLY THE CURRENT CARRIER  

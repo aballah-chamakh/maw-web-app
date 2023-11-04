@@ -1,14 +1,17 @@
 import json 
 import pprint
 from django.core.files import File
+from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from rest_framework.reverse import reverse as api_reverse 
 from rest_framework import status
-from django.contrib.auth import get_user_model
-from Account.models import User 
-from .models import Carrier, CarrierStateConversion,CompanyProfile
+from rest_framework_simplejwt.tokens import AccessToken
+from Account.models import CompanyProfile
+from Account.tests import JWTAuthenticationBaseTest
+from .models import Carrier, CarrierStateConversion
 from .serializers import CarrierSerializer,CarrierStateConversionSerializer
 from .views import CarrierViewSet,CarrierStateConversionViewSet
+
 
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -30,17 +33,19 @@ class CarrierStateConversion(models.Model):
     company_website_state = models.CharField(max_length=255)
 """
 
-class CarrierViewSetTests(APITestCase):
+class CarrierViewSetTests(APITestCase,JWTAuthenticationBaseTest):
 
     EXPECTED_MODEL_CLASS = Carrier 
     EXPECTED_SERIALIZER_CLASS = CarrierSerializer 
-    company_profile_data = {
-        'username' : 'Paraclic',
-        'email' : 'paraclic@gmail.com' , 
-        'password' : 'paraclic1234'
-    }
+
 
     def setUp(self):
+        # CREATE A COMPANY PROFILE
+        self.create_company_profile()
+
+        # ADD AUTHORIZATION HEADER TO THE CLIENT 
+        self.add_authorization_header_to_the_client()
+        
         # CREATE A CARRIER FOR THE TESTS 
         self.carrier = Carrier.objects.create(name='Test Carrier', api_base_url='http://example.com', api_key='test-key')
         self.carrier_state_converion = CarrierStateConversion.objects.create(
@@ -51,15 +56,6 @@ class CarrierViewSetTests(APITestCase):
         # SET THE URL OF THE LIST AND CREATE ACTIONS 
         self.url = api_reverse('Carrier:carrier-list') # THIS URL WORKS FOR THE BOTH CREATE AND LIST 
 
-    def create_company_profile(self) : 
-        User = get_user_model()
-        user_obj = User.objectscreate_user(**self.company_profile_data)
-        CompanyProfile.objects.create(user=user_obj,user_obj,api_base_url='http://www.google.com',api_key='154876ddf41ds')
-
-    def get_company_profile_token(self): 
-        del self.company_profile_data['username']
-        response = self.client.post(api_reverse('Account:token_obtain_pair'),self.company_profile_data)
-        return response.data['access']
 
     def test_basic_view_attrtibutes(self): 
         # CHECK THE MODEL CLASS OF THE CarrierViewSet 
@@ -287,13 +283,18 @@ class CarrierViewSetTests(APITestCase):
 
 
 
-class TestCarrierStateConversionViewSet(APITestCase):
+class TestCarrierStateConversionViewSet(APITestCase,JWTAuthenticationBaseTest):
 
     EXPECTED_MODEL_CLASS = CarrierStateConversion
     EXPECTED_SERIALIZER_CLASS = CarrierStateConversionSerializer 
 
-
     def setUp(self):
+        # CREATE A COMPANY PROFILE
+        self.create_company_profile()
+
+        # ADD AUTHORIZATION HEADER TO THE CLIENT 
+        self.add_authorization_header_to_the_client()
+
         # CREATE A CARRIER FOR THE TESTS 
         self.carrier = Carrier.objects.create(
             name='Test Carrier',
