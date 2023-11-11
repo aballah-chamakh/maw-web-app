@@ -9,3 +9,5 @@ class IsUserAuthenticatedAndAssociatedWithCompany(permissions.BasePermission):
             # Check if the user has a one-to-one relationship with a company record
             return hasattr(request.user, 'companyprofile') 
         return False 
+
+

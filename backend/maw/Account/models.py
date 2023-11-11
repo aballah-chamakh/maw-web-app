@@ -60,6 +60,9 @@ class User(AbstractBaseUser):
 
     objects = UserManager()
 
+    class Meta:
+        ordering = ['id']
+
     def get_full_name(self):
 
         return self.username
@@ -97,21 +100,27 @@ class User(AbstractBaseUser):
 
 
 class CompanyProfile(models.Model):
-    user = models.OneToOneField(User,on_delete=models.CASCADE,null=True)
-    logo = models.ImageField(default='icon_logo.png')
+    user = models.OneToOneField(User,on_delete=models.CASCADE)
+    logo = models.ImageField(default='company_logos/logo_2.png',upload_to='company_logos/')
     api_base_url = models.URLField(max_length=100)
     api_key = models.CharField(max_length=100)
     loading_state = models.ForeignKey('CompanyOrderState',on_delete=models.SET_NULL,related_name='company_order_loading_state',null=True)
     post_submit_state = models.ForeignKey('CompanyOrderState',on_delete=models.SET_NULL,related_name='company_order_post_submit_state',null=True)
     
+    class Meta:
+        ordering = ['id']
+
     def __str__(self):
         return f"company : {self.user.username}"
 
 class CompanyOrderState(models.Model):
     company = models.ForeignKey(CompanyProfile,on_delete=models.CASCADE)
-    state_name = models.CharField(max_length=100)
     state_id = models.IntegerField()
+    state_name = models.CharField(max_length=100)
 
+    class Meta:
+        ordering = ['id']
+    
     def __str__(self):
         return f"company => state_name : {self.company.user.username} state_id : {self.state_id}" 
     

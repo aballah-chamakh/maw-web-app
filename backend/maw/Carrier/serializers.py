@@ -9,8 +9,6 @@ class CarrierStateConversionSerializer(serializers.ModelSerializer):
 
 class CarrierSerializer(serializers.ModelSerializer):
     carrier_state_conversions = serializers.SerializerMethodField(read_only=True)
-    relative_logo = serializers.CharField(source='logo.url',read_only=True)
-    logo = serializers.ImageField(write_only=True)
     name = serializers.CharField(read_only=True)
     paginator = CustomPagination() 
 
@@ -23,11 +21,11 @@ class CarrierSerializer(serializers.ModelSerializer):
         # SHOW THE CARRIER STATE CONVERSIONS ONLY ON THE RETREIVE ACTION 
         request  = self.context.get('request')   
         view = self.context.get('view')
-
+        
         if not request or not view :
             return None
 
-        if request.method != 'GET' or view.action != 'retrieve' : 
+        if view.action != 'retrieve' : 
             return None 
         
         # GRAB THE CARRIER STATE CONVERSIONS OF ONLY THE CURRENT CARRIER  
@@ -45,10 +43,10 @@ class CarrierSerializer(serializers.ModelSerializer):
 
         # BECAUSE THE REQUEST IS FOR THE CARRIER WE NEED REPLACE 'carriers' BY 'carrierstateconversions' IN URLS OF THE PAGINATION
         if data['next'] : 
-            data['next'] = data['next'].replace('carriers','carrierstateconversions')
+            data['next'] = data['next'].replace('carriers','carrier_state_conversions')
 
         if data['previous'] : 
-            data['previous'] = data['previous'].replace('carriers','carrierstateconversions')
+            data['previous'] = data['previous'].replace('carriers','carrier_state_conversions')
 
         return data
 

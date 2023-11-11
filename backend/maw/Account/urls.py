@@ -7,7 +7,7 @@ from .token import MyTokenObtainPairView
 app_name = 'Account'
 router = DefaultRouter()
 router.register(r'companyprofiles', CompanyProfileViewSet)
-router.register(r'companyorderstates', CompanyOrderStateViewSet)
+router.register(r'company_order_states', CompanyOrderStateViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

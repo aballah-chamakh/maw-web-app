@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'Account',
     'Carrier',
     'OrderActionApi',
-    'WebApi'
+    'WebApi',
+    'Notification'
 
 ]
 
@@ -124,11 +125,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Tunis'
 
 USE_I18N = True
 
-USE_TZ = True
+#USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)

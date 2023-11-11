@@ -7,34 +7,14 @@ from rest_framework.reverse import reverse as api_reverse
 from rest_framework import status
 from rest_framework_simplejwt.tokens import AccessToken
 from Account.models import CompanyProfile
-from Account.tests import JWTAuthenticationBaseTest
+from Common.tests import CommonTests
 from .models import Carrier, CarrierStateConversion
 from .serializers import CarrierSerializer,CarrierStateConversionSerializer
 from .views import CarrierViewSet,CarrierStateConversionViewSet
 
 
-
-pp = pprint.PrettyPrinter(indent=4)
-
-
-# Create your tests here.
-
-"""
-class Carrier(models.Model):
-    logo = models.ImageField(default='carrier_logos/default_logo.png',upload_to='carrier_logos/', null=True)
-    name = models.CharField(max_length=255)
-    api_base_url = models.URLField()
-    api_key = models.CharField(max_length=255)
-    active = models.BooleanField(default=True)
-
-class CarrierStateConversion(models.Model):
-    carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE)
-    carrier_state = models.CharField(max_length=255)
-    company_website_state = models.CharField(max_length=255)
-"""
-
-class CarrierViewSetTests(APITestCase,JWTAuthenticationBaseTest):
-
+class CarrierViewSetAPITestCase(APITestCase,CommonTests):
+    VIEWSET_CLASS = CarrierViewSet
     EXPECTED_MODEL_CLASS = Carrier 
     EXPECTED_SERIALIZER_CLASS = CarrierSerializer 
 
@@ -56,18 +36,13 @@ class CarrierViewSetTests(APITestCase,JWTAuthenticationBaseTest):
         # SET THE URL OF THE LIST AND CREATE ACTIONS 
         self.url = api_reverse('Carrier:carrier-list') # THIS URL WORKS FOR THE BOTH CREATE AND LIST 
 
-
-    def test_basic_view_attrtibutes(self): 
-        # CHECK THE MODEL CLASS OF THE CarrierViewSet 
-        self.assertEqual(CarrierViewSet.queryset.model,self.EXPECTED_MODEL_CLASS)
-        # CHECK THE SERIALIZER CLASS OF THE CarrierViewSet 
-        self.assertEqual(CarrierViewSet.serializer_class,self.EXPECTED_SERIALIZER_CLASS)
-        # CHECK THE MODEL CLASS OF THE SERIALIZER CLASS 
-        self.assertEqual(CarrierViewSet.serializer_class.Meta.model,self.EXPECTED_MODEL_CLASS)
+    # THIS FUNCTION IS USED BY THE JWTAuthenticationBaseTest TO TEST AUTHORIZATION 
+    # AND THE REASON WHY IT IS CUSTOM FOR EACH TEST CLASS BECAUSE EACH VIEWSET HAS HIS OWWS SPECIFUC MIXIN AND THOSE MIXINS HAVE THEIR OWN SPECIFIC PARAMERTERS 
+    def authorization_request(self):
+        return self.client.get(api_reverse('Carrier:carrier-list'))
 
 
     def test_list_carriers(self):
-
         # ADD AN ADDITIONAL CARRIER WITH CARRIER STATE CONVERSION TO TEST WITH A LIST WITH AT LEAST 2 ELEMENTS 
         carrier_2 = Carrier.objects.create(name='Test Carrier 2', api_base_url='http://example2.com', api_key='test-key2')
         carrier_state_converions_2 = CarrierStateConversion.objects.create(
@@ -95,7 +70,7 @@ class CarrierViewSetTests(APITestCase,JWTAuthenticationBaseTest):
                                             'carrier_state_conversions': None,
                                             'id': 1,
                                             'name': 'Test Carrier',
-                                            'relative_logo': '/media/carrier_logos/default_logo.png'
+                                            'logo': 'http://testserver/media/carrier_logos/default_logo.png'
                                         },
                                         {  
                                             'active': True,
@@ -104,7 +79,7 @@ class CarrierViewSetTests(APITestCase,JWTAuthenticationBaseTest):
                                             'carrier_state_conversions': None,
                                             'id': 2,
                                             'name': 'Test Carrier 2',
-                                            'relative_logo': '/media/carrier_logos/default_logo.png'
+                                            'logo': 'http://testserver/media/carrier_logos/default_logo.png'
                                         }
                         ]
         }
@@ -116,7 +91,6 @@ class CarrierViewSetTests(APITestCase,JWTAuthenticationBaseTest):
     def test_retrieve_carrier(self):
         # SEND A CARRIER RETREIVE REQUEST 
         response = self.client.get(api_reverse('Carrier:carrier-detail', args=[self.carrier.id]))
-        
         # ASSERT THAT THE STATUS CODE OF THE RESPONSE IS SUCCESSFUL
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -136,7 +110,7 @@ class CarrierViewSetTests(APITestCase,JWTAuthenticationBaseTest):
                                                 }
                                             ],
                                         },
-                                        "relative_logo": "/media/carrier_logos/default_logo.png",
+                                        "logo": "http://testserver/media/carrier_logos/default_logo.png",
                                         "name": "Test Carrier",
                                         "api_base_url": "http://example.com",
                                         "api_key": "test-key",
@@ -148,7 +122,7 @@ class CarrierViewSetTests(APITestCase,JWTAuthenticationBaseTest):
         self.assertEqual(json_response_data, expected_json_response_data)
 
 
-    def test_patch_update_carrier(self):
+    def test_partial_update_carrier(self):
         # SEND A CARRIER PATCH REQUEST TO UPATE ONLY ONE FIELD
         data = {'api_key': 'new_api_key'}
         response = self.client.patch(api_reverse('Carrier:carrier-detail', args=[self.carrier.pk]), data, format='json')
@@ -156,7 +130,7 @@ class CarrierViewSetTests(APITestCase,JWTAuthenticationBaseTest):
         # ASSERT THAT THE STATUS CODE OF THE RESPONSE IS SUCCESSFUL
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # REFRESH THE CARRRIER 
+        # REFRESH THE CARRIER 
         self.carrier.refresh_from_db()
 
         # USING THE SERIALIZER ASSERT THAT THE FIELD THIS PATICULAR CARRIER ROW IN THE DB WAS UPDATED 
@@ -178,11 +152,11 @@ class CarrierViewSetTests(APITestCase,JWTAuthenticationBaseTest):
         self.carrier.refresh_from_db()
 
         # UPDATING THE DATA BECAUSE SOME FIELDS ARE JUST READ ONLY AND OTHER ARE JUST WRITE ONLY 
-        del data['logo'] # BECAUSE THIS FIELD IS WRITE ONLY 
         data['id'] = self.carrier.id # BECAUSE THIS FIELD IS READ ONLY 
-        data['relative_logo'] =  self.carrier.logo.url # BECAUSE THIS FIELD IS READ ONLY 
+        data['logo'] =  self.carrier.logo.url # BECAUSE THE ORIGINAL VALUE IS BYTES 
         data['name'] =  self.carrier.name  # BECAUSE THIS FIELD IS READ ONLY 
         data['carrier_state_conversions'] =  response.data['carrier_state_conversions'] # BECAUSE THIS FIELD IS READ ONLY 
+
         # USING THE SERIALIZER ASSERT THAT THIS PATICULAR CARRIER ROW IN THE DB WAS UPDATED 
         ser = CarrierSerializer(self.carrier,many=False)
         self.assertEqual(data, ser.data)
@@ -283,8 +257,8 @@ class CarrierViewSetTests(APITestCase,JWTAuthenticationBaseTest):
 
 
 
-class TestCarrierStateConversionViewSet(APITestCase,JWTAuthenticationBaseTest):
-
+class CarrierStateConversionViewSetAPITestCase(APITestCase,CommonTests):
+    VIEWSET_CLASS = CarrierStateConversionViewSet
     EXPECTED_MODEL_CLASS = CarrierStateConversion
     EXPECTED_SERIALIZER_CLASS = CarrierStateConversionSerializer 
 
@@ -311,13 +285,9 @@ class TestCarrierStateConversionViewSet(APITestCase,JWTAuthenticationBaseTest):
         # SET THE URL OF THE LIST AND CREATE ACTIONS 
         self.url = api_reverse('Carrier:carrierstateconversion-list')
 
-    def test_basic_view_attributes(self): 
-        # CHECK THE MODEL CLASS OF THE CarrierViewSet 
-        self.assertEqual(CarrierStateConversionViewSet.queryset.model,self.EXPECTED_MODEL_CLASS)
-        # CHECK THE SERIALIZER CLASS OF THE CarrierViewSet 
-        self.assertEqual(CarrierStateConversionViewSet.serializer_class,self.EXPECTED_SERIALIZER_CLASS)
-        # CHECK THE MODEL CLASS OF THE SERIALIZER CLASS 
-        self.assertEqual(CarrierStateConversionViewSet.serializer_class.Meta.model,self.EXPECTED_MODEL_CLASS)
+    
+    def authorization_request(self):
+        return self.client.get(api_reverse('Carrier:carrierstateconversion-list'),{'carrier_id':self.carrier.id})
 
 
     def test_list_carrier_state_conversions(self):
