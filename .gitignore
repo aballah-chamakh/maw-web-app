@@ -21,3 +21,19 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+
+# Ignore SQLite database files
+*.sqlite3
+*.db
+
+# Ignore folders named "notes"
+notes/
+**/notes/
+
+# Ignore OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.idea/
+*.vscode/

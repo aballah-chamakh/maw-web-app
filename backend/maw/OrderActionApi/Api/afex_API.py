@@ -105,7 +105,7 @@ def custom_unauthorization_err_handler(order_action_obj,order_id):
         'slow_website_or_internet_err' :  [
             {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
             {'pos' : 2, 'instruction' : f"Mettez à jour les identifiants du site web {AFEX_DOMAIN_NAME}"}
-        ]
+        ],
         'unauthorization_err' : [
             {'pos' : 1, 'instruction' : f"Restaurer l'état de la commande avec l'identifiant {order['id']} à l'état initial sur mawlety.com."},
             {'pos' : 3, 'instruction' : f"Mettez à jour les identifiants du site web {AFEX_DOMAIN_NAME}."}
