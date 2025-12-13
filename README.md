@@ -46,14 +46,6 @@ Click the image to view the demo video on YouTube.
    npm start
    ```
 
-## Usage
-
-* Load the orders created in the selected date range.
-* From the loaded orders, select the ones to submit to the carrier platform.
-* Run the sync process whenever you want to synchronize the order statuses between the Mawlety store and the carrier platform.
-
-No manual syncing is required.
-
 ## Requirements
 
 * Python 3.8+
