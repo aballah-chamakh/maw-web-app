@@ -8,47 +8,13 @@ Click the image below to view the demo video on YouTube :
 
 [![Mawlety Order Sync Demo](https://img.youtube.com/vi/7op97GIx-RE/maxresdefault.jpg)](https://youtu.be/7op97GIx-RE)
 
-## Features
+## Tech Stack
+- **Frontend:** React.Js
+- **Backend:** Django 
+- **Database:** Sqlite3
 
-* **Automatic Order Loading**: Retrieves orders directly from the Mawlety PrestaShop store and stores them in the app database.
-* **Automated Carrier Submission**: Submits loaded orders to Mawlety's carrier platform without manual intervention.
-* **Status Synchronization**: Compares app-submitted orders with their counterparts on the carrier platform and updates the order status on Mawlety's store whenever changes occur.
-
-## Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/aballah-chamakh/maw-web-app.git
-   ```
-2. Set up the Python environment and install dependencies:
-
-   ```bash
-   cd backend 
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   pip install -r requirements.txt
-   ```
-3. Apply migrations and start the **Django** server:
-
-   ```bash
-   cd maw
-   python manage.py migrate
-   python manage.py runserver
-   ```
-4. Start the React front-end:
-
-   ```bash
-   cd frontend/maw
-   npm install
-   npm start
-   ```
-
-## Requirements
-
-* Python 3.8+
-* **Django** 3.2+
-* Node.js 14+
-* **React.js** 17+
-
+## Author
+**Abdallah Ben Chamakh**  
+- GitHub: [https://github.com/aballah-chamakh](https://github.com/aballah-chamakh)  
+- LinkedIn: [https://www.linkedin.com/in/abdallah-ben-chamakh/](https://www.linkedin.com/in/abdallah-ben-chamakh/)  
 
